@@ -2142,3 +2142,21 @@ Before adding any existing checkout as a submodule, inspect its tracked modifica
 ### How to verify
 
 Run `git submodule foreach --quiet 'git status --short --branch'` and require every retained submodule to be clean. Then clone recursively into an empty directory and verify that the vendored solver edits and generated body assets exist without relying on the original machine.
+
+## Regression tests must not depend on ignored runtime residue
+
+### What happened
+
+The Unreal garment compiler regression passed in the original working folder but failed in the fresh repository clone because its default body profile came from `PatternaUnreal/Saved`. That directory is generated Unreal runtime state and is correctly ignored.
+
+### Root cause
+
+The regression used a machine-produced body profile as an implicit fixture without checking whether a new contributor or CI runner could obtain it from the repository. The original folder masked the missing test input.
+
+### Prevention rule
+
+Every default regression path must be self-contained in tracked source. Generate compact deterministic fixtures in the test or track explicit fixture data outside ignored build and runtime directories. Keep optional arguments for integration tests against real generated artifacts.
+
+### How to verify
+
+Clone the repository recursively into an empty directory, restore and build all projects, and run every regression without supplying local paths. Require the tests to pass while `git status --short` remains empty.

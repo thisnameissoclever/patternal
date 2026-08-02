@@ -22,7 +22,83 @@ static string FindRepositoryRoot()
         }
         directory = directory.Parent;
     }
-    throw new DirectoryNotFoundException("Could not locate the Patterna repository root.");
+    throw new DirectoryNotFoundException("Could not locate the Patternal repository root.");
+}
+
+static LiveBodyProfileDocument BuildTestBodyProfile()
+{
+    (double Height, double Width, double Depth, double CenterX, double CenterY, double Circumference, int Samples)[] specs =
+    [
+        (95, 32.406463623046875, 26.99819564819336, -0.042532920837402344, -0.04366302490234375, 93.50607299804688, 188),
+        (97, 31.773630142211914, 26.599925994873047, -0.012362480163574219, -0.09551811218261719, 91.87313079833984, 192),
+        (99, 30.870895385742188, 26.160228729248047, 0.0027146339416503906, 0.2680697441101074, 89.73714447021484, 192),
+        (101, 30.244747161865234, 25.14645004272461, -0.007094383239746094, 0.857795238494873, 87.19267272949219, 176),
+        (103, 29.165790557861328, 22.925880432128906, 0.010231494903564453, 1.432854175567627, 82.11920166015625, 172),
+        (105, 27.833744049072266, 19.80615234375, 0.013199329376220703, 2.0835025310516357, 75.3647232055664, 172),
+        (107, 26.565475463867188, 18.17998504638672, 0.014256954193115234, 2.5417702198028564, 70.90449523925781, 160),
+        (109, 25.413063049316406, 18.71812629699707, 0.012871265411376953, 2.2570760250091553, 69.72053527832031, 160),
+        (111, 25.96047592163086, 19.56203842163086, 0.01439046859741211, 1.7306170463562012, 71.86019897460938, 152),
+        (113, 27.004955291748047, 20.177661895751953, 0.014241218566894531, 1.2583527565002441, 74.50274658203125, 152),
+        (115, 27.54150390625, 20.43756675720215, 0.014217853546142578, 0.6739397048950195, 75.77898406982422, 152),
+        (117, 28.26836585998535, 20.281959533691406, 0.014333724975585938, -0.07528352737426758, 76.77945709228516, 156),
+        (119, 28.638347625732422, 20.237245559692383, 0.014091014862060547, -0.5731678009033203, 77.34173583984375, 168),
+        (121, 29.074302673339844, 22.096338272094727, 0.013820648193359375, -0.5528783798217773, 80.75276947021484, 196),
+        (123, 29.259883880615234, 23.48531723022461, 0.014102458953857422, -0.8978028297424316, 83.10041809082031, 228),
+        (125, 28.219013214111328, 24.463134765625, -0.013614654541015625, -1.5255050659179688, 82.85811614990234, 186),
+        (127, 27.805923461914062, 25.7216796875, -0.02331256866455078, -1.982530117034912, 84.11283874511719, 156),
+        (129, 28.436134338378906, 28.19538116455078, -0.0369715690612793, -1.7334532737731934, 88.95698547363281, 160),
+        (131, 28.210552215576172, 29.822547912597656, 0.010432720184326172, -1.642773151397705, 91.17576599121094, 176),
+        (133, 29.628231048583984, 30.615102767944336, -0.1612563133239746, -1.7484941482543945, 94.6363525390625, 182),
+        (135, 31.87389373779297, 30.625600814819336, 0.051900386810302734, -2.121577262878418, 98.18377685546875, 148),
+        (137, 33.84080123901367, 21.10405158996582, 0.01294708251953125, -6.9063897132873535, 87.47057342529297, 104),
+        (139, 31.737470626831055, 15.937533378601074, 0.01658916473388672, -9.236466407775879, 76.95850372314453, 76)
+    ];
+
+    LiveBodySectionDocument[] sections = specs
+        .Select(spec =>
+        {
+            LiveBodySurfacePointDocument[] points = Enumerable.Range(0, 64)
+                .Select(index =>
+                {
+                    double angle = -Math.PI + index * (2.0 * Math.PI / 64.0);
+                    double radiusX = spec.Width * 0.5;
+                    double radiusY = spec.Depth * 0.5;
+                    double cosine = Math.Cos(angle);
+                    double sine = Math.Sin(angle);
+                    double radius = radiusX * radiusY / Math.Sqrt(
+                        radiusY * radiusY * cosine * cosine +
+                        radiusX * radiusX * sine * sine);
+                    return new LiveBodySurfacePointDocument(
+                        angle,
+                        radius,
+                        spec.CenterX + radius * cosine,
+                        spec.CenterY + radius * sine);
+                })
+                .ToArray();
+            return new LiveBodySectionDocument(
+                spec.Height,
+                spec.Width,
+                spec.Depth,
+                spec.CenterX,
+                spec.CenterY,
+                spec.Circumference,
+                spec.Samples,
+                points.Length,
+                points);
+        })
+        .ToArray();
+
+    return new LiveBodyProfileDocument(
+        "patterna.live-body-profile/1.0",
+        "/Game/PatternaMeasuredV2/MH_Patterna_Female_Default/Body/SKM_MH_Patterna_Female_Default_BodyMesh.SKM_MH_Patterna_Female_Default_BodyMesh",
+        0,
+        0.05,
+        0.95,
+        "torso-skin-weight-filtered-triangle-plane-intersection-above-109cm",
+        sections,
+        95,
+        139,
+        2);
 }
 
 static double PanelWrongSideRatio(ArrangedPanelMesh panel)
@@ -107,22 +183,25 @@ static PatternaUnrealBridgeDocument BuildBridge(GarmentDocument garment)
 }
 
 string repositoryRoot = FindRepositoryRoot();
-string bodyProfilePath = args.Length > 0
-    ? Path.GetFullPath(args[0])
-    : Path.Combine(
-        repositoryRoot,
-        "PatternaUnreal",
-        "Saved",
-        "Patterna",
-        "LiveBodyProfile.json");
 JsonSerializerOptions jsonOptions = new()
 {
     PropertyNameCaseInsensitive = true,
     PropertyNamingPolicy = JsonNamingPolicy.CamelCase
 };
-string bodyProfileJson = await File.ReadAllTextAsync(bodyProfilePath);
-LiveBodyProfileDocument bodyProfile = JsonSerializer.Deserialize<LiveBodyProfileDocument>(bodyProfileJson, jsonOptions)
-    ?? throw new InvalidDataException("Body profile deserialization failed.");
+LiveBodyProfileDocument bodyProfile;
+string bodyProfileJson;
+if (args.Length > 0)
+{
+    string bodyProfilePath = Path.GetFullPath(args[0]);
+    bodyProfileJson = await File.ReadAllTextAsync(bodyProfilePath);
+    bodyProfile = JsonSerializer.Deserialize<LiveBodyProfileDocument>(bodyProfileJson, jsonOptions)
+        ?? throw new InvalidDataException("Body profile deserialization failed.");
+}
+else
+{
+    bodyProfile = BuildTestBodyProfile();
+    bodyProfileJson = JsonSerializer.Serialize(bodyProfile, jsonOptions);
+}
 
 GarmentDocument garment = GarmentDocumentFactory.CreateWrapDress(
     167,
