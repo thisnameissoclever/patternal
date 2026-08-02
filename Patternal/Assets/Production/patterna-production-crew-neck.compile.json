@@ -1,0 +1,436 @@
+{
+  "schemaVersion": "patterna.full-garment-usd/1.1",
+  "garmentId": "PatternaFemaleShirt",
+  "units": "centimeters",
+  "usdSha256": "b136b08ba669b62c91136ae312a82475bfcb2d23e3cbdc600028a3eb4e04e90a",
+  "simulation": {
+    "panelCount": 16,
+    "vertexCount": 133870,
+    "triangleCount": 262814,
+    "seamCount": 32,
+    "stitchCount": 1974,
+    "closureCount": 0,
+    "closureConstraintCount": 0,
+    "minimumTriangleAreaCm2": 0.013800508747331216,
+    "maximumSeamGapCm": 0,
+    "maximumClosureGapCm": 0,
+    "maximumEdgeStrainRatio": 0.17078466524745947,
+    "ninetyFifthPercentileEdgeStrainRatio": 0.027427509184712665,
+    "minimumTorsoClearanceCm": -1.8621337068523438
+  },
+  "panels": [
+    {
+      "id": "left-sleeve-f-panel",
+      "pieceId": "left-sleeve-f",
+      "placement": "sleeveLeft",
+      "reverseWinding": false,
+      "vertexCount": 6745,
+      "triangleCount": 13182
+    },
+    {
+      "id": "left-sleeve-b-panel",
+      "pieceId": "left-sleeve-b",
+      "placement": "sleeveLeft",
+      "reverseWinding": false,
+      "vertexCount": 6724,
+      "triangleCount": 13140
+    },
+    {
+      "id": "sl-left-cuff-b-panel",
+      "pieceId": "sl-left-cuff-b",
+      "placement": "sleeveLeft",
+      "reverseWinding": false,
+      "vertexCount": 461,
+      "triangleCount": 784
+    },
+    {
+      "id": "sl-left-cuff-f-panel",
+      "pieceId": "sl-left-cuff-f",
+      "placement": "sleeveLeft",
+      "reverseWinding": false,
+      "vertexCount": 466,
+      "triangleCount": 794
+    },
+    {
+      "id": "left-collar-front-panel",
+      "pieceId": "left-collar-front",
+      "placement": "torsoFront",
+      "reverseWinding": false,
+      "vertexCount": 454,
+      "triangleCount": 738
+    },
+    {
+      "id": "left-collar-back-panel",
+      "pieceId": "left-collar-back",
+      "placement": "torsoBack",
+      "reverseWinding": false,
+      "vertexCount": 308,
+      "triangleCount": 494
+    },
+    {
+      "id": "left-ftorso-panel",
+      "pieceId": "left-ftorso",
+      "placement": "torsoFront",
+      "reverseWinding": false,
+      "vertexCount": 26295,
+      "triangleCount": 51940
+    },
+    {
+      "id": "left-btorso-panel",
+      "pieceId": "left-btorso",
+      "placement": "torsoBack",
+      "reverseWinding": false,
+      "vertexCount": 25381,
+      "triangleCount": 50133
+    },
+    {
+      "id": "right-sleeve-b-panel",
+      "pieceId": "right-sleeve-b",
+      "placement": "sleeveRight",
+      "reverseWinding": false,
+      "vertexCount": 6685,
+      "triangleCount": 13062
+    },
+    {
+      "id": "right-sleeve-f-panel",
+      "pieceId": "right-sleeve-f",
+      "placement": "sleeveRight",
+      "reverseWinding": false,
+      "vertexCount": 6676,
+      "triangleCount": 13044
+    },
+    {
+      "id": "sl-right-cuff-b-panel",
+      "pieceId": "sl-right-cuff-b",
+      "placement": "sleeveRight",
+      "reverseWinding": false,
+      "vertexCount": 460,
+      "triangleCount": 782
+    },
+    {
+      "id": "sl-right-cuff-f-panel",
+      "pieceId": "sl-right-cuff-f",
+      "placement": "sleeveRight",
+      "reverseWinding": false,
+      "vertexCount": 472,
+      "triangleCount": 806
+    },
+    {
+      "id": "right-collar-back-panel",
+      "pieceId": "right-collar-back",
+      "placement": "torsoBack",
+      "reverseWinding": false,
+      "vertexCount": 318,
+      "triangleCount": 514
+    },
+    {
+      "id": "right-collar-front-panel",
+      "pieceId": "right-collar-front",
+      "placement": "torsoFront",
+      "reverseWinding": false,
+      "vertexCount": 476,
+      "triangleCount": 782
+    },
+    {
+      "id": "right-ftorso-panel",
+      "pieceId": "right-ftorso",
+      "placement": "torsoFront",
+      "reverseWinding": false,
+      "vertexCount": 26420,
+      "triangleCount": 52190
+    },
+    {
+      "id": "right-btorso-panel",
+      "pieceId": "right-btorso",
+      "placement": "torsoBack",
+      "reverseWinding": false,
+      "vertexCount": 25529,
+      "triangleCount": 50429
+    }
+  ],
+  "seams": [
+    {
+      "id": "stitch-0",
+      "panelA": "sl-left-cuff-f-panel",
+      "panelB": "sl-left-cuff-b-panel",
+      "stitchCount": 6,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-1",
+      "panelA": "sl-left-cuff-f-panel",
+      "panelB": "sl-left-cuff-b-panel",
+      "stitchCount": 6,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-2",
+      "panelA": "left-sleeve-f-panel",
+      "panelB": "left-sleeve-b-panel",
+      "stitchCount": 105,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-3",
+      "panelA": "left-sleeve-f-panel",
+      "panelB": "left-sleeve-b-panel",
+      "stitchCount": 35,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-4",
+      "panelA": "sl-left-cuff-f-panel",
+      "panelB": "left-sleeve-f-panel",
+      "stitchCount": 64,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-5",
+      "panelA": "sl-left-cuff-b-panel",
+      "panelB": "left-sleeve-b-panel",
+      "stitchCount": 64,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-6",
+      "panelA": "left-collar-front-panel",
+      "panelB": "left-collar-back-panel",
+      "stitchCount": 5,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-7",
+      "panelA": "left-sleeve-f-panel",
+      "panelB": "left-ftorso-panel",
+      "stitchCount": 106,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-8",
+      "panelA": "left-sleeve-b-panel",
+      "panelB": "left-ftorso-panel",
+      "stitchCount": 4,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-9",
+      "panelA": "left-sleeve-b-panel",
+      "panelB": "left-btorso-panel",
+      "stitchCount": 103,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-10",
+      "panelA": "left-ftorso-panel",
+      "panelB": "left-collar-front-panel",
+      "stitchCount": 81,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-11",
+      "panelA": "left-btorso-panel",
+      "panelB": "left-collar-back-panel",
+      "stitchCount": 57,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-12",
+      "panelA": "left-ftorso-panel",
+      "panelB": "left-btorso-panel",
+      "stitchCount": 47,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-13",
+      "panelA": "left-ftorso-panel",
+      "panelB": "left-btorso-panel",
+      "stitchCount": 126,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-14",
+      "panelA": "sl-right-cuff-f-panel",
+      "panelB": "sl-right-cuff-b-panel",
+      "stitchCount": 6,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-15",
+      "panelA": "sl-right-cuff-f-panel",
+      "panelB": "sl-right-cuff-b-panel",
+      "stitchCount": 6,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-16",
+      "panelA": "right-sleeve-f-panel",
+      "panelB": "right-sleeve-b-panel",
+      "stitchCount": 105,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-17",
+      "panelA": "right-sleeve-f-panel",
+      "panelB": "right-sleeve-b-panel",
+      "stitchCount": 35,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-18",
+      "panelA": "sl-right-cuff-f-panel",
+      "panelB": "right-sleeve-f-panel",
+      "stitchCount": 64,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-19",
+      "panelA": "sl-right-cuff-b-panel",
+      "panelB": "right-sleeve-b-panel",
+      "stitchCount": 64,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-20",
+      "panelA": "right-collar-front-panel",
+      "panelB": "right-collar-back-panel",
+      "stitchCount": 5,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-21",
+      "panelA": "right-sleeve-f-panel",
+      "panelB": "right-ftorso-panel",
+      "stitchCount": 106,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-22",
+      "panelA": "right-sleeve-b-panel",
+      "panelB": "right-ftorso-panel",
+      "stitchCount": 4,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-23",
+      "panelA": "right-sleeve-b-panel",
+      "panelB": "right-btorso-panel",
+      "stitchCount": 103,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-24",
+      "panelA": "right-ftorso-panel",
+      "panelB": "right-collar-front-panel",
+      "stitchCount": 81,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-25",
+      "panelA": "right-btorso-panel",
+      "panelB": "right-collar-back-panel",
+      "stitchCount": 57,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-26",
+      "panelA": "right-ftorso-panel",
+      "panelB": "right-btorso-panel",
+      "stitchCount": 47,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-27",
+      "panelA": "right-ftorso-panel",
+      "panelB": "right-btorso-panel",
+      "stitchCount": 126,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-28",
+      "panelA": "right-ftorso-panel",
+      "panelB": "left-ftorso-panel",
+      "stitchCount": 164,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-29",
+      "panelA": "right-collar-front-panel",
+      "panelB": "left-collar-front-panel",
+      "stitchCount": 5,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-30",
+      "panelA": "right-btorso-panel",
+      "panelB": "left-btorso-panel",
+      "stitchCount": 182,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-31",
+      "panelA": "right-collar-back-panel",
+      "panelB": "left-collar-back-panel",
+      "stitchCount": 5,
+      "maximumGapCm": 0
+    }
+  ],
+  "closures": [],
+  "fabric": {
+    "source": {
+      "id": "cotton",
+      "name": "Lightweight cotton jersey",
+      "massGramsPerSquareMeter": 180,
+      "thicknessMillimeters": 0.5,
+      "warpStretchPercent": 19.25,
+      "weftStretchPercent": 35,
+      "biasStretchPercent": 49,
+      "bendResistance": 8,
+      "shearResistance": 95.6,
+      "staticFriction": 0.45999999999999996,
+      "dynamicFriction": 0.4,
+      "calibration": "style3d-lightweight-jersey-v1"
+    },
+    "chaos": {
+      "densityKgPerSquareCm": 1.8e-05,
+      "stretchWarp": 41025.64102564103,
+      "stretchWeft": 26666.666666666668,
+      "shearLeft": 17340,
+      "shearRight": 17340,
+      "bendWarp": 0.098,
+      "bendWeft": 0.054,
+      "bendBias": 0.076,
+      "damping": 0.16999999999999998,
+      "friction": 0.4
+    }
+  },
+  "render": {
+    "meshCount": 1,
+    "topology": "welded boundary-constrained fairing and Loop render surface",
+    "sourceVertexCount": 133870,
+    "weldedBaseVertexCount": 131910,
+    "vertexCount": 526636,
+    "triangleCount": 1051256,
+    "subdivisionLevel": 1,
+    "refinementAlgorithm": "boundary-constrained Taubin fairing and Loop subdivision",
+    "protectedBoundaryVertexCount": 1010,
+    "protectedNonManifoldVertexCount": 0,
+    "maximumBaseVertexDisplacementCm": 0.09164812486070305,
+    "averageBaseVertexDisplacementCm": 0.022854727854357097,
+    "weldedConstructionStitchCount": 1974,
+    "unweldedConstructionStitchCount": 0,
+    "maximumWeldedGapCm": 0,
+    "material": "PatternaFabric",
+    "doubleSided": true,
+    "objSha256": "4a3bf450c38da10b285408d853687c770648dd1cf8c2a959e2e22389dea6ef3c",
+    "uvCoordinateSource": "authoritative 2D panel rest coordinates",
+    "uvInterpolation": "face-varying",
+    "constructionLineCount": 32,
+    "openBoundaryLineCount": 12
+  },
+  "coordinateSystem": {
+    "source": "Unreal left-handed Z-up",
+    "interchange": "OpenUSD right-handed Z-up",
+    "reflectedAxis": "Y",
+    "windingReversed": true
+  }
+}

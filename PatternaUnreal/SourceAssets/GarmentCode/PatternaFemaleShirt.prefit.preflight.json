@@ -1,0 +1,343 @@
+{
+  "schemaVersion": "patterna.full-garment-preflight/1.1",
+  "garmentId": "PatternaFemaleAdaptiveCrewNeck.specification",
+  "bridgeSha256": "8963e2005b5d4129071086b4367880650f32477ce1940de9ea3d86f61b9161fb",
+  "bodyProfileSha256": "42c0249562eee5d1ecc0960bec0a75a09932aa272238c9d7a8b4a895a926dd28",
+  "isAccepted": true,
+  "issues": [
+    {
+      "severity": "warning",
+      "code": "prefit-localized-peak-strain",
+      "message": "The validated Warp pre-fit has a localized peak edge strain of 201.9% on panel left-ftorso-panel; its garment-wide 95th percentile is 29.2%.",
+      "sourceId": null
+    },
+    {
+      "severity": "warning",
+      "code": "prefit-broad-strain",
+      "message": "The validated Warp pre-fit has a garment-wide 95th-percentile edge strain of 29.2%; the worst panel is left-btorso-panel at 50.1%.",
+      "sourceId": null
+    },
+    {
+      "severity": "warning",
+      "code": "upper-neck-collision-fallback",
+      "message": "The body mesh ends near 139 cm; neckline and neck collision still require the assembled MetaHuman physics surface.",
+      "sourceId": "/Game/PatternaMeasuredV2/MH_Patterna_Female_Default/Body/SKM_MH_Patterna_Female_Default_BodyMesh.SKM_MH_Patterna_Female_Default_BodyMesh"
+    }
+  ],
+  "panels": [
+    {
+      "id": "right-ftorso-panel",
+      "pieceId": "right-ftorso",
+      "placement": "torsoFront",
+      "vertexCount": 1125,
+      "triangleCount": 2115,
+      "widthCm": 27.178968960000002,
+      "heightCm": 42.69132032821446,
+      "areaCm2": 864.9163773518787,
+      "minimumTriangleAreaCm2": 0.2333792863688121,
+      "maximumTriangleAspectRatio": 3.286529782756058,
+      "sewingRelationshipCount": 5,
+      "hasStructuredRemesh": true
+    },
+    {
+      "id": "right-btorso-panel",
+      "pieceId": "right-btorso",
+      "placement": "torsoBack",
+      "vertexCount": 1119,
+      "triangleCount": 2108,
+      "widthCm": 24.486022079999998,
+      "heightCm": 42.65253455617288,
+      "areaCm2": 829.9352041590471,
+      "minimumTriangleAreaCm2": 0.22562907935159648,
+      "maximumTriangleAspectRatio": 3.2330739002554583,
+      "sewingRelationshipCount": 4,
+      "hasStructuredRemesh": true
+    },
+    {
+      "id": "right-sleeve-b-panel",
+      "pieceId": "right-sleeve-b",
+      "placement": "sleeveRight",
+      "vertexCount": 409,
+      "triangleCount": 740,
+      "widthCm": 25.433906251112013,
+      "heightCm": 15.271303329783086,
+      "areaCm2": 303.2244081280904,
+      "minimumTriangleAreaCm2": 0.2350123901034002,
+      "maximumTriangleAspectRatio": 3.1135526357181,
+      "sewingRelationshipCount": 4,
+      "hasStructuredRemesh": true
+    },
+    {
+      "id": "right-sleeve-f-panel",
+      "pieceId": "right-sleeve-f",
+      "placement": "sleeveRight",
+      "vertexCount": 406,
+      "triangleCount": 735,
+      "widthCm": 25.42039196334086,
+      "heightCm": 15.271303329783152,
+      "areaCm2": 301.62003383648414,
+      "minimumTriangleAreaCm2": 0.24749712469340424,
+      "maximumTriangleAspectRatio": 3.068945818012265,
+      "sewingRelationshipCount": 3,
+      "hasStructuredRemesh": true
+    },
+    {
+      "id": "left-ftorso-panel",
+      "pieceId": "left-ftorso",
+      "placement": "torsoFront",
+      "vertexCount": 1126,
+      "triangleCount": 2117,
+      "widthCm": 27.178968960000002,
+      "heightCm": 42.69132032821446,
+      "areaCm2": 864.9163773518787,
+      "minimumTriangleAreaCm2": 0.23594132239178262,
+      "maximumTriangleAspectRatio": 3.4874294358012756,
+      "sewingRelationshipCount": 5,
+      "hasStructuredRemesh": true
+    },
+    {
+      "id": "left-sleeve-b-panel",
+      "pieceId": "left-sleeve-b",
+      "placement": "sleeveLeft",
+      "vertexCount": 394,
+      "triangleCount": 710,
+      "widthCm": 25.433906251112013,
+      "heightCm": 15.271303329783086,
+      "areaCm2": 303.22440812809026,
+      "minimumTriangleAreaCm2": 0.23798197466796284,
+      "maximumTriangleAspectRatio": 2.782035777803067,
+      "sewingRelationshipCount": 4,
+      "hasStructuredRemesh": true
+    },
+    {
+      "id": "left-sleeve-f-panel",
+      "pieceId": "left-sleeve-f",
+      "placement": "sleeveLeft",
+      "vertexCount": 416,
+      "triangleCount": 755,
+      "widthCm": 25.42039196334086,
+      "heightCm": 15.271303329783152,
+      "areaCm2": 301.62003383648414,
+      "minimumTriangleAreaCm2": 0.2336285901440323,
+      "maximumTriangleAspectRatio": 3.20423192189108,
+      "sewingRelationshipCount": 3,
+      "hasStructuredRemesh": true
+    },
+    {
+      "id": "left-btorso-panel",
+      "pieceId": "left-btorso",
+      "placement": "torsoBack",
+      "vertexCount": 1081,
+      "triangleCount": 2032,
+      "widthCm": 24.486022079999998,
+      "heightCm": 42.65253455617288,
+      "areaCm2": 829.935204159047,
+      "minimumTriangleAreaCm2": 0.2294325216176551,
+      "maximumTriangleAspectRatio": 3.1882022553795424,
+      "sewingRelationshipCount": 4,
+      "hasStructuredRemesh": true
+    }
+  ],
+  "seams": [
+    {
+      "id": "stitch-0",
+      "panelA": "right-sleeve-f-panel",
+      "panelB": "right-sleeve-b-panel",
+      "lengthACm": 25.42039196334086,
+      "lengthBCm": 25.42039196334087,
+      "lengthMismatchCm": 7.105427357601002E-15,
+      "lengthMismatchRatio": 2.7951682916014223E-16,
+      "correspondenceCount": 2,
+      "accepted": true
+    },
+    {
+      "id": "stitch-1",
+      "panelA": "right-sleeve-f-panel",
+      "panelB": "right-sleeve-b-panel",
+      "lengthACm": 10.251681583091255,
+      "lengthBCm": 10.251681583091255,
+      "lengthMismatchCm": 0,
+      "lengthMismatchRatio": 0,
+      "correspondenceCount": 2,
+      "accepted": true
+    },
+    {
+      "id": "stitch-2",
+      "panelA": "right-sleeve-f-panel",
+      "panelB": "right-ftorso-panel",
+      "lengthACm": 22.83043096807704,
+      "lengthBCm": 22.831146957349944,
+      "lengthMismatchCm": 0.0007159892729049488,
+      "lengthMismatchRatio": 3.1360197288487655E-05,
+      "correspondenceCount": 32,
+      "accepted": true
+    },
+    {
+      "id": "stitch-3",
+      "panelA": "right-sleeve-b-panel",
+      "panelB": "right-ftorso-panel",
+      "lengthACm": 0.6995290561073945,
+      "lengthBCm": 0.6903442807891462,
+      "lengthMismatchCm": 0.00918477531824824,
+      "lengthMismatchRatio": 0.013129941119755512,
+      "correspondenceCount": 3,
+      "accepted": true
+    },
+    {
+      "id": "stitch-4",
+      "panelA": "right-sleeve-b-panel",
+      "panelB": "right-btorso-panel",
+      "lengthACm": 22.160185236642914,
+      "lengthBCm": 22.169828653093937,
+      "lengthMismatchCm": 0.009643416451023512,
+      "lengthMismatchRatio": 0.000434979295596753,
+      "correspondenceCount": 31,
+      "accepted": true
+    },
+    {
+      "id": "stitch-5",
+      "panelA": "right-ftorso-panel",
+      "panelB": "right-btorso-panel",
+      "lengthACm": 9.074793245384384,
+      "lengthBCm": 9.096931518743245,
+      "lengthMismatchCm": 0.02213827335886087,
+      "lengthMismatchRatio": 0.002433597891030327,
+      "correspondenceCount": 2,
+      "accepted": true
+    },
+    {
+      "id": "stitch-6",
+      "panelA": "right-ftorso-panel",
+      "panelB": "right-btorso-panel",
+      "lengthACm": 21.276974298621266,
+      "lengthBCm": 21.229730893204334,
+      "lengthMismatchCm": 0.04724340541693195,
+      "lengthMismatchRatio": 0.002220400549151074,
+      "correspondenceCount": 2,
+      "accepted": true
+    },
+    {
+      "id": "stitch-7",
+      "panelA": "left-sleeve-f-panel",
+      "panelB": "left-sleeve-b-panel",
+      "lengthACm": 25.42039196334086,
+      "lengthBCm": 25.42039196334087,
+      "lengthMismatchCm": 7.105427357601002E-15,
+      "lengthMismatchRatio": 2.7951682916014223E-16,
+      "correspondenceCount": 2,
+      "accepted": true
+    },
+    {
+      "id": "stitch-8",
+      "panelA": "left-sleeve-f-panel",
+      "panelB": "left-sleeve-b-panel",
+      "lengthACm": 10.251681583091255,
+      "lengthBCm": 10.251681583091255,
+      "lengthMismatchCm": 0,
+      "lengthMismatchRatio": 0,
+      "correspondenceCount": 2,
+      "accepted": true
+    },
+    {
+      "id": "stitch-9",
+      "panelA": "left-sleeve-f-panel",
+      "panelB": "left-ftorso-panel",
+      "lengthACm": 22.83043096807704,
+      "lengthBCm": 22.831146957349947,
+      "lengthMismatchCm": 0.0007159892729085016,
+      "lengthMismatchRatio": 3.136019728864326E-05,
+      "correspondenceCount": 32,
+      "accepted": true
+    },
+    {
+      "id": "stitch-10",
+      "panelA": "left-sleeve-b-panel",
+      "panelB": "left-ftorso-panel",
+      "lengthACm": 0.6995290561073945,
+      "lengthBCm": 0.6903442807891462,
+      "lengthMismatchCm": 0.00918477531824824,
+      "lengthMismatchRatio": 0.013129941119755512,
+      "correspondenceCount": 3,
+      "accepted": true
+    },
+    {
+      "id": "stitch-11",
+      "panelA": "left-sleeve-b-panel",
+      "panelB": "left-btorso-panel",
+      "lengthACm": 22.160185236642914,
+      "lengthBCm": 22.16982865309394,
+      "lengthMismatchCm": 0.009643416451027065,
+      "lengthMismatchRatio": 0.00043497929559691315,
+      "correspondenceCount": 31,
+      "accepted": true
+    },
+    {
+      "id": "stitch-12",
+      "panelA": "left-ftorso-panel",
+      "panelB": "left-btorso-panel",
+      "lengthACm": 9.074793245384384,
+      "lengthBCm": 9.096931518743245,
+      "lengthMismatchCm": 0.02213827335886087,
+      "lengthMismatchRatio": 0.002433597891030327,
+      "correspondenceCount": 2,
+      "accepted": true
+    },
+    {
+      "id": "stitch-13",
+      "panelA": "left-ftorso-panel",
+      "panelB": "left-btorso-panel",
+      "lengthACm": 21.276974298621266,
+      "lengthBCm": 21.229730893204334,
+      "lengthMismatchCm": 0.04724340541693195,
+      "lengthMismatchRatio": 0.002220400549151074,
+      "correspondenceCount": 2,
+      "accepted": true
+    },
+    {
+      "id": "stitch-14",
+      "panelA": "right-ftorso-panel",
+      "panelB": "left-ftorso-panel",
+      "lengthACm": 31.026826919395432,
+      "lengthBCm": 31.026826919395432,
+      "lengthMismatchCm": 0,
+      "lengthMismatchRatio": 0,
+      "correspondenceCount": 2,
+      "accepted": true
+    },
+    {
+      "id": "stitch-15",
+      "panelA": "right-btorso-panel",
+      "panelB": "left-btorso-panel",
+      "lengthACm": 35.57529410659381,
+      "lengthBCm": 35.57529410659381,
+      "lengthMismatchCm": 0,
+      "lengthMismatchRatio": 0,
+      "correspondenceCount": 2,
+      "accepted": true
+    }
+  ],
+  "closures": [],
+  "bodyProfile": {
+    "samplingMethod": "torso-skin-weight-filtered-triangle-plane-intersection-above-109cm",
+    "sectionCount": 23,
+    "minimumHeightCm": 95,
+    "maximumHeightCm": 139,
+    "minimumIntersectionCount": 76,
+    "minimumSurfacePointCount": 31,
+    "maximumAdjacentCircumferenceChangeRatio": 0.12017835588018187,
+    "accepted": true
+  },
+  "arrangement": {
+    "panelCount": 8,
+    "stitchCount": 316,
+    "closureCount": 0,
+    "closureConstraintCount": 0,
+    "minimumTriangleAreaCm2": 0.10378446549374627,
+    "maximumSeamGapCm": 0,
+    "maximumClosureGapCm": 0,
+    "maximumEdgeStrainRatio": 2.018624629329917,
+    "ninetyFifthPercentileEdgeStrainRatio": 0.29240524764603926,
+    "minimumTorsoClearanceCm": 0.39107053104002887,
+    "accepted": true
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "patterna.metahuman-garmentcode-body/1.0",
+  "sourceBody": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\PatternaUnreal\\Saved\\Patterna\\LiveBodyMesh.obj",
+  "referenceBody": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\third_party\\GarmentCode\\assets\\bodies\\patterna_live_female.obj",
+  "outputBody": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\third_party\\GarmentCode\\assets\\bodies\\patterna_metahuman_female.obj",
+  "sourceVertexCount": 3974,
+  "sourceFaceCount": 6632,
+  "voxelPitchCm": 1.5,
+  "vertexCount": 18754,
+  "faceCount": 37912,
+  "watertight": true,
+  "connectedComponents": 1,
+  "boundsMeters": [
+    [
+      -0.4725,
+      -0.0075,
+      -0.1875
+    ],
+    [
+      0.47250000000000003,
+      1.4024999999999999,
+      0.2625
+    ]
+  ],
+  "segmentationCounts": {
+    "body": 5891,
+    "left_arm": 1920,
+    "left_leg": 4528,
+    "right_arm": 1861,
+    "right_leg": 4554,
+    "face_internal": 0
+  },
+  "nearestReferenceDistanceCm": {
+    "mean": 2.5805155761619436,
+    "p95": 9.589988565309634,
+    "max": 22.136575262525074
+  }
+}

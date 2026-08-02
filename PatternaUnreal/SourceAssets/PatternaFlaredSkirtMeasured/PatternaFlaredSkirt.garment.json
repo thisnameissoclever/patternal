@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "garmentId": "PatternaFlaredSkirt",
+  "units": "centimeters",
+  "generator": "tools/Generate-PatternaUnrealGarment.ps1",
+  "bridgeInput": {
+    "schemaVersion": "patterna.unreal-bridge/1.0",
+    "sha256": "2d3aebf4b7762c439f0696e59adfb7cffc9db7cf32de23f3f35139b795b56b92"
+  },
+  "bodyReference": {
+    "waistCircumference": 71.0,
+    "hipCircumference": 99.0,
+    "waistHeight": 107.0,
+    "requestedWaistHeight": 103.0,
+    "effectiveWaistHeight": 107.0,
+    "waistPlacementReason": "closest-live-body-circumference",
+    "matchedWaistSectionCircumference": 71.20831298828125,
+    "liveProfile": {
+      "schemaVersion": "patterna.live-body-profile/1.0",
+      "bodyAssetPath": "/Game/PatternaMeasuredV2/MH_Patterna_Female_Default/Body/SKM_MH_Patterna_Female_Default_BodyMesh.SKM_MH_Patterna_Female_Default_BodyMesh",
+      "sha256": "7072a0877f2317e8e8a403a432cfba05ec2bfab02a7a92145c3a24203722de1a",
+      "surfaceSampling": "outermost-angular-sector",
+      "minimumSurfacePointCount": 33
+    }
+  },
+  "garmentMeasurements": {
+    "waistEase": 2.0,
+    "hipEase": 5.0,
+    "waistCircumference": 73.0,
+    "hipCircumference": 104.0,
+    "hemCircumference": 190.0,
+    "length": 62.0,
+    "renderThickness": 0.034
+  },
+  "renderConstruction": {
+    "technique": "raised render-only ribbons bound to cloth simulation",
+    "ribbonCount": 6,
+    "ribbonVertexCount": 780,
+    "ribbonTriangleCount": 768,
+    "ribbonWidthCm": 0.22,
+    "surfaceOffsetCm": 0.045,
+    "features": [
+      "front-left-side-seam",
+      "front-right-side-seam",
+      "front-waistband-seam",
+      "back-waistband-seam",
+      "front-hem-stitch",
+      "back-hem-stitch"
+    ],
+    "affectsSimulation": false
+  },
+  "dressing": {
+    "requestedMaximumRadialClearance": 8.0,
+    "waistRadialClearance": 0.0,
+    "hipAndBelowRadialClearance": 0.0,
+    "hemRadialClearance": 0.0,
+    "waistDepthToWidthRatio": 0.82,
+    "hipAndHemDepthToWidthRatio": 0.78,
+    "bodySupportCollisionOffset": 0.15,
+    "bodyConformedRowCount": 8,
+    "measuredBodySurfaceRowCount": 8,
+    "preservesTwoDimensionalRestMeasurements": true,
+    "balancedHem": {
+      "profile": "Patterna editable skirt cubic hem",
+      "centerLengthCm": 62.0,
+      "sideVerticalLengthCm": 59.10022271714922,
+      "centerHemY": 224.5,
+      "sideHemY": 214.0,
+      "controlHemY": 228.0
+    },
+    "coordinateAxes": {
+      "forwardDepth": "Y",
+      "bodyWidth": "X",
+      "vertical": "Z"
+    }
+  },
+  "panels": [
+    {
+      "id": "FrontPanel",
+      "columns": 72,
+      "rows": 48,
+      "faceCount": 6912
+    },
+    {
+      "id": "BackPanel",
+      "columns": 72,
+      "rows": 48,
+      "faceCount": 6912
+    }
+  ],
+  "namedSeams": [
+    {
+      "id": "LeftSideSeam",
+      "panelA": "FrontPanel",
+      "edgeA": "left",
+      "panelB": "BackPanel",
+      "edgeB": "right",
+      "stitchCount": 49
+    },
+    {
+      "id": "RightSideSeam",
+      "panelA": "FrontPanel",
+      "edgeA": "right",
+      "panelB": "BackPanel",
+      "edgeB": "left",
+      "stitchCount": 49
+    }
+  ],
+  "fabric": {
+    "source": {
+      "massGsm": 120.0,
+      "thicknessMm": 0.34,
+      "warpStretchPercent": 4.95,
+      "weftStretchPercent": 9.0,
+      "biasStretchPercent": 12.6,
+      "bendResistance": 38.0,
+      "shearResistance": 79.1,
+      "staticFriction": 0.5175,
+      "dynamicFriction": 0.45
+    },
+    "chaos": {
+      "densityKgPerSquareCm": 1.2E-05,
+      "stretchWarp": 80267.55852842808,
+      "stretchWeft": 63157.89473684211,
+      "shearLeft": 14865.0,
+      "shearRight": 14865.0,
+      "bendWarp": 0.278,
+      "bendWeft": 0.14400000000000002,
+      "bendBias": 0.211,
+      "damping": 0.14,
+      "friction": 0.45
+    }
+  }
+}

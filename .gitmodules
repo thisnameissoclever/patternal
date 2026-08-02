@@ -1,0 +1,9 @@
+[submodule "third_party/CharMorph"]
+	path = third_party/CharMorph
+	url = https://github.com/Upliner/CharMorph.git
+[submodule "third_party/CharMorph-db"]
+	path = third_party/CharMorph-db
+	url = https://github.com/Upliner/CharMorph-db.git
+[submodule "third_party/MPFB2"]
+	path = third_party/MPFB2
+	url = https://github.com/makehumancommunity/mpfb2.git

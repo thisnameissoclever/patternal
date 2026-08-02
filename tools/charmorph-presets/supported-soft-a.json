@@ -1,0 +1,24 @@
+{
+  "replaceDefaults": true,
+  "controls": {
+    "Arms_UpperarmGirth": -0.55,
+    "Arms_UpperarmSize": -0.30,
+    "Chest_SizeX": -0.08,
+    "Chest_SizeY": -0.06,
+    "Pelvis_Girth": 0.12,
+    "Pelvis_GluteusSize": 0.10,
+    "Pelvis_SizeX": 0.08,
+    "Shoulders_Length": -0.10,
+    "Shoulders_Mass": -0.30,
+    "Shoulders_Size": -0.16,
+    "Shoulders_Tone": -0.35,
+    "Stomach_LocalFat": 0.08,
+    "Torso_BreastMass": 0.42,
+    "Torso_BreastPosZ": 0.08,
+    "Torso_BreastScaleY": -0.05,
+    "Torso_BreastTone": 0.32,
+    "Torso_Mass": 0.04,
+    "Torso_Tone": -0.18,
+    "Waist_Size": 0.06
+  }
+}

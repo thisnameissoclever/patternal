@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Patternal\AdaptiveShirtPatternGrader.cs" Link="AdaptiveShirtPatternGrader.cs" />
+    <Compile Include="..\Patternal\AdaptiveShirtBustShaper.cs" Link="AdaptiveShirtBustShaper.cs" />
+    <Compile Include="..\Patternal\PatternPhysicalDartCompiler.cs" Link="PatternPhysicalDartCompiler.cs" />
+    <Compile Include="..\Patternal\PatternStructuralEditor.cs" Link="PatternStructuralEditor.cs" />
+    <Compile Include="..\Patternal\ShirtConstructionPatternDrafter.cs" Link="ShirtConstructionPatternDrafter.cs" />
+    <Compile Include="..\Patternal\GarmentDocument.cs" Link="GarmentDocument.cs" />
+    <Compile Include="..\Patternal\GarmentCodePatternImporter.cs" Link="GarmentCodePatternImporter.cs" />
+    <Compile Include="..\Patternal\GarmentCodePatternExporter.cs" Link="GarmentCodePatternExporter.cs" />
+    <Compile Include="..\Patternal\GarmentCodeBodyMapper.cs" Link="GarmentCodeBodyMapper.cs" />
+    <Compile Include="..\Patternal\PatternTopologyCompiler.cs" Link="PatternTopologyCompiler.cs" />
+    <Compile Include="..\Patternal\ProductionShirtBridgeBuilder.cs" Link="ProductionShirtBridgeBuilder.cs" />
+    <Compile Include="..\Patternal\SimulationPipeline.cs" Link="SimulationPipeline.cs" />
+    <Compile Include="..\Patternal\SimulationRuntime.cs" Link="SimulationRuntime.cs" />
+    <Compile Include="..\Patternal\Style3DFabricMapper.cs" Link="Style3DFabricMapper.cs" />
+    <Compile Include="..\Patternal\UnrealBridgeDocument.cs" Link="UnrealBridgeDocument.cs" />
+    <Compile Include="..\Patternal\WarpFabricConfigWriter.cs" Link="WarpFabricConfigWriter.cs" />
+  </ItemGroup>
+</Project>

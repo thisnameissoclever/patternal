@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "garmentId": "PatternaFlaredSkirt",
+  "simulationVertices": 3234,
+  "simulationTriangles": 6144,
+  "renderVertices": 3234,
+  "renderTriangles": 6144,
+  "renderMeshCount": 2,
+  "renderPatternCount": 2,
+  "panelCount": 2,
+  "namedSeamCount": 2,
+  "stitchesPerSeam": 33,
+  "minimumDoubledTriangleArea": 1.3276702118418284,
+  "minimumOutwardWindingDot": 16.908205213040542,
+  "seamCoincidenceToleranceCm": 0.001,
+  "separateSimulationAndRenderMeshes": true,
+  "independentRenderMeshPerPanel": true,
+  "waistDressingClearanceCm": 0.0,
+  "hipAndBelowDressingClearanceCm": 0.0,
+  "hemDressingClearanceCm": 0.0,
+  "waistDepthToWidthRatio": 0.82,
+  "hipAndHemDepthToWidthRatio": 0.78,
+  "preservesTwoDimensionalRestMeasurements": true,
+  "coordinateAxes": {
+    "forwardDepth": "Y",
+    "bodyWidth": "X",
+    "vertical": "Z"
+  },
+  "renderThicknessCm": 0.034
+}

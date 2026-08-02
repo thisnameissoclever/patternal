@@ -1,0 +1,3227 @@
+{
+  "schema_version": "patterna.mpfb-avatar-fit/1.2",
+  "source_profile": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\artifacts\\full-bust-v12-upstream-tee-proof\\SimulationJobs\\0eaa4ca2109efd3540a96b516756186dbe9d5fe0eb9d021be3e5f7e66c7c7e98\\avatar-garmentcode-profile.json",
+  "source_profile_sha256": "5e1be34dbd4b3aca9b9c69ab4ec36536726b3334c41513125d26c977fd10d379",
+  "output_body": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\artifacts\\full-bust-default-avatar-v15\\body.obj",
+  "output_body_sha256": "d7d2d68be17fd3efcbd4fc98294c7c140eff16a67e8a6fb6834596cc9154e1e5",
+  "mpfb_version": [
+    2,
+    0,
+    16
+  ],
+  "mpfb_commit": "f47e9a1bb57a02ec3a33089bfe9e19f85bbf70ec",
+  "blender_version": "4.5.11 LTS",
+  "gender": "female",
+  "gender_macro": 0.0,
+  "vertex_count": 13380,
+  "face_count": 13378,
+  "display_avatar": {
+    "schema_version": "patterna.display-avatar/1.0",
+    "source": "MakeHuman Community system assets",
+    "license": "CC0",
+    "floor_offset_m": -0.011167844757437706,
+    "collision_geometry": "../patterna-mpfb-female.obj",
+    "assets": {
+      "body": {
+        "geometry": "body.obj",
+        "texture": "body.png",
+        "vertex_count": 13380,
+        "face_count": 13378,
+        "uv_count": 53512
+      },
+      "bra": {
+        "geometry": "bra.obj",
+        "texture": "bra.png",
+        "vertex_count": 1988,
+        "face_count": 1808,
+        "uv_count": 1988,
+        "display_optional": true,
+        "maximum_surface_offset_m": 0.0001
+      },
+      "eyes": {
+        "geometry": "eyes.obj",
+        "texture": "eyes.png",
+        "vertex_count": 1064,
+        "face_count": 1020,
+        "uv_count": 4080
+      },
+      "teeth": {
+        "geometry": "teeth.obj",
+        "texture": "teeth.png",
+        "vertex_count": 3868,
+        "face_count": 3560,
+        "uv_count": 14240
+      },
+      "eyebrows": {
+        "geometry": "eyebrows.obj",
+        "texture": "eyebrows.png",
+        "vertex_count": 124,
+        "face_count": 96,
+        "uv_count": 384
+      },
+      "eyelashes": {
+        "geometry": "eyelashes.obj",
+        "texture": "eyelashes.png",
+        "vertex_count": 250,
+        "face_count": 184,
+        "uv_count": 736
+      },
+      "hair": {
+        "geometry": "hair.obj",
+        "texture": "hair.png",
+        "vertex_count": 4493,
+        "face_count": 2759,
+        "uv_count": 11036
+      }
+    },
+    "default_garment": {
+      "geometry": "garment.obj",
+      "texture": "garment.png",
+      "vertex_count": 1311,
+      "face_count": 1262,
+      "uv_count": 5048,
+      "source": "female_casualsuit02 upper components"
+    }
+  },
+  "bounds_m": [
+    [
+      -0.5416407585144043,
+      -0.3237942159175873,
+      -0.011167844757437706
+    ],
+    [
+      0.5416407585144043,
+      0.12153566628694534,
+      1.6588321924209595
+    ]
+  ],
+  "height": {
+    "target_cm": 167.0,
+    "measured_cm": 167.00000371783972,
+    "uniform_scale": 0.9442041516304016
+  },
+  "macro_controls": {
+    "muscle": 0.0,
+    "weight": 0.6181818181818182,
+    "cupsize": 0.7567567567567568,
+    "firmness": 1.0
+  },
+  "detail_morph_controls": [
+    {
+      "name": "head-circumference",
+      "source_keys": [
+        "headCirc"
+      ],
+      "requested": 56.2,
+      "default": 56.2,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "head-scale-horiz-decr",
+          0.0
+        ],
+        [
+          "head-scale-horiz-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "head-height",
+      "source_keys": [
+        "headHeight",
+        "crownChin"
+      ],
+      "requested": 22.75,
+      "default": 22.75,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "head-scale-vert-decr",
+          0.0
+        ],
+        [
+          "head-scale-vert-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "face-depth",
+      "source_keys": [
+        "faceDepth"
+      ],
+      "requested": 18.1,
+      "default": 18.1,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "head-scale-depth-decr",
+          0.0
+        ],
+        [
+          "head-scale-depth-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "temple-width",
+      "source_keys": [
+        "faceWidth"
+      ],
+      "requested": 14.2,
+      "default": 14.2,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "forehead-temple-decr",
+          0.0
+        ],
+        [
+          "forehead-temple-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "cheekbone-width",
+      "source_keys": [
+        "bizygomaticWidth"
+      ],
+      "requested": 13.8,
+      "default": 13.8,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "l-cheek-bones-decr",
+          0.0
+        ],
+        [
+          "l-cheek-bones-incr",
+          0.0
+        ],
+        [
+          "r-cheek-bones-decr",
+          0.0
+        ],
+        [
+          "r-cheek-bones-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "ear-to-ear-over-crown",
+      "source_keys": [
+        "earToEar"
+      ],
+      "requested": 31.8,
+      "default": 31.8,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "l-ear-scale-decr",
+          0.0
+        ],
+        [
+          "l-ear-scale-incr",
+          0.0
+        ],
+        [
+          "r-ear-scale-decr",
+          0.0
+        ],
+        [
+          "r-ear-scale-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "back-skull-projection",
+      "source_keys": [
+        "skullBackProjection"
+      ],
+      "requested": 2.1,
+      "default": 2.1,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "head-back-scale-depth-decr",
+          0.0
+        ],
+        [
+          "head-back-scale-depth-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "jaw-width",
+      "source_keys": [
+        "jawWidth"
+      ],
+      "requested": 11.2,
+      "default": 11.2,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "chin-width-decr",
+          0.0
+        ],
+        [
+          "chin-width-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "jaw-depth",
+      "source_keys": [
+        "jawDepth"
+      ],
+      "requested": 10.4,
+      "default": 10.4,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "chin-prognathism-decr",
+          0.0
+        ],
+        [
+          "chin-prognathism-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "neck-base-width",
+      "source_keys": [
+        "neckBaseCirc"
+      ],
+      "requested": 39.4,
+      "default": 39.4,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "neck-scale-horiz-decr",
+          0.0
+        ],
+        [
+          "neck-scale-horiz-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "neck-depth",
+      "source_keys": [
+        "neckCirc"
+      ],
+      "requested": 34.5,
+      "default": 34.5,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "neck-scale-depth-decr",
+          0.0
+        ],
+        [
+          "neck-scale-depth-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "chin-to-neck",
+      "source_keys": [
+        "chinNeck"
+      ],
+      "requested": 9.3,
+      "default": 9.3,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "chin-height-decr",
+          0.0
+        ],
+        [
+          "chin-height-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "head-forward-offset",
+      "source_keys": [
+        "neckForward"
+      ],
+      "requested": 1.2,
+      "default": 1.2,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "neck-trans-backward",
+          0.0
+        ],
+        [
+          "neck-trans-forward",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "chest-depth",
+      "source_keys": [
+        "chestDepth"
+      ],
+      "requested": 31.0,
+      "default": 23.2,
+      "normalized_delta": 0.41489361702127664,
+      "direction": "increase",
+      "weight": 0.22819148936170217,
+      "target_weights": [
+        [
+          "torso-scale-depth-decr",
+          0.0
+        ],
+        [
+          "torso-scale-depth-incr",
+          0.22819148936170217
+        ]
+      ]
+    },
+    {
+      "name": "high-chest-circumference",
+      "source_keys": [
+        "highChestCirc"
+      ],
+      "requested": 96.0,
+      "default": 88.0,
+      "normalized_delta": 0.12903225806451613,
+      "direction": "increase",
+      "weight": 0.05806451612903226,
+      "target_weights": [
+        [
+          "torso-scale-horiz-decr",
+          0.0
+        ],
+        [
+          "torso-scale-horiz-incr",
+          0.05806451612903226
+        ]
+      ]
+    },
+    {
+      "name": "back-width",
+      "source_keys": [
+        "acrossBack"
+      ],
+      "requested": 37.0,
+      "default": 36.5,
+      "normalized_delta": 0.02127659574468085,
+      "direction": "increase",
+      "weight": 0.009574468085106383,
+      "target_weights": [
+        [
+          "torso-muscle-dorsi-decr",
+          0.0
+        ],
+        [
+          "torso-muscle-dorsi-incr",
+          0.009574468085106383
+        ]
+      ]
+    },
+    {
+      "name": "lower-rib-circumference",
+      "source_keys": [
+        "ribCirc"
+      ],
+      "requested": 82.0,
+      "default": 78.4,
+      "normalized_delta": 0.054054054054053974,
+      "direction": "increase",
+      "weight": 0.02162162162162159,
+      "target_weights": [
+        [
+          "torso-muscle-pectoral-decr",
+          0.0
+        ],
+        [
+          "torso-muscle-pectoral-incr",
+          0.02162162162162159
+        ]
+      ]
+    },
+    {
+      "name": "upper-bust-fullness",
+      "source_keys": [
+        "upperBustFullness"
+      ],
+      "requested": 85.0,
+      "default": 50,
+      "normalized_delta": 0.7,
+      "direction": "increase",
+      "weight": 0.385,
+      "target_weights": [
+        [
+          "breast-volume-vert-down",
+          0.0
+        ],
+        [
+          "breast-volume-vert-up",
+          0.385
+        ]
+      ]
+    },
+    {
+      "name": "back-waist-length",
+      "source_keys": [
+        "backWaistLength"
+      ],
+      "requested": 41.8,
+      "default": 41.8,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "torso-scale-vert-decr",
+          0.0
+        ],
+        [
+          "torso-scale-vert-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "bust-separation",
+      "source_keys": [
+        "bustSeparation"
+      ],
+      "requested": 19.0,
+      "default": 18.6,
+      "normalized_delta": 0.025974025974025886,
+      "direction": "increase",
+      "weight": 0.019480519480519414,
+      "target_weights": [
+        [
+          "breast-dist-decr",
+          0.0
+        ],
+        [
+          "breast-dist-incr",
+          0.019480519480519414
+        ]
+      ]
+    },
+    {
+      "name": "bust-height",
+      "source_keys": [
+        "bustHeightL",
+        "bustHeightR"
+      ],
+      "requested": 24.700000000000003,
+      "default": 25.7,
+      "normalized_delta": -0.08547008547008517,
+      "direction": "decrease",
+      "weight": 0.0512820512820511,
+      "target_weights": [
+        [
+          "breast-trans-up",
+          0.0512820512820511
+        ],
+        [
+          "breast-trans-down",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "bust-projection",
+      "source_keys": [
+        "bustProjectionL",
+        "bustProjectionR"
+      ],
+      "requested": 9.5,
+      "default": 4.75,
+      "normalized_delta": 0.5135135135135135,
+      "direction": "increase",
+      "weight": 0.3851351351351351,
+      "target_weights": [
+        [
+          "breast-point-decr",
+          0.0
+        ],
+        [
+          "breast-point-incr",
+          0.3851351351351351
+        ]
+      ]
+    },
+    {
+      "name": "abdomen-projection",
+      "source_keys": [
+        "abdomenProjection"
+      ],
+      "requested": 2.4,
+      "default": 1.7,
+      "normalized_delta": 0.06796116504854369,
+      "direction": "increase",
+      "weight": 0.03737864077669903,
+      "target_weights": [
+        [
+          "stomach-pregnant-decr",
+          0.0
+        ],
+        [
+          "stomach-pregnant-incr",
+          0.03737864077669903
+        ]
+      ]
+    },
+    {
+      "name": "abdomen-circumference",
+      "source_keys": [
+        "abdomenCirc"
+      ],
+      "requested": 90.0,
+      "default": 82.0,
+      "normalized_delta": 0.0963855421686747,
+      "direction": "increase",
+      "weight": 0.05301204819277109,
+      "target_weights": [
+        [
+          "stomach-tone-decr",
+          0.0
+        ],
+        [
+          "stomach-tone-incr",
+          0.05301204819277109
+        ]
+      ]
+    },
+    {
+      "name": "abdomen-depth",
+      "source_keys": [
+        "abdomenDepth"
+      ],
+      "requested": 22.5,
+      "default": 20.4,
+      "normalized_delta": 0.08536585365853663,
+      "direction": "increase",
+      "weight": 0.04268292682926832,
+      "target_weights": [
+        [
+          "stomach-navel-in",
+          0.0
+        ],
+        [
+          "stomach-navel-out",
+          0.04268292682926832
+        ]
+      ]
+    },
+    {
+      "name": "high-hip-circumference",
+      "source_keys": [
+        "highHipCirc"
+      ],
+      "requested": 98.0,
+      "default": 87.4,
+      "normalized_delta": 0.1568047337278106,
+      "direction": "increase",
+      "weight": 0.0784023668639053,
+      "target_weights": [
+        [
+          "pelvis-tone-decr",
+          0.0
+        ],
+        [
+          "pelvis-tone-incr",
+          0.0784023668639053
+        ]
+      ]
+    },
+    {
+      "name": "pelvis-width",
+      "source_keys": [
+        "pelvicWidth"
+      ],
+      "requested": 31.0,
+      "default": 29.2,
+      "normalized_delta": 0.09574468085106387,
+      "direction": "increase",
+      "weight": 0.052659574468085134,
+      "target_weights": [
+        [
+          "hip-scale-horiz-decr",
+          0.0
+        ],
+        [
+          "hip-scale-horiz-incr",
+          0.052659574468085134
+        ]
+      ]
+    },
+    {
+      "name": "hip-depth",
+      "source_keys": [
+        "hipDepth"
+      ],
+      "requested": 28.0,
+      "default": 24.8,
+      "normalized_delta": 0.15094339622641506,
+      "direction": "increase",
+      "weight": 0.08301886792452828,
+      "target_weights": [
+        [
+          "hip-scale-depth-decr",
+          0.0
+        ],
+        [
+          "hip-scale-depth-incr",
+          0.08301886792452828
+        ]
+      ]
+    },
+    {
+      "name": "seat-projection",
+      "source_keys": [
+        "gluteProjectionL",
+        "gluteProjectionR"
+      ],
+      "requested": 5.55,
+      "default": 4.15,
+      "normalized_delta": 0.15819209039548018,
+      "direction": "increase",
+      "weight": 0.11864406779661013,
+      "target_weights": [
+        [
+          "buttocks-volume-decr",
+          0.0
+        ],
+        [
+          "buttocks-volume-incr",
+          0.11864406779661013
+        ]
+      ]
+    },
+    {
+      "name": "body-rise",
+      "source_keys": [
+        "bodyRise"
+      ],
+      "requested": 26.7,
+      "default": 26.7,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "hip-scale-vert-decr",
+          0.0
+        ],
+        [
+          "hip-scale-vert-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "waist-to-hip-length",
+      "source_keys": [
+        "waistHipLengthL",
+        "waistHipLengthR"
+      ],
+      "requested": 20.35,
+      "default": 20.35,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "hip-waist-up",
+          0.0
+        ],
+        [
+          "hip-waist-down",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "thoracic-curve",
+      "source_keys": [
+        "thoracicCurve"
+      ],
+      "requested": 2.2,
+      "default": 2.2,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "torso-trans-backward",
+          0.0
+        ],
+        [
+          "torso-trans-forward",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "cervical-curve",
+      "source_keys": [
+        "cervicalCurve"
+      ],
+      "requested": 1.3,
+      "default": 1.3,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "neck-back-scale-depth-decr",
+          0.0
+        ],
+        [
+          "neck-back-scale-depth-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "left-deltoid-prominence",
+      "source_keys": [
+        "deltoidProminenceL"
+      ],
+      "requested": 0.0,
+      "default": 50,
+      "normalized_delta": -1.0,
+      "direction": "decrease",
+      "weight": 0.55,
+      "target_weights": [
+        [
+          "l-upperarm-shoulder-muscle-decr",
+          0.55
+        ],
+        [
+          "l-upperarm-shoulder-muscle-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "right-deltoid-prominence",
+      "source_keys": [
+        "deltoidProminenceR"
+      ],
+      "requested": 0.0,
+      "default": 50,
+      "normalized_delta": -1.0,
+      "direction": "decrease",
+      "weight": 0.55,
+      "target_weights": [
+        [
+          "r-upperarm-shoulder-muscle-decr",
+          0.55
+        ],
+        [
+          "r-upperarm-shoulder-muscle-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "left-upper-arm-length",
+      "source_keys": [
+        "shoulderElbowL"
+      ],
+      "requested": 31.8,
+      "default": 31.8,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "l-upperarm-scale-vert-decr",
+          0.0
+        ],
+        [
+          "l-upperarm-scale-vert-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "right-upper-arm-length",
+      "source_keys": [
+        "shoulderElbowR"
+      ],
+      "requested": 31.8,
+      "default": 31.8,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "r-upperarm-scale-vert-decr",
+          0.0
+        ],
+        [
+          "r-upperarm-scale-vert-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "left-lower-arm-length",
+      "source_keys": [
+        "elbowWristL"
+      ],
+      "requested": 25.5,
+      "default": 25.5,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "l-lowerarm-scale-vert-decr",
+          0.0
+        ],
+        [
+          "l-lowerarm-scale-vert-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "right-lower-arm-length",
+      "source_keys": [
+        "elbowWristR"
+      ],
+      "requested": 25.5,
+      "default": 25.5,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "r-lowerarm-scale-vert-decr",
+          0.0
+        ],
+        [
+          "r-lowerarm-scale-vert-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "left-upper-arm-girth",
+      "source_keys": [
+        "upperArmCircL"
+      ],
+      "requested": 26.0,
+      "default": 29.4,
+      "normalized_delta": -0.29824561403508765,
+      "direction": "decrease",
+      "weight": 0.11929824561403507,
+      "target_weights": [
+        [
+          "l-upperarm-scale-horiz-decr",
+          0.11929824561403507
+        ],
+        [
+          "l-upperarm-scale-horiz-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "right-upper-arm-girth",
+      "source_keys": [
+        "upperArmCircR"
+      ],
+      "requested": 26.0,
+      "default": 29.4,
+      "normalized_delta": -0.29824561403508765,
+      "direction": "decrease",
+      "weight": 0.11929824561403507,
+      "target_weights": [
+        [
+          "r-upperarm-scale-horiz-decr",
+          0.11929824561403507
+        ],
+        [
+          "r-upperarm-scale-horiz-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "left-upper-arm-depth",
+      "source_keys": [
+        "bicepDepthL"
+      ],
+      "requested": 9.2,
+      "default": 9.2,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "l-upperarm-scale-depth-decr",
+          0.0
+        ],
+        [
+          "l-upperarm-scale-depth-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "right-upper-arm-depth",
+      "source_keys": [
+        "bicepDepthR"
+      ],
+      "requested": 9.2,
+      "default": 9.2,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "r-upperarm-scale-depth-decr",
+          0.0
+        ],
+        [
+          "r-upperarm-scale-depth-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "left-elbow-girth",
+      "source_keys": [
+        "elbowCircL"
+      ],
+      "requested": 24.5,
+      "default": 25.1,
+      "normalized_delta": -0.07407407407407424,
+      "direction": "decrease",
+      "weight": 0.02592592592592598,
+      "target_weights": [
+        [
+          "l-lowerarm-scale-depth-decr",
+          0.02592592592592598
+        ],
+        [
+          "l-lowerarm-scale-depth-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "right-elbow-girth",
+      "source_keys": [
+        "elbowCircR"
+      ],
+      "requested": 24.5,
+      "default": 25.1,
+      "normalized_delta": -0.07407407407407424,
+      "direction": "decrease",
+      "weight": 0.02592592592592598,
+      "target_weights": [
+        [
+          "r-lowerarm-scale-depth-decr",
+          0.02592592592592598
+        ],
+        [
+          "r-lowerarm-scale-depth-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "left-forearm-girth",
+      "source_keys": [
+        "forearmCircL"
+      ],
+      "requested": 24.0,
+      "default": 24.0,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "l-lowerarm-scale-horiz-decr",
+          0.0
+        ],
+        [
+          "l-lowerarm-scale-horiz-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "right-forearm-girth",
+      "source_keys": [
+        "forearmCircR"
+      ],
+      "requested": 24.0,
+      "default": 24.0,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "r-lowerarm-scale-horiz-decr",
+          0.0
+        ],
+        [
+          "r-lowerarm-scale-horiz-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "left-wrist-fullness",
+      "source_keys": [
+        "wristCircL"
+      ],
+      "requested": 15.8,
+      "default": 15.8,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "l-lowerarm-fat-decr",
+          0.0
+        ],
+        [
+          "l-lowerarm-fat-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "right-wrist-fullness",
+      "source_keys": [
+        "wristCircR"
+      ],
+      "requested": 15.8,
+      "default": 15.8,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "r-lowerarm-fat-decr",
+          0.0
+        ],
+        [
+          "r-lowerarm-fat-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "left-hand-length",
+      "source_keys": [
+        "handLengthL"
+      ],
+      "requested": 17.9,
+      "default": 17.9,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "l-hand-fingers-length-decr",
+          0.0
+        ],
+        [
+          "l-hand-fingers-length-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "right-hand-length",
+      "source_keys": [
+        "handLengthR"
+      ],
+      "requested": 17.9,
+      "default": 17.9,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "r-hand-fingers-length-decr",
+          0.0
+        ],
+        [
+          "r-hand-fingers-length-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "left-palm-width",
+      "source_keys": [
+        "palmWidthL"
+      ],
+      "requested": 7.7,
+      "default": 7.7,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "l-hand-fingers-distance-decr",
+          0.0
+        ],
+        [
+          "l-hand-fingers-distance-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "right-palm-width",
+      "source_keys": [
+        "palmWidthR"
+      ],
+      "requested": 7.7,
+      "default": 7.7,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "r-hand-fingers-distance-decr",
+          0.0
+        ],
+        [
+          "r-hand-fingers-distance-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "left-palm-girth",
+      "source_keys": [
+        "palmCircL"
+      ],
+      "requested": 18.4,
+      "default": 18.4,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "l-hand-scale-decr",
+          0.0
+        ],
+        [
+          "l-hand-scale-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "right-palm-girth",
+      "source_keys": [
+        "palmCircR"
+      ],
+      "requested": 18.4,
+      "default": 18.4,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "r-hand-scale-decr",
+          0.0
+        ],
+        [
+          "r-hand-scale-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "left-thumb-base-girth",
+      "source_keys": [
+        "thumbBaseCircL"
+      ],
+      "requested": 6.3,
+      "default": 6.3,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "l-hand-fingers-diameter-decr",
+          0.0
+        ],
+        [
+          "l-hand-fingers-diameter-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "right-thumb-base-girth",
+      "source_keys": [
+        "thumbBaseCircR"
+      ],
+      "requested": 6.3,
+      "default": 6.3,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "r-hand-fingers-diameter-decr",
+          0.0
+        ],
+        [
+          "r-hand-fingers-diameter-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "left-upper-arm-soft-tissue",
+      "source_keys": [
+        "upperArmSoftTissueL"
+      ],
+      "requested": 20.0,
+      "default": 50,
+      "normalized_delta": -0.6,
+      "direction": "decrease",
+      "weight": 0.21,
+      "target_weights": [
+        [
+          "l-upperarm-fat-decr",
+          0.21
+        ],
+        [
+          "l-upperarm-fat-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "right-upper-arm-soft-tissue",
+      "source_keys": [
+        "upperArmSoftTissueR"
+      ],
+      "requested": 20.0,
+      "default": 50,
+      "normalized_delta": -0.6,
+      "direction": "decrease",
+      "weight": 0.21,
+      "target_weights": [
+        [
+          "r-upperarm-fat-decr",
+          0.21
+        ],
+        [
+          "r-upperarm-fat-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "left-upper-leg-length",
+      "source_keys": [
+        "crotchKneeL"
+      ],
+      "requested": 34.8,
+      "default": 34.8,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "l-upperleg-scale-vert-decr",
+          0.0
+        ],
+        [
+          "l-upperleg-scale-vert-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "right-upper-leg-length",
+      "source_keys": [
+        "crotchKneeR"
+      ],
+      "requested": 34.8,
+      "default": 34.8,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "r-upperleg-scale-vert-decr",
+          0.0
+        ],
+        [
+          "r-upperleg-scale-vert-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "left-lower-leg-length",
+      "source_keys": [
+        "lowerLegLengthL"
+      ],
+      "requested": 40.8,
+      "default": 40.8,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "l-lowerleg-scale-vert-decr",
+          0.0
+        ],
+        [
+          "l-lowerleg-scale-vert-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "right-lower-leg-length",
+      "source_keys": [
+        "lowerLegLengthR"
+      ],
+      "requested": 40.8,
+      "default": 40.8,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "r-lowerleg-scale-vert-decr",
+          0.0
+        ],
+        [
+          "r-lowerleg-scale-vert-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "left-upper-thigh-girth",
+      "source_keys": [
+        "thighUpperCircL"
+      ],
+      "requested": 62.0,
+      "default": 57.4,
+      "normalized_delta": 0.12234042553191493,
+      "direction": "increase",
+      "weight": 0.04893617021276597,
+      "target_weights": [
+        [
+          "l-upperleg-scale-depth-decr",
+          0.0
+        ],
+        [
+          "l-upperleg-scale-depth-incr",
+          0.04893617021276597
+        ]
+      ]
+    },
+    {
+      "name": "right-upper-thigh-girth",
+      "source_keys": [
+        "thighUpperCircR"
+      ],
+      "requested": 62.0,
+      "default": 57.4,
+      "normalized_delta": 0.12234042553191493,
+      "direction": "increase",
+      "weight": 0.04893617021276597,
+      "target_weights": [
+        [
+          "r-upperleg-scale-depth-decr",
+          0.0
+        ],
+        [
+          "r-upperleg-scale-depth-incr",
+          0.04893617021276597
+        ]
+      ]
+    },
+    {
+      "name": "left-mid-thigh-girth",
+      "source_keys": [
+        "thighMidCircL"
+      ],
+      "requested": 50.2,
+      "default": 50.2,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "l-upperleg-scale-horiz-decr",
+          0.0
+        ],
+        [
+          "l-upperleg-scale-horiz-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "right-mid-thigh-girth",
+      "source_keys": [
+        "thighMidCircR"
+      ],
+      "requested": 50.2,
+      "default": 50.2,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "r-upperleg-scale-horiz-decr",
+          0.0
+        ],
+        [
+          "r-upperleg-scale-horiz-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "left-knee-fullness",
+      "source_keys": [
+        "kneeCircL"
+      ],
+      "requested": 38.0,
+      "default": 36.8,
+      "normalized_delta": 0.04761904761904773,
+      "direction": "increase",
+      "weight": 0.011904761904761932,
+      "target_weights": [
+        [
+          "l-upperleg-muscle-decr",
+          0.0
+        ],
+        [
+          "l-upperleg-muscle-incr",
+          0.011904761904761932
+        ]
+      ]
+    },
+    {
+      "name": "right-knee-fullness",
+      "source_keys": [
+        "kneeCircR"
+      ],
+      "requested": 38.0,
+      "default": 36.8,
+      "normalized_delta": 0.04761904761904773,
+      "direction": "increase",
+      "weight": 0.011904761904761932,
+      "target_weights": [
+        [
+          "r-upperleg-muscle-decr",
+          0.0
+        ],
+        [
+          "r-upperleg-muscle-incr",
+          0.011904761904761932
+        ]
+      ]
+    },
+    {
+      "name": "left-calf-girth",
+      "source_keys": [
+        "calfCircL"
+      ],
+      "requested": 36.4,
+      "default": 36.4,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "l-lowerleg-scale-horiz-decr",
+          0.0
+        ],
+        [
+          "l-lowerleg-scale-horiz-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "right-calf-girth",
+      "source_keys": [
+        "calfCircR"
+      ],
+      "requested": 36.4,
+      "default": 36.4,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "r-lowerleg-scale-horiz-decr",
+          0.0
+        ],
+        [
+          "r-lowerleg-scale-horiz-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "left-ankle-girth",
+      "source_keys": [
+        "ankleCircL"
+      ],
+      "requested": 22.5,
+      "default": 22.5,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "l-lowerleg-scale-depth-decr",
+          0.0
+        ],
+        [
+          "l-lowerleg-scale-depth-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "right-ankle-girth",
+      "source_keys": [
+        "ankleCircR"
+      ],
+      "requested": 22.5,
+      "default": 22.5,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "r-lowerleg-scale-depth-decr",
+          0.0
+        ],
+        [
+          "r-lowerleg-scale-depth-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "left-knee-alignment",
+      "source_keys": [
+        "kneeAngleL"
+      ],
+      "requested": 0.0,
+      "default": 0,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "l-leg-valgus-decr",
+          0.0
+        ],
+        [
+          "l-leg-valgus-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "right-knee-alignment",
+      "source_keys": [
+        "kneeAngleR"
+      ],
+      "requested": 0.0,
+      "default": 0,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "r-leg-valgus-decr",
+          0.0
+        ],
+        [
+          "r-leg-valgus-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "left-foot-length",
+      "source_keys": [
+        "footLengthL"
+      ],
+      "requested": 24.1,
+      "default": 24.1,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "l-foot-scale-depth-decr",
+          0.0
+        ],
+        [
+          "l-foot-scale-depth-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "right-foot-length",
+      "source_keys": [
+        "footLengthR"
+      ],
+      "requested": 24.1,
+      "default": 24.1,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "r-foot-scale-depth-decr",
+          0.0
+        ],
+        [
+          "r-foot-scale-depth-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "left-foot-width",
+      "source_keys": [
+        "footWidthL"
+      ],
+      "requested": 9.2,
+      "default": 9.2,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "l-foot-scale-horiz-decr",
+          0.0
+        ],
+        [
+          "l-foot-scale-horiz-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "right-foot-width",
+      "source_keys": [
+        "footWidthR"
+      ],
+      "requested": 9.2,
+      "default": 9.2,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "r-foot-scale-horiz-decr",
+          0.0
+        ],
+        [
+          "r-foot-scale-horiz-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "left-ball-girth",
+      "source_keys": [
+        "ballGirthL"
+      ],
+      "requested": 22.6,
+      "default": 22.6,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "l-foot-scale-decr",
+          0.0
+        ],
+        [
+          "l-foot-scale-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "right-ball-girth",
+      "source_keys": [
+        "ballGirthR"
+      ],
+      "requested": 22.6,
+      "default": 22.6,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "r-foot-scale-decr",
+          0.0
+        ],
+        [
+          "r-foot-scale-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "left-arch-height",
+      "source_keys": [
+        "archHeightL"
+      ],
+      "requested": 2.1,
+      "default": 2.1,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "l-foot-scale-vert-decr",
+          0.0
+        ],
+        [
+          "l-foot-scale-vert-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "right-arch-height",
+      "source_keys": [
+        "archHeightR"
+      ],
+      "requested": 2.1,
+      "default": 2.1,
+      "normalized_delta": 0.0,
+      "direction": "increase",
+      "weight": 0.0,
+      "target_weights": [
+        [
+          "r-foot-scale-vert-decr",
+          0.0
+        ],
+        [
+          "r-foot-scale-vert-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "upper-body-distribution",
+      "source_keys": [
+        "upperBodyDistribution"
+      ],
+      "requested": 42.0,
+      "default": 48,
+      "normalized_delta": -0.125,
+      "direction": "decrease",
+      "weight": 0.0625,
+      "target_weights": [
+        [
+          "torso-vshape-decr",
+          0.0625
+        ],
+        [
+          "torso-vshape-incr",
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "lower-body-tone",
+      "source_keys": [
+        "lowerBodyDistribution"
+      ],
+      "requested": 58.0,
+      "default": 55,
+      "normalized_delta": 0.06666666666666667,
+      "direction": "increase",
+      "weight": 0.02333333333333333,
+      "target_weights": [
+        [
+          "l-upperleg-fat-decr",
+          0.0
+        ],
+        [
+          "l-upperleg-fat-incr",
+          0.02333333333333333
+        ],
+        [
+          "r-upperleg-fat-decr",
+          0.0
+        ],
+        [
+          "r-upperleg-fat-incr",
+          0.02333333333333333
+        ],
+        [
+          "l-lowerleg-fat-decr",
+          0.0
+        ],
+        [
+          "l-lowerleg-fat-incr",
+          0.02333333333333333
+        ],
+        [
+          "r-lowerleg-fat-decr",
+          0.0
+        ],
+        [
+          "r-lowerleg-fat-incr",
+          0.02333333333333333
+        ]
+      ]
+    }
+  ],
+  "local_deformation_controls": [
+    {
+      "name": "front-hip-arc",
+      "source_key": "frontHipArc",
+      "requested": 51.5,
+      "normalized_delta": 0.11337209302325578,
+      "kind": "front_y",
+      "affected_vertex_count": 455,
+      "maximum_displacement_cm": 0.28268624070453136
+    },
+    {
+      "name": "back-hip-arc",
+      "source_key": "backHipArc",
+      "requested": 56.5,
+      "normalized_delta": 0.139344262295082,
+      "kind": "back_y",
+      "affected_vertex_count": 524,
+      "maximum_displacement_cm": 0.3483597486783577
+    },
+    {
+      "name": "back-neck-to-waist",
+      "source_key": "backNeckWaist",
+      "requested": 40.6,
+      "normalized_delta": 0.0,
+      "kind": "vertical_scale",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "front-rise",
+      "source_key": "frontRise",
+      "requested": 30.8,
+      "normalized_delta": 0.0,
+      "kind": "front_z",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "back-rise",
+      "source_key": "backRise",
+      "requested": 39.6,
+      "normalized_delta": 0.0,
+      "kind": "back_z",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "crotch-depth",
+      "source_key": "crotchDepth",
+      "requested": 25.1,
+      "normalized_delta": 0.0,
+      "kind": "translate_z",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "crotch-length",
+      "source_key": "crotchLength",
+      "requested": 70.4,
+      "normalized_delta": 0.0,
+      "kind": "radial_y",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "left-foot-angle",
+      "source_key": "footAngleL",
+      "requested": 4.0,
+      "normalized_delta": 0.0,
+      "kind": "axial_rotate",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "right-foot-angle",
+      "source_key": "footAngleR",
+      "requested": 4.0,
+      "normalized_delta": 0.0,
+      "kind": "axial_rotate",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "left-heel-girth",
+      "source_key": "heelGirthL",
+      "requested": 31.8,
+      "normalized_delta": 0.0,
+      "kind": "radial_y",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "right-heel-girth",
+      "source_key": "heelGirthR",
+      "requested": 31.8,
+      "normalized_delta": 0.0,
+      "kind": "radial_y",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "high-hip-depth",
+      "source_key": "highHipDepth",
+      "requested": 24.0,
+      "normalized_delta": 0.14285714285714285,
+      "kind": "radial_y",
+      "affected_vertex_count": 739,
+      "maximum_displacement_cm": 0.3142786348247023
+    },
+    {
+      "name": "under-bust-depth",
+      "source_key": "underBustDepth",
+      "requested": 23.0,
+      "normalized_delta": 0.0,
+      "kind": "radial_y",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "supported-bust-shaping",
+      "source_key": "bustSupport",
+      "requested": 100.0,
+      "normalized_delta": 1.0,
+      "kind": "bust_support",
+      "affected_vertex_count": 591,
+      "maximum_displacement_cm": 3.494643630140079
+    },
+    {
+      "name": "left-hip-dip",
+      "source_key": "hipDipL",
+      "requested": 0.7,
+      "normalized_delta": 0.0,
+      "kind": "radial_x",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "right-hip-dip",
+      "source_key": "hipDipR",
+      "requested": 0.6,
+      "normalized_delta": 0.0,
+      "kind": "radial_x",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "left-inseam",
+      "source_key": "inseamL",
+      "requested": 77.0,
+      "normalized_delta": 0.0,
+      "kind": "vertical_scale",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "right-inseam",
+      "source_key": "inseamR",
+      "requested": 77.0,
+      "normalized_delta": 0.0,
+      "kind": "vertical_scale",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "left-total-arm-length",
+      "source_key": "armLengthL",
+      "requested": 57.3,
+      "normalized_delta": 0.0,
+      "kind": "arm_scale",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "right-total-arm-length",
+      "source_key": "armLengthR",
+      "requested": 57.3,
+      "normalized_delta": 0.0,
+      "kind": "arm_scale",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "left-shoulder-length",
+      "source_key": "shoulderLengthL",
+      "requested": 12.4,
+      "normalized_delta": 0.0,
+      "kind": "translate_x",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "right-shoulder-length",
+      "source_key": "shoulderLengthR",
+      "requested": 12.3,
+      "normalized_delta": 0.0,
+      "kind": "translate_x",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "left-armhole-depth",
+      "source_key": "armholeDepthL",
+      "requested": 21.8,
+      "normalized_delta": 0.0,
+      "kind": "translate_z",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "right-armhole-depth",
+      "source_key": "armholeDepthR",
+      "requested": 21.8,
+      "normalized_delta": 0.0,
+      "kind": "translate_z",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "left-armscye-circumference",
+      "source_key": "armscyeCircL",
+      "requested": 45.5,
+      "normalized_delta": 0.0,
+      "kind": "radial_yz",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "right-armscye-circumference",
+      "source_key": "armscyeCircR",
+      "requested": 45.5,
+      "normalized_delta": 0.0,
+      "kind": "radial_yz",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "left-knee-height",
+      "source_key": "kneeHeightL",
+      "requested": 48.2,
+      "normalized_delta": 0.0,
+      "kind": "translate_z",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "right-knee-height",
+      "source_key": "kneeHeightR",
+      "requested": 48.2,
+      "normalized_delta": 0.0,
+      "kind": "translate_z",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "left-leg-offset",
+      "source_key": "legOffsetL",
+      "requested": 0.0,
+      "normalized_delta": 0.0,
+      "kind": "translate_x",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "right-leg-offset",
+      "source_key": "legOffsetR",
+      "requested": 0.0,
+      "normalized_delta": 0.0,
+      "kind": "translate_x",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "lumbar-curve",
+      "source_key": "lumbarCurve",
+      "requested": 2.4,
+      "normalized_delta": 0.0,
+      "kind": "back_y",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "left-outseam",
+      "source_key": "outseamL",
+      "requested": 103.0,
+      "normalized_delta": 0.0,
+      "kind": "vertical_scale",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "right-outseam",
+      "source_key": "outseamR",
+      "requested": 103.0,
+      "normalized_delta": 0.0,
+      "kind": "vertical_scale",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "pelvic-tilt",
+      "source_key": "pelvicTilt",
+      "requested": 8.0,
+      "normalized_delta": 0.0,
+      "kind": "sagittal_rotate",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "left-rib-flare",
+      "source_key": "ribFlareL",
+      "requested": 0.4,
+      "normalized_delta": 0.0,
+      "kind": "radial_x",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "right-rib-flare",
+      "source_key": "ribFlareR",
+      "requested": 0.4,
+      "normalized_delta": 0.0,
+      "kind": "radial_x",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "left-scapula-projection",
+      "source_key": "scapulaProjectionL",
+      "requested": 0.7,
+      "normalized_delta": 0.0,
+      "kind": "back_y",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "right-scapula-projection",
+      "source_key": "scapulaProjectionR",
+      "requested": 0.6,
+      "normalized_delta": 0.0,
+      "kind": "back_y",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "left-shoulder-roll",
+      "source_key": "shoulderRollL",
+      "requested": 1.0,
+      "normalized_delta": 0.0,
+      "kind": "translate_y",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "right-shoulder-roll",
+      "source_key": "shoulderRollR",
+      "requested": 0.5,
+      "normalized_delta": 0.0,
+      "kind": "translate_y",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "left-shoulder-slope",
+      "source_key": "shoulderSlopeL",
+      "requested": 22.0,
+      "normalized_delta": 0.5555555555555556,
+      "kind": "translate_z",
+      "affected_vertex_count": 608,
+      "maximum_displacement_cm": 0.7777645659969856
+    },
+    {
+      "name": "right-shoulder-slope",
+      "source_key": "shoulderSlopeR",
+      "requested": 21.5,
+      "normalized_delta": 0.5405405405405406,
+      "kind": "translate_z",
+      "affected_vertex_count": 608,
+      "maximum_displacement_cm": 0.7567439020511157
+    },
+    {
+      "name": "sternum-to-waist",
+      "source_key": "sternumWaist",
+      "requested": 33.0,
+      "normalized_delta": 0.15730337078651688,
+      "kind": "front_z",
+      "affected_vertex_count": 886,
+      "maximum_displacement_cm": 0.22021122605622168
+    },
+    {
+      "name": "torso-length",
+      "source_key": "torso",
+      "requested": 44.0,
+      "normalized_delta": 0.125,
+      "kind": "vertical_scale",
+      "affected_vertex_count": 3433,
+      "maximum_displacement_cm": 0.14909097709643326
+    },
+    {
+      "name": "torso-lean",
+      "source_key": "torsoLean",
+      "requested": 0.0,
+      "normalized_delta": 0.0,
+      "kind": "sagittal_rotate",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "torso-twist",
+      "source_key": "torsoTwist",
+      "requested": 0.0,
+      "normalized_delta": 0.0,
+      "kind": "axial_rotate",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "waist-depth",
+      "source_key": "waistDepth",
+      "requested": 21.0,
+      "normalized_delta": 0.1282051282051282,
+      "kind": "radial_y",
+      "affected_vertex_count": 603,
+      "maximum_displacement_cm": 0.2820508074077833
+    },
+    {
+      "name": "left-waist-to-knee",
+      "source_key": "waistKneeL",
+      "requested": 59.4,
+      "normalized_delta": 0.0,
+      "kind": "vertical_scale",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    },
+    {
+      "name": "right-waist-to-knee",
+      "source_key": "waistKneeR",
+      "requested": 59.4,
+      "normalized_delta": 0.0,
+      "kind": "vertical_scale",
+      "affected_vertex_count": 0,
+      "maximum_displacement_cm": 0.0
+    }
+  ],
+  "local_ruler_compensation": [
+    {
+      "pass": 1,
+      "compensated_targets_cm": {
+        "bust_circumference": 111.92631007372856,
+        "underbust_circumference": 83.65677417992784,
+        "waist_circumference": 80.18915966552252,
+        "hip_circumference": 108.0,
+        "neck_circumference": 35.54738978636762,
+        "upper_arm_length": 32.06102768937977,
+        "wrist_circumference": 15.8,
+        "nape_to_waist": 46.986910374569625,
+        "waist_to_hip": 20.264340319718645,
+        "thigh_circumference": 62.0,
+        "lower_arm_length": 25.5,
+        "neck_height": 8.771134497569406,
+        "upper_arm_circumference": 25.995980133428098,
+        "front_chest_distance": 36.699999990234254,
+        "upper_leg_length": 34.8,
+        "lower_leg_length": 40.8,
+        "knee_circumference": 38.0,
+        "calf_circumference": 36.4,
+        "ankle_circumference": 22.5,
+        "shoulder_distance": 12.691212480520658
+      },
+      "maximum_direct_ruler_error_cm": 0.997960652878632
+    },
+    {
+      "pass": 2,
+      "compensated_targets_cm": {
+        "bust_circumference": 111.92754824685734,
+        "underbust_circumference": 83.63815309672924,
+        "waist_circumference": 80.19929084660731,
+        "hip_circumference": 108.0,
+        "neck_circumference": 35.547500876408805,
+        "upper_arm_length": 32.06602002269245,
+        "wrist_circumference": 15.8,
+        "nape_to_waist": 46.98881975692556,
+        "waist_to_hip": 20.272335380271983,
+        "thigh_circumference": 62.0,
+        "lower_arm_length": 25.5,
+        "neck_height": 8.772172691648619,
+        "upper_arm_circumference": 25.995275019813352,
+        "front_chest_distance": 36.69999999227703,
+        "upper_leg_length": 34.8,
+        "lower_leg_length": 40.8,
+        "knee_circumference": 38.0,
+        "calf_circumference": 36.4,
+        "ankle_circumference": 22.5,
+        "shoulder_distance": 12.686356284614842
+      },
+      "maximum_direct_ruler_error_cm": 0.16732635769217552
+    },
+    {
+      "pass": 3,
+      "compensated_targets_cm": {
+        "bust_circumference": 111.92783388001125,
+        "underbust_circumference": 83.62472867470812,
+        "waist_circumference": 80.20312459722697,
+        "hip_circumference": 108.0,
+        "neck_circumference": 35.54759969795515,
+        "upper_arm_length": 32.06852837360432,
+        "wrist_circumference": 15.8,
+        "nape_to_waist": 46.987858092646924,
+        "waist_to_hip": 20.272401885617665,
+        "thigh_circumference": 62.0,
+        "lower_arm_length": 25.5,
+        "neck_height": 8.772704078121336,
+        "upper_arm_circumference": 25.995141860753463,
+        "front_chest_distance": 36.69999999302401,
+        "upper_leg_length": 34.8,
+        "lower_leg_length": 40.8,
+        "knee_circumference": 38.0,
+        "calf_circumference": 36.4,
+        "ankle_circumference": 22.5,
+        "shoulder_distance": 12.684783344491672
+      },
+      "maximum_direct_ruler_error_cm": 0.14154696202049877
+    }
+  ],
+  "coupled_ruler_refinement": [
+    {
+      "iteration": 1,
+      "starting_max_error_cm": 0.14154696202049877,
+      "ending_max_error_cm": 0.14154696202049877,
+      "accepted": true
+    }
+  ],
+  "measurement_coverage": {
+    "user_measurement_key_count": 152,
+    "internal_body_alias_keys": [
+      "arm_length",
+      "arm_pose_angle",
+      "armscye_depth",
+      "back_width",
+      "bum_points",
+      "bust",
+      "bust_line",
+      "bust_points",
+      "crotch_hip_diff",
+      "head_l",
+      "height",
+      "hip_back_width",
+      "hip_inclination",
+      "hips",
+      "hips_line",
+      "leg_circ",
+      "neck_w",
+      "shoulder_incl",
+      "shoulder_w",
+      "underbust",
+      "vert_bust_line",
+      "waist",
+      "waist_back_width",
+      "waist_line",
+      "waist_over_bust_line",
+      "wrist"
+    ],
+    "direct_ruler_source_keys": [
+      "acrossFront",
+      "ankleCircL",
+      "ankleCircR",
+      "armLengthL",
+      "armLengthR",
+      "calfCircL",
+      "calfCircR",
+      "chest",
+      "crotchKneeL",
+      "crotchKneeR",
+      "elbowWristL",
+      "elbowWristR",
+      "frontWaistLength",
+      "height",
+      "hip",
+      "kneeCircL",
+      "kneeCircR",
+      "lowerLegLengthL",
+      "lowerLegLengthR",
+      "neckBaseCirc",
+      "neckLengthBack",
+      "neckLengthFront",
+      "shoulder",
+      "shoulderElbowL",
+      "shoulderElbowR",
+      "thighUpperCircL",
+      "thighUpperCircR",
+      "underBust",
+      "upperArmCircL",
+      "upperArmCircR",
+      "waist",
+      "waistHipLengthL",
+      "waistHipLengthR",
+      "wristCircL",
+      "wristCircR"
+    ],
+    "approximate_morph_source_keys": [
+      "abdomenCirc",
+      "abdomenDepth",
+      "abdomenProjection",
+      "acrossBack",
+      "ankleCircL",
+      "ankleCircR",
+      "archHeightL",
+      "archHeightR",
+      "backWaistLength",
+      "ballGirthL",
+      "ballGirthR",
+      "bicepDepthL",
+      "bicepDepthR",
+      "bizygomaticWidth",
+      "bodyRise",
+      "bustHeightL",
+      "bustHeightR",
+      "bustProjectionL",
+      "bustProjectionR",
+      "bustSeparation",
+      "bustSupport",
+      "calfCircL",
+      "calfCircR",
+      "cervicalCurve",
+      "chestDepth",
+      "chinNeck",
+      "crotchKneeL",
+      "crotchKneeR",
+      "crownChin",
+      "deltoidProminenceL",
+      "deltoidProminenceR",
+      "earToEar",
+      "elbowCircL",
+      "elbowCircR",
+      "elbowWristL",
+      "elbowWristR",
+      "faceDepth",
+      "faceWidth",
+      "footLengthL",
+      "footLengthR",
+      "footWidthL",
+      "footWidthR",
+      "forearmCircL",
+      "forearmCircR",
+      "gluteProjectionL",
+      "gluteProjectionR",
+      "handLengthL",
+      "handLengthR",
+      "headCirc",
+      "headHeight",
+      "highChestCirc",
+      "highHipCirc",
+      "hipDepth",
+      "jawDepth",
+      "jawWidth",
+      "kneeAngleL",
+      "kneeAngleR",
+      "kneeCircL",
+      "kneeCircR",
+      "lowerBodyDistribution",
+      "lowerLegLengthL",
+      "lowerLegLengthR",
+      "muscleDefinition",
+      "neckBaseCirc",
+      "neckCirc",
+      "neckForward",
+      "palmCircL",
+      "palmCircR",
+      "palmWidthL",
+      "palmWidthR",
+      "pelvicWidth",
+      "ribCirc",
+      "shoulderElbowL",
+      "shoulderElbowR",
+      "skullBackProjection",
+      "softTissue",
+      "thighMidCircL",
+      "thighMidCircR",
+      "thighUpperCircL",
+      "thighUpperCircR",
+      "thoracicCurve",
+      "thumbBaseCircL",
+      "thumbBaseCircR",
+      "upperArmCircL",
+      "upperArmCircR",
+      "upperArmSoftTissueL",
+      "upperArmSoftTissueR",
+      "upperBodyDistribution",
+      "upperBustFullness",
+      "waistHipLengthL",
+      "waistHipLengthR",
+      "wristCircL",
+      "wristCircR"
+    ],
+    "local_deformation_source_keys": [
+      "armLengthL",
+      "armLengthR",
+      "armholeDepthL",
+      "armholeDepthR",
+      "armscyeCircL",
+      "armscyeCircR",
+      "backHipArc",
+      "backNeckWaist",
+      "backRise",
+      "bustSupport",
+      "crotchDepth",
+      "crotchLength",
+      "footAngleL",
+      "footAngleR",
+      "frontHipArc",
+      "frontRise",
+      "heelGirthL",
+      "heelGirthR",
+      "highHipDepth",
+      "hipDipL",
+      "hipDipR",
+      "inseamL",
+      "inseamR",
+      "kneeHeightL",
+      "kneeHeightR",
+      "legOffsetL",
+      "legOffsetR",
+      "lumbarCurve",
+      "outseamL",
+      "outseamR",
+      "pelvicTilt",
+      "ribFlareL",
+      "ribFlareR",
+      "scapulaProjectionL",
+      "scapulaProjectionR",
+      "shoulderLengthL",
+      "shoulderLengthR",
+      "shoulderRollL",
+      "shoulderRollR",
+      "shoulderSlopeL",
+      "shoulderSlopeR",
+      "sternumWaist",
+      "torso",
+      "torsoLean",
+      "torsoTwist",
+      "underBustDepth",
+      "waistDepth",
+      "waistKneeL",
+      "waistKneeR"
+    ],
+    "mapped_source_key_count": 151,
+    "unmapped_source_keys": [
+      "custom_1"
+    ],
+    "measurement_origin_count": 152
+  },
+  "fit_passes": 30,
+  "fit_tolerance_cm": 0.15,
+  "fit_results": {
+    "bust_circumference": {
+      "target_cm": 112.0,
+      "measured_cm": 111.98924338784342,
+      "residual_cm": -0.010756612156583856,
+      "direction": "increase",
+      "weight": 1.25,
+      "reachable": true
+    },
+    "underbust_circumference": {
+      "target_cm": 84.0,
+      "measured_cm": 84.00114687949538,
+      "residual_cm": 0.0011468794953799488,
+      "direction": "decrease",
+      "weight": 1.5625,
+      "reachable": true
+    },
+    "waist_circumference": {
+      "target_cm": 82.0,
+      "measured_cm": 82.01071425443256,
+      "residual_cm": 0.010714254432556913,
+      "direction": "increase",
+      "weight": 0.16796875,
+      "reachable": true
+    },
+    "hip_circumference": {
+      "target_cm": 108.0,
+      "measured_cm": 108.00162489576024,
+      "residual_cm": 0.0016248957602442715,
+      "direction": "increase",
+      "weight": 0.416015625,
+      "reachable": true
+    },
+    "neck_circumference": {
+      "target_cm": 35.5388,
+      "measured_cm": 35.53329009598437,
+      "residual_cm": -0.005509904015632117,
+      "direction": "increase",
+      "weight": 1.21875,
+      "reachable": true
+    },
+    "upper_arm_length": {
+      "target_cm": 31.8,
+      "measured_cm": 31.80359430880616,
+      "residual_cm": 0.0035943088061607398,
+      "direction": "increase",
+      "weight": 1.28515625,
+      "reachable": true
+    },
+    "wrist_circumference": {
+      "target_cm": 15.8,
+      "measured_cm": 15.806336819945422,
+      "residual_cm": 0.006336819945421013,
+      "direction": "increase",
+      "weight": 0.546875,
+      "reachable": true
+    },
+    "nape_to_waist": {
+      "target_cm": 47.0,
+      "measured_cm": 46.99863782194533,
+      "residual_cm": -0.0013621780546699824,
+      "direction": "increase",
+      "weight": 1.59765625,
+      "reachable": true
+    },
+    "waist_to_hip": {
+      "target_cm": 20.35,
+      "measured_cm": 20.34909581505314,
+      "residual_cm": -0.0009041849468616192,
+      "direction": "increase",
+      "weight": 0.57421875,
+      "reachable": true
+    },
+    "thigh_circumference": {
+      "target_cm": 62.0,
+      "measured_cm": 62.009352053962786,
+      "residual_cm": 0.009352053962786044,
+      "direction": "increase",
+      "weight": 0.41796875,
+      "reachable": true
+    },
+    "lower_arm_length": {
+      "target_cm": 25.5,
+      "measured_cm": 25.496795664506184,
+      "residual_cm": -0.003204335493816046,
+      "direction": "increase",
+      "weight": 0.9453125,
+      "reachable": true
+    },
+    "neck_height": {
+      "target_cm": 8.75,
+      "measured_cm": 8.737046415155609,
+      "residual_cm": -0.01295358484439113,
+      "direction": "decrease",
+      "weight": 0.046875,
+      "reachable": true
+    },
+    "upper_arm_circumference": {
+      "target_cm": 26.0,
+      "measured_cm": 25.996459884687233,
+      "residual_cm": -0.0035401153127665452,
+      "direction": "increase",
+      "weight": 0.26171875,
+      "reachable": true
+    },
+    "front_chest_distance": {
+      "target_cm": 36.7,
+      "measured_cm": 36.69911529217846,
+      "residual_cm": -0.000884707821541042,
+      "direction": "increase",
+      "weight": 1.5703125,
+      "reachable": true
+    },
+    "upper_leg_length": {
+      "target_cm": 34.8,
+      "measured_cm": 34.80412885968008,
+      "residual_cm": 0.0041288596800796995,
+      "direction": "increase",
+      "weight": 0.326171875,
+      "reachable": true
+    },
+    "lower_leg_length": {
+      "target_cm": 40.8,
+      "measured_cm": 40.79394216079237,
+      "residual_cm": -0.006057839207628035,
+      "direction": "decrease",
+      "weight": 0.39453125,
+      "reachable": true
+    },
+    "knee_circumference": {
+      "target_cm": 38.0,
+      "measured_cm": 38.00464891100598,
+      "residual_cm": 0.004648911005979528,
+      "direction": "increase",
+      "weight": 0.69140625,
+      "reachable": true
+    },
+    "calf_circumference": {
+      "target_cm": 36.4,
+      "measured_cm": 36.41383315460876,
+      "residual_cm": 0.013833154608761333,
+      "direction": "increase",
+      "weight": 0.09375,
+      "reachable": true
+    },
+    "ankle_circumference": {
+      "target_cm": 22.5,
+      "measured_cm": 22.499100297215985,
+      "residual_cm": -0.0008997027840145222,
+      "direction": "increase",
+      "weight": 0.8828125,
+      "reachable": true
+    },
+    "shoulder_distance": {
+      "target_cm": 12.84382430844575,
+      "measured_cm": 12.830340057709714,
+      "residual_cm": -0.01348425073603643,
+      "direction": "increase",
+      "weight": 0.28125,
+      "reachable": true
+    }
+  },
+  "final_measurements_cm": {
+    "bust_circumference": 111.8584530379795,
+    "underbust_circumference": 84.01563883808932,
+    "waist_circumference": 81.95997089994555,
+    "hip_circumference": 107.94886245221464,
+    "neck_circumference": 35.535234304726806,
+    "upper_arm_length": 31.798484836219572,
+    "wrist_circumference": 15.794246612650213,
+    "nape_to_waist": 46.99103138259352,
+    "waist_to_hip": 20.33321751848975,
+    "thigh_circumference": 61.985165514496444,
+    "lower_arm_length": 25.49067007394977,
+    "neck_height": 8.741449418220686,
+    "upper_arm_circumference": 26.002626373382082,
+    "front_chest_distance": 36.680739600148286,
+    "upper_leg_length": 34.79120771218746,
+    "lower_leg_length": 40.77240525937347,
+    "knee_circumference": 37.97752583096842,
+    "calf_circumference": 36.38635150906767,
+    "ankle_circumference": 22.494026091169786,
+    "shoulder_distance": 12.833288632295744
+  },
+  "fit_acceptance": {
+    "policy": "patterna.provenance-aware-avatar-fit/1.0",
+    "accepted": true,
+    "tolerance_cm": 0.15,
+    "height": {
+      "source_keys": [
+        "height"
+      ],
+      "source_origins": {
+        "height": "manual-override"
+      },
+      "source_policy": "hard",
+      "target_cm": 167.0,
+      "measured_cm": 167.00000371783972,
+      "residual_cm": 3.7178397178649902e-06,
+      "within_tolerance": true,
+      "disposition": "accepted-within-tolerance"
+    },
+    "targets": {
+      "bust_circumference": {
+        "source_keys": [
+          "chest"
+        ],
+        "source_origins": {
+          "chest": "manual-override"
+        },
+        "source_policy": "hard",
+        "target_cm": 112.0,
+        "measured_cm": 111.8584530379795,
+        "residual_cm": -0.14154696202049877,
+        "reachable": true,
+        "within_tolerance": true,
+        "disposition": "accepted-within-tolerance"
+      },
+      "underbust_circumference": {
+        "source_keys": [
+          "underBust"
+        ],
+        "source_origins": {
+          "underBust": "estimated"
+        },
+        "source_policy": "estimated",
+        "target_cm": 84.0,
+        "measured_cm": 84.01563883808932,
+        "residual_cm": 0.01563883808931621,
+        "reachable": true,
+        "within_tolerance": true,
+        "disposition": "accepted-within-tolerance"
+      },
+      "waist_circumference": {
+        "source_keys": [
+          "waist"
+        ],
+        "source_origins": {
+          "waist": "manual-or-baseline"
+        },
+        "source_policy": "hard",
+        "target_cm": 82.0,
+        "measured_cm": 81.95997089994555,
+        "residual_cm": -0.04002910005445415,
+        "reachable": true,
+        "within_tolerance": true,
+        "disposition": "accepted-within-tolerance"
+      },
+      "hip_circumference": {
+        "source_keys": [
+          "hip"
+        ],
+        "source_origins": {
+          "hip": "manual-or-baseline"
+        },
+        "source_policy": "hard",
+        "target_cm": 108.0,
+        "measured_cm": 107.94886245221464,
+        "residual_cm": -0.05113754778535906,
+        "reachable": true,
+        "within_tolerance": true,
+        "disposition": "accepted-within-tolerance"
+      },
+      "neck_circumference": {
+        "source_keys": [
+          "neckBaseCirc"
+        ],
+        "source_origins": {
+          "neckBaseCirc": "estimated"
+        },
+        "source_policy": "estimated",
+        "target_cm": 35.5388,
+        "measured_cm": 35.535234304726806,
+        "residual_cm": -0.0035656952731955016,
+        "reachable": true,
+        "within_tolerance": true,
+        "disposition": "accepted-within-tolerance"
+      },
+      "upper_arm_length": {
+        "source_keys": [
+          "shoulderElbowL",
+          "shoulderElbowR"
+        ],
+        "source_origins": {
+          "shoulderElbowL": "estimated",
+          "shoulderElbowR": "estimated"
+        },
+        "source_policy": "estimated",
+        "target_cm": 31.8,
+        "measured_cm": 31.798484836219572,
+        "residual_cm": -0.0015151637804287077,
+        "reachable": true,
+        "within_tolerance": true,
+        "disposition": "accepted-within-tolerance"
+      },
+      "wrist_circumference": {
+        "source_keys": [
+          "wristCircL",
+          "wristCircR"
+        ],
+        "source_origins": {
+          "wristCircL": "estimated",
+          "wristCircR": "estimated"
+        },
+        "source_policy": "estimated",
+        "target_cm": 15.8,
+        "measured_cm": 15.794246612650213,
+        "residual_cm": -0.005753387349788142,
+        "reachable": true,
+        "within_tolerance": true,
+        "disposition": "accepted-within-tolerance"
+      },
+      "nape_to_waist": {
+        "source_keys": [
+          "frontWaistLength"
+        ],
+        "source_origins": {
+          "frontWaistLength": "estimated"
+        },
+        "source_policy": "estimated",
+        "target_cm": 47.0,
+        "measured_cm": 46.99103138259352,
+        "residual_cm": -0.008968617406480917,
+        "reachable": true,
+        "within_tolerance": true,
+        "disposition": "accepted-within-tolerance"
+      },
+      "waist_to_hip": {
+        "source_keys": [
+          "waistHipLengthL",
+          "waistHipLengthR"
+        ],
+        "source_origins": {
+          "waistHipLengthL": "estimated",
+          "waistHipLengthR": "estimated"
+        },
+        "source_policy": "estimated",
+        "target_cm": 20.35,
+        "measured_cm": 20.33321751848975,
+        "residual_cm": -0.0167824815102513,
+        "reachable": true,
+        "within_tolerance": true,
+        "disposition": "accepted-within-tolerance"
+      },
+      "thigh_circumference": {
+        "source_keys": [
+          "thighUpperCircL",
+          "thighUpperCircR"
+        ],
+        "source_origins": {
+          "thighUpperCircL": "estimated",
+          "thighUpperCircR": "estimated"
+        },
+        "source_policy": "estimated",
+        "target_cm": 62.0,
+        "measured_cm": 61.985165514496444,
+        "residual_cm": -0.014834485503556039,
+        "reachable": true,
+        "within_tolerance": true,
+        "disposition": "accepted-within-tolerance"
+      },
+      "lower_arm_length": {
+        "source_keys": [
+          "elbowWristL",
+          "elbowWristR"
+        ],
+        "source_origins": {
+          "elbowWristL": "estimated",
+          "elbowWristR": "estimated"
+        },
+        "source_policy": "estimated",
+        "target_cm": 25.5,
+        "measured_cm": 25.49067007394977,
+        "residual_cm": -0.009329926050231307,
+        "reachable": true,
+        "within_tolerance": true,
+        "disposition": "accepted-within-tolerance"
+      },
+      "neck_height": {
+        "source_keys": [
+          "neckLengthFront",
+          "neckLengthBack"
+        ],
+        "source_origins": {
+          "neckLengthFront": "estimated",
+          "neckLengthBack": "manual"
+        },
+        "source_policy": "hard",
+        "target_cm": 8.75,
+        "measured_cm": 8.741449418220686,
+        "residual_cm": -0.008550581779314115,
+        "reachable": true,
+        "within_tolerance": true,
+        "disposition": "accepted-within-tolerance"
+      },
+      "upper_arm_circumference": {
+        "source_keys": [
+          "upperArmCircL",
+          "upperArmCircR"
+        ],
+        "source_origins": {
+          "upperArmCircL": "estimated",
+          "upperArmCircR": "estimated"
+        },
+        "source_policy": "estimated",
+        "target_cm": 26.0,
+        "measured_cm": 26.002626373382082,
+        "residual_cm": 0.002626373382081937,
+        "reachable": true,
+        "within_tolerance": true,
+        "disposition": "accepted-within-tolerance"
+      },
+      "front_chest_distance": {
+        "source_keys": [
+          "acrossFront"
+        ],
+        "source_origins": {
+          "acrossFront": "estimated"
+        },
+        "source_policy": "estimated",
+        "target_cm": 36.7,
+        "measured_cm": 36.680739600148286,
+        "residual_cm": -0.019260399851717125,
+        "reachable": true,
+        "within_tolerance": true,
+        "disposition": "accepted-within-tolerance"
+      },
+      "upper_leg_length": {
+        "source_keys": [
+          "crotchKneeL",
+          "crotchKneeR"
+        ],
+        "source_origins": {
+          "crotchKneeL": "estimated",
+          "crotchKneeR": "estimated"
+        },
+        "source_policy": "estimated",
+        "target_cm": 34.8,
+        "measured_cm": 34.79120771218746,
+        "residual_cm": -0.008792287812539712,
+        "reachable": true,
+        "within_tolerance": true,
+        "disposition": "accepted-within-tolerance"
+      },
+      "lower_leg_length": {
+        "source_keys": [
+          "lowerLegLengthL",
+          "lowerLegLengthR"
+        ],
+        "source_origins": {
+          "lowerLegLengthL": "estimated",
+          "lowerLegLengthR": "estimated"
+        },
+        "source_policy": "estimated",
+        "target_cm": 40.8,
+        "measured_cm": 40.77240525937347,
+        "residual_cm": -0.027594740626526004,
+        "reachable": true,
+        "within_tolerance": true,
+        "disposition": "accepted-within-tolerance"
+      },
+      "knee_circumference": {
+        "source_keys": [
+          "kneeCircL",
+          "kneeCircR"
+        ],
+        "source_origins": {
+          "kneeCircL": "estimated",
+          "kneeCircR": "estimated"
+        },
+        "source_policy": "estimated",
+        "target_cm": 38.0,
+        "measured_cm": 37.97752583096842,
+        "residual_cm": -0.02247416903158239,
+        "reachable": true,
+        "within_tolerance": true,
+        "disposition": "accepted-within-tolerance"
+      },
+      "calf_circumference": {
+        "source_keys": [
+          "calfCircL",
+          "calfCircR"
+        ],
+        "source_origins": {
+          "calfCircL": "estimated",
+          "calfCircR": "estimated"
+        },
+        "source_policy": "estimated",
+        "target_cm": 36.4,
+        "measured_cm": 36.38635150906767,
+        "residual_cm": -0.013648490932325785,
+        "reachable": true,
+        "within_tolerance": true,
+        "disposition": "accepted-within-tolerance"
+      },
+      "ankle_circumference": {
+        "source_keys": [
+          "ankleCircL",
+          "ankleCircR"
+        ],
+        "source_origins": {
+          "ankleCircL": "estimated",
+          "ankleCircR": "estimated"
+        },
+        "source_policy": "estimated",
+        "target_cm": 22.5,
+        "measured_cm": 22.494026091169786,
+        "residual_cm": -0.005973908830213759,
+        "reachable": true,
+        "within_tolerance": true,
+        "disposition": "accepted-within-tolerance"
+      },
+      "shoulder_distance": {
+        "source_keys": [
+          "shoulder",
+          "neckBaseCirc"
+        ],
+        "source_origins": {
+          "shoulder": "manual-or-baseline",
+          "neckBaseCirc": "estimated"
+        },
+        "source_policy": "hard",
+        "target_cm": 12.84382430844575,
+        "measured_cm": 12.833288632295744,
+        "residual_cm": -0.010535676150006168,
+        "reachable": true,
+        "within_tolerance": true,
+        "disposition": "accepted-within-tolerance"
+      }
+    },
+    "blocking_failures": [],
+    "accepted_estimated_unreachable": []
+  },
+  "accepted": true
+}

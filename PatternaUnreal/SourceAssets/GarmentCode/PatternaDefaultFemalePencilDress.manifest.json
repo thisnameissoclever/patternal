@@ -1,0 +1,374 @@
+{
+  "schemaVersion": "patterna.full-garment-usd/1.1",
+  "garmentId": "PatternaFittedPencilDress",
+  "units": "centimeters",
+  "usdSha256": "78a8d99f1a8b8949082712fa65af37b635234032abcdec01d6a6a2436925c9d7",
+  "simulation": {
+    "panelCount": 6,
+    "vertexCount": 4335,
+    "triangleCount": 7645,
+    "seamCount": 36,
+    "stitchCount": 454,
+    "closureCount": 0,
+    "closureConstraintCount": 0,
+    "minimumTriangleAreaCm2": 0.07586831952061845,
+    "maximumSeamGapCm": 7.6177027005149105,
+    "maximumClosureGapCm": 0,
+    "maximumEdgeStrainRatio": 1.9953000922319308,
+    "ninetyFifthPercentileEdgeStrainRatio": 0.21734696957758606,
+    "minimumTorsoClearanceCm": 1.0997456409806858
+  },
+  "panels": [
+    {
+      "id": "skirt-front-panel",
+      "pieceId": "skirt-front",
+      "placement": "skirtFront",
+      "reverseWinding": false,
+      "vertexCount": 1188,
+      "triangleCount": 2187
+    },
+    {
+      "id": "skirt-back-panel",
+      "pieceId": "skirt-back",
+      "placement": "skirtBack",
+      "reverseWinding": false,
+      "vertexCount": 1333,
+      "triangleCount": 2410
+    },
+    {
+      "id": "right-btorso-panel",
+      "pieceId": "right-btorso",
+      "placement": "torsoBack",
+      "reverseWinding": false,
+      "vertexCount": 462,
+      "triangleCount": 774
+    },
+    {
+      "id": "right-ftorso-panel",
+      "pieceId": "right-ftorso",
+      "placement": "torsoFront",
+      "reverseWinding": false,
+      "vertexCount": 444,
+      "triangleCount": 748
+    },
+    {
+      "id": "left-btorso-panel",
+      "pieceId": "left-btorso",
+      "placement": "torsoBack",
+      "reverseWinding": false,
+      "vertexCount": 461,
+      "triangleCount": 772
+    },
+    {
+      "id": "left-ftorso-panel",
+      "pieceId": "left-ftorso",
+      "placement": "torsoFront",
+      "reverseWinding": false,
+      "vertexCount": 447,
+      "triangleCount": 754
+    }
+  ],
+  "seams": [
+    {
+      "id": "stitch-0",
+      "panelA": "skirt-front-panel",
+      "panelB": "skirt-front-panel",
+      "stitchCount": 13,
+      "maximumGapCm": 7.6177027005149105
+    },
+    {
+      "id": "stitch-1",
+      "panelA": "skirt-front-panel",
+      "panelB": "skirt-front-panel",
+      "stitchCount": 13,
+      "maximumGapCm": 7.409252757524146
+    },
+    {
+      "id": "stitch-2",
+      "panelA": "skirt-back-panel",
+      "panelB": "skirt-back-panel",
+      "stitchCount": 14,
+      "maximumGapCm": 5.010013867311817
+    },
+    {
+      "id": "stitch-3",
+      "panelA": "skirt-back-panel",
+      "panelB": "skirt-back-panel",
+      "stitchCount": 15,
+      "maximumGapCm": 4.58484176817467
+    },
+    {
+      "id": "stitch-4",
+      "panelA": "skirt-back-panel",
+      "panelB": "skirt-back-panel",
+      "stitchCount": 15,
+      "maximumGapCm": 3.772040633805512
+    },
+    {
+      "id": "stitch-5",
+      "panelA": "skirt-back-panel",
+      "panelB": "skirt-back-panel",
+      "stitchCount": 14,
+      "maximumGapCm": 4.6147662515462455
+    },
+    {
+      "id": "stitch-6",
+      "panelA": "skirt-front-panel",
+      "panelB": "skirt-back-panel",
+      "stitchCount": 24,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-7",
+      "panelA": "skirt-front-panel",
+      "panelB": "skirt-back-panel",
+      "stitchCount": 16,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-8",
+      "panelA": "skirt-front-panel",
+      "panelB": "skirt-back-panel",
+      "stitchCount": 16,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-9",
+      "panelA": "skirt-front-panel",
+      "panelB": "skirt-back-panel",
+      "stitchCount": 24,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-10",
+      "panelA": "right-btorso-panel",
+      "panelB": "right-btorso-panel",
+      "stitchCount": 14,
+      "maximumGapCm": 5.010013867311817
+    },
+    {
+      "id": "stitch-11",
+      "panelA": "right-btorso-panel",
+      "panelB": "right-btorso-panel",
+      "stitchCount": 15,
+      "maximumGapCm": 4.58484176817467
+    },
+    {
+      "id": "stitch-12",
+      "panelA": "right-ftorso-panel",
+      "panelB": "right-ftorso-panel",
+      "stitchCount": 10,
+      "maximumGapCm": 1.5836363587112645
+    },
+    {
+      "id": "stitch-13",
+      "panelA": "right-ftorso-panel",
+      "panelB": "right-ftorso-panel",
+      "stitchCount": 14,
+      "maximumGapCm": 7.6177027005149105
+    },
+    {
+      "id": "stitch-14",
+      "panelA": "right-ftorso-panel",
+      "panelB": "right-btorso-panel",
+      "stitchCount": 8,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-15",
+      "panelA": "right-ftorso-panel",
+      "panelB": "right-btorso-panel",
+      "stitchCount": 15,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-16",
+      "panelA": "right-ftorso-panel",
+      "panelB": "right-btorso-panel",
+      "stitchCount": 6,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-17",
+      "panelA": "left-btorso-panel",
+      "panelB": "left-btorso-panel",
+      "stitchCount": 14,
+      "maximumGapCm": 4.6147662515462455
+    },
+    {
+      "id": "stitch-18",
+      "panelA": "left-btorso-panel",
+      "panelB": "left-btorso-panel",
+      "stitchCount": 15,
+      "maximumGapCm": 3.772040633805512
+    },
+    {
+      "id": "stitch-19",
+      "panelA": "left-ftorso-panel",
+      "panelB": "left-ftorso-panel",
+      "stitchCount": 10,
+      "maximumGapCm": 0.6160067763914915
+    },
+    {
+      "id": "stitch-20",
+      "panelA": "left-ftorso-panel",
+      "panelB": "left-ftorso-panel",
+      "stitchCount": 14,
+      "maximumGapCm": 7.409252757524146
+    },
+    {
+      "id": "stitch-21",
+      "panelA": "left-ftorso-panel",
+      "panelB": "left-btorso-panel",
+      "stitchCount": 8,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-22",
+      "panelA": "left-ftorso-panel",
+      "panelB": "left-btorso-panel",
+      "stitchCount": 15,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-23",
+      "panelA": "left-ftorso-panel",
+      "panelB": "left-btorso-panel",
+      "stitchCount": 6,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-24",
+      "panelA": "right-ftorso-panel",
+      "panelB": "left-ftorso-panel",
+      "stitchCount": 25,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-25",
+      "panelA": "right-btorso-panel",
+      "panelB": "left-btorso-panel",
+      "stitchCount": 29,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-26",
+      "panelA": "right-ftorso-panel",
+      "panelB": "skirt-front-panel",
+      "stitchCount": 8,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-27",
+      "panelA": "right-ftorso-panel",
+      "panelB": "skirt-front-panel",
+      "stitchCount": 9,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-28",
+      "panelA": "left-ftorso-panel",
+      "panelB": "skirt-front-panel",
+      "stitchCount": 9,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-29",
+      "panelA": "left-ftorso-panel",
+      "panelB": "skirt-front-panel",
+      "stitchCount": 8,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-30",
+      "panelA": "left-btorso-panel",
+      "panelB": "skirt-back-panel",
+      "stitchCount": 7,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-31",
+      "panelA": "left-btorso-panel",
+      "panelB": "skirt-back-panel",
+      "stitchCount": 5,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-32",
+      "panelA": "left-btorso-panel",
+      "panelB": "skirt-back-panel",
+      "stitchCount": 7,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-33",
+      "panelA": "right-btorso-panel",
+      "panelB": "skirt-back-panel",
+      "stitchCount": 7,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-34",
+      "panelA": "right-btorso-panel",
+      "panelB": "skirt-back-panel",
+      "stitchCount": 5,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-35",
+      "panelA": "right-btorso-panel",
+      "panelB": "skirt-back-panel",
+      "stitchCount": 7,
+      "maximumGapCm": 0
+    }
+  ],
+  "closures": [],
+  "fabric": {
+    "source": {
+      "id": "cotton",
+      "name": "Cotton poplin",
+      "massGramsPerSquareMeter": 120,
+      "thicknessMillimeters": 0.34,
+      "warpStretchPercent": 4.95,
+      "weftStretchPercent": 9,
+      "biasStretchPercent": 12.6,
+      "bendResistance": 38,
+      "shearResistance": 79.1,
+      "staticFriction": 0.5175,
+      "dynamicFriction": 0.45,
+      "calibration": "prototype-unvalidated"
+    },
+    "chaos": {
+      "densityKgPerSquareCm": 1.2E-05,
+      "stretchWarp": 80267.55852842808,
+      "stretchWeft": 63157.89473684211,
+      "shearLeft": 14865,
+      "shearRight": 14865,
+      "bendWarp": 0.278,
+      "bendWeft": 0.14400000000000002,
+      "bendBias": 0.211,
+      "damping": 0.14,
+      "friction": 0.45
+    }
+  },
+  "render": {
+    "meshCount": 1,
+    "topology": "welded subdivided render surface",
+    "sourceVertexCount": 4335,
+    "weldedBaseVertexCount": 4077,
+    "vertexCount": 15811,
+    "triangleCount": 30580,
+    "subdivisionLevel": 1,
+    "weldedConstructionStitchCount": 280,
+    "unweldedConstructionStitchCount": 174,
+    "maximumWeldedGapCm": 0,
+    "material": "PatternaFabric",
+    "doubleSided": true
+  },
+  "coordinateSystem": {
+    "source": "Unreal left-handed Z-up",
+    "interchange": "OpenUSD right-handed Z-up",
+    "reflectedAxis": "Y",
+    "windingReversed": true
+  }
+}

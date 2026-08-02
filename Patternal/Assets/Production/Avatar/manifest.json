@@ -1,0 +1,62 @@
+{
+  "schema_version": "patterna.display-avatar/1.0",
+  "source": "MakeHuman Community system assets",
+  "license": "CC0",
+  "floor_offset_m": -0.011167844757437706,
+  "collision_geometry": "../patterna-mpfb-female.obj",
+  "assets": {
+    "body": {
+      "geometry": "body.obj",
+      "texture": "body.png",
+      "vertex_count": 13380,
+      "face_count": 13378,
+      "uv_count": 53512
+    },
+    "bra": {
+      "geometry": "bra.obj",
+      "texture": "bra.png",
+      "vertex_count": 1988,
+      "face_count": 1808,
+      "uv_count": 1988,
+      "display_optional": true,
+      "maximum_surface_offset_m": 0.0001
+    },
+    "eyes": {
+      "geometry": "eyes.obj",
+      "texture": "eyes.png",
+      "vertex_count": 1064,
+      "face_count": 1020,
+      "uv_count": 4080
+    },
+    "teeth": {
+      "geometry": "teeth.obj",
+      "texture": "teeth.png",
+      "vertex_count": 3868,
+      "face_count": 3560,
+      "uv_count": 14240
+    },
+    "eyebrows": {
+      "geometry": "eyebrows.obj",
+      "texture": "eyebrows.png",
+      "vertex_count": 124,
+      "face_count": 96,
+      "uv_count": 384
+    },
+    "eyelashes": {
+      "geometry": "eyelashes.obj",
+      "texture": "eyelashes.png",
+      "vertex_count": 250,
+      "face_count": 184,
+      "uv_count": 736
+    },
+    "hair": {
+      "geometry": "hair.obj",
+      "texture": "hair.png",
+      "vertex_count": 4493,
+      "face_count": 2759,
+      "uv_count": 11036
+    }
+  },
+  "source_body_geometry_sha256": "9f05f12e4beaa2bb2d0a084b611a5fb8a5a62622490c43a1a3f8e208a8420cd8",
+  "source_body_vertex_count": 13380
+}

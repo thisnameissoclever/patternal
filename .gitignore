@@ -1,0 +1,63 @@
+## Local Python and simulation runtimes
+.venv-*/
+.runtime/
+
+## Generated simulation, rendering, and browser output
+artifacts/
+output/
+.playwright-cli/
+
+## .NET and Visual Studio
+**/[Bb]in/
+**/[Oo]bj/
+**/[Dd]ebug/
+**/[Rr]elease/
+**/.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+AppPackages/
+BundleArtifacts/
+publish/
+*.msix
+*.msixupload
+*.appx
+*.appxbundle
+*.appxupload
+*.nupkg
+*.snupkg
+*.binlog
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+*.coveragexml
+
+## Unreal Engine generated state
+**/Binaries/
+**/DerivedDataCache/
+**/Intermediate/
+**/Saved/
+PatternaUnreal/Backups/
+PatternalUnreal/Backups/
+
+## Local diagnostics and caches
+**/__pycache__/
+*.py[cod]
+*.log
+.idea/
+_ReSharper*/
+*.DotSettings.user
+
+## Reproducible source archives that duplicate extracted assets
+third_party/MakeHumanAssets/makehuman_system_assets_cc0.zip
+
+## Secrets and machine-local configuration
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+*.snk
+*.pem
+*.key

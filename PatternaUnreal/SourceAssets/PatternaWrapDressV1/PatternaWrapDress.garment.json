@@ -1,0 +1,240 @@
+{
+  "schemaVersion": "patterna.full-garment-usd/1.1",
+  "garmentId": "PatternaWrapDress",
+  "units": "centimeters",
+  "usdSha256": "44d1436ddff6a747d8ee48e14566869edf5055b2716d9e77543d78f0d9968d10",
+  "simulation": {
+    "panelCount": 8,
+    "vertexCount": 12976,
+    "triangleCount": 24576,
+    "seamCount": 11,
+    "stitchCount": 272,
+    "closureCount": 3,
+    "closureConstraintCount": 3,
+    "minimumTriangleAreaCm2": 0.043640345591634766,
+    "maximumSeamGapCm": 35.1235949331003,
+    "maximumClosureGapCm": 26.87929574006384,
+    "maximumEdgeStrainRatio": 0.40672669477102114,
+    "ninetyFifthPercentileEdgeStrainRatio": 0.10086028004222046,
+    "minimumTorsoClearanceCm": 1.1783406484437862
+  },
+  "panels": [
+    {
+      "id": "bodice-left-wrap-panel",
+      "pieceId": "bodice-front",
+      "placement": "torsoFrontWrapLeft",
+      "reverseWinding": false,
+      "vertexCount": 833,
+      "triangleCount": 1536
+    },
+    {
+      "id": "bodice-right-wrap-panel",
+      "pieceId": "bodice-front",
+      "placement": "torsoFrontWrapRight",
+      "reverseWinding": true,
+      "vertexCount": 833,
+      "triangleCount": 1536
+    },
+    {
+      "id": "bodice-back-panel",
+      "pieceId": "bodice-back",
+      "placement": "torsoBack",
+      "reverseWinding": true,
+      "vertexCount": 2793,
+      "triangleCount": 5376
+    },
+    {
+      "id": "skirt-left-wrap-panel",
+      "pieceId": "skirt",
+      "placement": "skirtFrontWrapLeft",
+      "reverseWinding": false,
+      "vertexCount": 2401,
+      "triangleCount": 4608
+    },
+    {
+      "id": "skirt-right-wrap-panel",
+      "pieceId": "skirt",
+      "placement": "skirtFrontWrapRight",
+      "reverseWinding": true,
+      "vertexCount": 2401,
+      "triangleCount": 4608
+    },
+    {
+      "id": "skirt-back-panel",
+      "pieceId": "skirt-back",
+      "placement": "skirtBack",
+      "reverseWinding": true,
+      "vertexCount": 2401,
+      "triangleCount": 4608
+    },
+    {
+      "id": "tie-left-panel",
+      "pieceId": "waist-tie",
+      "placement": "tieLeft",
+      "reverseWinding": false,
+      "vertexCount": 657,
+      "triangleCount": 1152
+    },
+    {
+      "id": "tie-right-panel",
+      "pieceId": "waist-tie",
+      "placement": "tieRight",
+      "reverseWinding": true,
+      "vertexCount": 657,
+      "triangleCount": 1152
+    }
+  ],
+  "seams": [
+    {
+      "id": "bodice-side-left",
+      "panelA": "bodice-left-wrap-panel",
+      "panelB": "bodice-back-panel",
+      "stitchCount": 26,
+      "maximumGapCm": 6.362968598905485
+    },
+    {
+      "id": "bodice-side-right",
+      "panelA": "bodice-right-wrap-panel",
+      "panelB": "bodice-back-panel",
+      "stitchCount": 26,
+      "maximumGapCm": 19.792583166081656
+    },
+    {
+      "id": "shoulder-left",
+      "panelA": "bodice-left-wrap-panel",
+      "panelB": "bodice-back-panel",
+      "stitchCount": 15,
+      "maximumGapCm": 11.84502728588065
+    },
+    {
+      "id": "shoulder-right",
+      "panelA": "bodice-right-wrap-panel",
+      "panelB": "bodice-back-panel",
+      "stitchCount": 14,
+      "maximumGapCm": 14.202994226852322
+    },
+    {
+      "id": "waist-left-wrap",
+      "panelA": "bodice-left-wrap-panel",
+      "panelB": "skirt-left-wrap-panel",
+      "stitchCount": 17,
+      "maximumGapCm": 18.92664510723279
+    },
+    {
+      "id": "waist-right-wrap",
+      "panelA": "bodice-right-wrap-panel",
+      "panelB": "skirt-right-wrap-panel",
+      "stitchCount": 17,
+      "maximumGapCm": 19.729766183750925
+    },
+    {
+      "id": "waist-back",
+      "panelA": "bodice-back-panel",
+      "panelB": "skirt-back-panel",
+      "stitchCount": 49,
+      "maximumGapCm": 4.91183974444559
+    },
+    {
+      "id": "skirt-side-left",
+      "panelA": "skirt-left-wrap-panel",
+      "panelB": "skirt-back-panel",
+      "stitchCount": 49,
+      "maximumGapCm": 29.109468441420546
+    },
+    {
+      "id": "skirt-side-right",
+      "panelA": "skirt-right-wrap-panel",
+      "panelB": "skirt-back-panel",
+      "stitchCount": 49,
+      "maximumGapCm": 35.1235949331003
+    },
+    {
+      "id": "tie-left-attachment",
+      "panelA": "tie-left-panel",
+      "panelB": "bodice-left-wrap-panel",
+      "stitchCount": 5,
+      "maximumGapCm": 20.76044129127089
+    },
+    {
+      "id": "tie-right-attachment",
+      "panelA": "tie-right-panel",
+      "panelB": "bodice-right-wrap-panel",
+      "stitchCount": 5,
+      "maximumGapCm": 21.960426183405914
+    }
+  ],
+  "closures": [
+    {
+      "id": "wrap-bodice-tack",
+      "kind": "tack",
+      "state": "closed",
+      "panelA": "bodice-left-wrap-panel",
+      "panelB": "bodice-right-wrap-panel",
+      "constraintCount": 1,
+      "targetDistanceCm": 0,
+      "strength": 1,
+      "maximumInitialGapCm": 12.77455589199387
+    },
+    {
+      "id": "wrap-skirt-waist-pin",
+      "kind": "pin",
+      "state": "closed",
+      "panelA": "skirt-left-wrap-panel",
+      "panelB": "skirt-right-wrap-panel",
+      "constraintCount": 1,
+      "targetDistanceCm": 0,
+      "strength": 1,
+      "maximumInitialGapCm": 26.87929574006384
+    },
+    {
+      "id": "wrap-waist-buckle",
+      "kind": "buckle",
+      "state": "closed",
+      "panelA": "tie-left-panel",
+      "panelB": "tie-right-panel",
+      "constraintCount": 1,
+      "targetDistanceCm": 0,
+      "strength": 1,
+      "maximumInitialGapCm": 4.533230528379404
+    }
+  ],
+  "fabric": {
+    "source": {
+      "id": "cotton",
+      "name": "Cotton poplin",
+      "massGramsPerSquareMeter": 120,
+      "thicknessMillimeters": 0.34,
+      "warpStretchPercent": 4.95,
+      "weftStretchPercent": 9,
+      "biasStretchPercent": 12.6,
+      "bendResistance": 38,
+      "shearResistance": 79.1,
+      "staticFriction": 0.5175,
+      "dynamicFriction": 0.45,
+      "calibration": "prototype-unvalidated"
+    },
+    "chaos": {
+      "densityKgPerSquareCm": 1.2E-05,
+      "stretchWarp": 80267.55852842808,
+      "stretchWeft": 63157.89473684211,
+      "shearLeft": 14865,
+      "shearRight": 14865,
+      "bendWarp": 0.278,
+      "bendWeft": 0.14400000000000002,
+      "bendBias": 0.211,
+      "damping": 0.14,
+      "friction": 0.45
+    }
+  },
+  "render": {
+    "meshCount": 8,
+    "material": "PatternaFabric",
+    "doubleSided": true
+  },
+  "coordinateSystem": {
+    "source": "Unreal left-handed Z-up",
+    "interchange": "OpenUSD right-handed Z-up",
+    "reflectedAxis": "Y",
+    "windingReversed": true
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "schema_version": "patterna.mpfb-body-pose/1.0",
+  "accepted": true,
+  "issues": [],
+  "method": "MPFB default-rig weighted shoulder rotation",
+  "pose": "relaxed-stand",
+  "arm_lowering_degrees": 22.0,
+  "source_body": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\Patterna\\Assets\\Production\\Avatar\\body.obj",
+  "source_body_sha256": "02a2baa660e4fc9cda5b5698f4cce44059e5c17108a37f445e1cb83c10b5a954",
+  "source_fit_report": null,
+  "source_fit_report_sha256": null,
+  "rig_weights": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\third_party\\MPFB2\\src\\mpfb\\data\\rigs\\standard\\weights.default.json",
+  "rig_weights_sha256": "e2623c088b05eb0677d04ff4ae701c98264634ade7b8a6393f437d50f84e04c2",
+  "output_body": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\artifacts\\relaxed-body\\product\\avatar\\body.obj",
+  "output_body_sha256": "9b69cc312646645b985bafdfb87104daa0803f733ef15df1a28a2f4aa67a3731",
+  "vertex_count": 13380,
+  "topology_preserved": true,
+  "source_bounds_m": [
+    [
+      -0.539753437,
+      -0.371802449,
+      -1.7e-08
+    ],
+    [
+      0.539753437,
+      0.096903294,
+      1.669999957
+    ]
+  ],
+  "posed_bounds_m": [
+    [
+      -0.35071610964100886,
+      -0.371802449,
+      -1.7e-08
+    ],
+    [
+      0.3507161096410092,
+      0.096903294,
+      1.669999957
+    ]
+  ],
+  "floor_delta_m": 0.0,
+  "posed_center_x_m": 1.6653345369377348e-16,
+  "sides": {
+    "positive_x_arm": {
+      "rig_suffix": ".L",
+      "shoulder_pivot_m": [
+        0.12323665921782179,
+        -0.02817871156435644,
+        1.325551627871287
+      ],
+      "affected_vertex_count": 2459,
+      "maximum_displacement_m": 0.23478643111577419
+    },
+    "negative_x_arm": {
+      "rig_suffix": ".R",
+      "shoulder_pivot_m": [
+        -0.12323665921782179,
+        -0.02817871156435644,
+        1.325551627871287
+      ],
+      "affected_vertex_count": 2458,
+      "maximum_displacement_m": 0.23478643111577419
+    }
+  }
+}

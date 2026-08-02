@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Patternal\GarmentDocument.cs" Link="GarmentDocument.cs" />
+    <Compile Include="..\Patternal\GarmentCodePatternImporter.cs" Link="GarmentCodePatternImporter.cs" />
+    <Compile Include="..\Patternal\GarmentCodePatternExporter.cs" Link="GarmentCodePatternExporter.cs" />
+    <Compile Include="..\Patternal\GarmentCodeBodyMapper.cs" Link="GarmentCodeBodyMapper.cs" />
+    <Compile Include="..\Patternal\PatternTopologyCompiler.cs" Link="PatternTopologyCompiler.cs" />
+    <Compile Include="..\Patternal\UnrealBridgeDocument.cs" Link="UnrealBridgeDocument.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CDT.NET" Version="1.0.0" />
+  </ItemGroup>
+</Project>

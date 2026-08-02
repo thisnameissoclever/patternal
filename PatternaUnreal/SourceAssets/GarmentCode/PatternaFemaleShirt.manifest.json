@@ -1,0 +1,250 @@
+{
+  "schemaVersion": "patterna.full-garment-usd/1.1",
+  "garmentId": "PatternaFemaleShirt",
+  "units": "centimeters",
+  "usdSha256": "af452512ed1d4b04d84d4da89be31b18118d734dba3ef82d2e7c009517b006db",
+  "simulation": {
+    "panelCount": 8,
+    "vertexCount": 6076,
+    "triangleCount": 11312,
+    "seamCount": 16,
+    "stitchCount": 316,
+    "closureCount": 0,
+    "closureConstraintCount": 0,
+    "minimumTriangleAreaCm2": 0.10378446549374627,
+    "maximumSeamGapCm": 0,
+    "maximumClosureGapCm": 0,
+    "maximumEdgeStrainRatio": 2.018624629329917,
+    "ninetyFifthPercentileEdgeStrainRatio": 0.29240524764603926,
+    "minimumTorsoClearanceCm": 0.39107053104002887
+  },
+  "panels": [
+    {
+      "id": "right-ftorso-panel",
+      "pieceId": "right-ftorso",
+      "placement": "torsoFront",
+      "reverseWinding": false,
+      "vertexCount": 1125,
+      "triangleCount": 2115
+    },
+    {
+      "id": "right-btorso-panel",
+      "pieceId": "right-btorso",
+      "placement": "torsoBack",
+      "reverseWinding": false,
+      "vertexCount": 1119,
+      "triangleCount": 2108
+    },
+    {
+      "id": "right-sleeve-b-panel",
+      "pieceId": "right-sleeve-b",
+      "placement": "sleeveRight",
+      "reverseWinding": false,
+      "vertexCount": 409,
+      "triangleCount": 740
+    },
+    {
+      "id": "right-sleeve-f-panel",
+      "pieceId": "right-sleeve-f",
+      "placement": "sleeveRight",
+      "reverseWinding": false,
+      "vertexCount": 406,
+      "triangleCount": 735
+    },
+    {
+      "id": "left-ftorso-panel",
+      "pieceId": "left-ftorso",
+      "placement": "torsoFront",
+      "reverseWinding": false,
+      "vertexCount": 1126,
+      "triangleCount": 2117
+    },
+    {
+      "id": "left-sleeve-b-panel",
+      "pieceId": "left-sleeve-b",
+      "placement": "sleeveLeft",
+      "reverseWinding": false,
+      "vertexCount": 394,
+      "triangleCount": 710
+    },
+    {
+      "id": "left-sleeve-f-panel",
+      "pieceId": "left-sleeve-f",
+      "placement": "sleeveLeft",
+      "reverseWinding": false,
+      "vertexCount": 416,
+      "triangleCount": 755
+    },
+    {
+      "id": "left-btorso-panel",
+      "pieceId": "left-btorso",
+      "placement": "torsoBack",
+      "reverseWinding": false,
+      "vertexCount": 1081,
+      "triangleCount": 2032
+    }
+  ],
+  "seams": [
+    {
+      "id": "stitch-0",
+      "panelA": "right-sleeve-f-panel",
+      "panelB": "right-sleeve-b-panel",
+      "stitchCount": 27,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-1",
+      "panelA": "right-sleeve-f-panel",
+      "panelB": "right-sleeve-b-panel",
+      "stitchCount": 12,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-2",
+      "panelA": "right-sleeve-f-panel",
+      "panelB": "right-ftorso-panel",
+      "stitchCount": 24,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-3",
+      "panelA": "right-sleeve-b-panel",
+      "panelB": "right-ftorso-panel",
+      "stitchCount": 2,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-4",
+      "panelA": "right-sleeve-b-panel",
+      "panelB": "right-btorso-panel",
+      "stitchCount": 24,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-5",
+      "panelA": "right-ftorso-panel",
+      "panelB": "right-btorso-panel",
+      "stitchCount": 11,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-6",
+      "panelA": "right-ftorso-panel",
+      "panelB": "right-btorso-panel",
+      "stitchCount": 23,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-7",
+      "panelA": "left-sleeve-f-panel",
+      "panelB": "left-sleeve-b-panel",
+      "stitchCount": 27,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-8",
+      "panelA": "left-sleeve-f-panel",
+      "panelB": "left-sleeve-b-panel",
+      "stitchCount": 12,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-9",
+      "panelA": "left-sleeve-f-panel",
+      "panelB": "left-ftorso-panel",
+      "stitchCount": 24,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-10",
+      "panelA": "left-sleeve-b-panel",
+      "panelB": "left-ftorso-panel",
+      "stitchCount": 2,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-11",
+      "panelA": "left-sleeve-b-panel",
+      "panelB": "left-btorso-panel",
+      "stitchCount": 24,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-12",
+      "panelA": "left-ftorso-panel",
+      "panelB": "left-btorso-panel",
+      "stitchCount": 11,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-13",
+      "panelA": "left-ftorso-panel",
+      "panelB": "left-btorso-panel",
+      "stitchCount": 23,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-14",
+      "panelA": "right-ftorso-panel",
+      "panelB": "left-ftorso-panel",
+      "stitchCount": 33,
+      "maximumGapCm": 0
+    },
+    {
+      "id": "stitch-15",
+      "panelA": "right-btorso-panel",
+      "panelB": "left-btorso-panel",
+      "stitchCount": 37,
+      "maximumGapCm": 0
+    }
+  ],
+  "closures": [],
+  "fabric": {
+    "source": {
+      "id": "cotton",
+      "name": "Cotton poplin",
+      "massGramsPerSquareMeter": 120,
+      "thicknessMillimeters": 0.34,
+      "warpStretchPercent": 4.95,
+      "weftStretchPercent": 9,
+      "biasStretchPercent": 12.6,
+      "bendResistance": 38,
+      "shearResistance": 79.1,
+      "staticFriction": 0.5175,
+      "dynamicFriction": 0.45,
+      "calibration": "prototype-unvalidated"
+    },
+    "chaos": {
+      "densityKgPerSquareCm": 1.2E-05,
+      "stretchWarp": 80267.55852842808,
+      "stretchWeft": 63157.89473684211,
+      "shearLeft": 14865,
+      "shearRight": 14865,
+      "bendWarp": 0.278,
+      "bendWeft": 0.14400000000000002,
+      "bendBias": 0.211,
+      "damping": 0.14,
+      "friction": 0.45
+    }
+  },
+  "render": {
+    "meshCount": 1,
+    "topology": "welded subdivided render surface",
+    "sourceVertexCount": 6076,
+    "weldedBaseVertexCount": 5766,
+    "vertexCount": 22846,
+    "triangleCount": 45248,
+    "subdivisionLevel": 1,
+    "weldedConstructionStitchCount": 316,
+    "unweldedConstructionStitchCount": 0,
+    "maximumWeldedGapCm": 0,
+    "material": "PatternaFabric",
+    "doubleSided": true
+  },
+  "coordinateSystem": {
+    "source": "Unreal left-handed Z-up",
+    "interchange": "OpenUSD right-handed Z-up",
+    "reflectedAxis": "Y",
+    "windingReversed": true
+  }
+}

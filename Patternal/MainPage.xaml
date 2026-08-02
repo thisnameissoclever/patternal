@@ -1,0 +1,1684 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="Patterna.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:Patterna"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+    Loaded="OnPageLoaded"
+    mc:Ignorable="d">
+
+    <Grid x:Name="PageRoot" SizeChanged="OnPageRootSizeChanged">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <CommandBar
+            x:Name="EditorCommandBar"
+            Grid.Row="0"
+            Background="Transparent"
+            DefaultLabelPosition="Right"
+            IsDynamicOverflowEnabled="True">
+            <CommandBar.Content>
+                <StackPanel
+                    Margin="12,0,24,0"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="10">
+                    <TextBlock
+                        x:Name="GarmentTitleText"
+                        VerticalAlignment="Center"
+                        FontFamily="Segoe UI Variable Display"
+                        FontSize="18"
+                        FontWeight="SemiBold"
+                        Text="Adaptive crew-neck shirt" />
+                    <Border
+                        Padding="7,2"
+                        Background="{ThemeResource AccentSoftBrush}"
+                        CornerRadius="4">
+                        <TextBlock
+                            FontSize="11"
+                            Foreground="{ThemeResource AccentStrongBrush}"
+                            Text="DRAFT 08" />
+                    </Border>
+                </StackPanel>
+            </CommandBar.Content>
+            <AppBarButton
+                AutomationProperties.Name="Create a new pattern"
+                Click="OnNewPatternClicked"
+                Icon="Add"
+                Label="New" />
+            <AppBarButton
+                AutomationProperties.Name="Save pattern snapshot"
+                Click="OnSavePatternClicked"
+                Icon="Save"
+                Label="Save" />
+            <AppBarSeparator />
+            <AppBarToggleButton
+                x:Name="EditPatternPointsButton"
+                AutomationProperties.HelpText="Show draggable pattern anchors and curve controls"
+                AutomationProperties.Name="Edit pattern points"
+                Click="OnEditPatternPointsClicked"
+                Icon="Edit"
+                Label="Edit points" />
+            <AppBarToggleButton
+                x:Name="EditAssemblyButton"
+                AutomationProperties.HelpText="Inspect permanent seams and temporary garment closures on the authoritative pattern"
+                AutomationProperties.Name="Inspect garment seam graph"
+                Click="OnEditAssemblyClicked"
+                Label="Assembly">
+                <AppBarToggleButton.Icon>
+                    <FontIcon Glyph="&#xE8EC;" />
+                </AppBarToggleButton.Icon>
+            </AppBarToggleButton>
+            <AppBarButton
+                x:Name="UndoPatternEditButton"
+                AutomationProperties.Name="Undo pattern geometry edit"
+                Click="OnUndoPatternEditClicked"
+                Icon="Undo"
+                IsEnabled="False"
+                Label="Undo" />
+            <AppBarButton
+                x:Name="RedoPatternEditButton"
+                AutomationProperties.Name="Redo pattern geometry edit"
+                Click="OnRedoPatternEditClicked"
+                Icon="Redo"
+                IsEnabled="False"
+                Label="Redo" />
+            <AppBarButton
+                AutomationProperties.HelpText="Select front, side, and back reference photos"
+                AutomationProperties.Name="Import body reference photos"
+                Click="OnImportPhotosClicked"
+                Label="Import photos">
+                <AppBarButton.Icon>
+                    <FontIcon Glyph="&#xE91B;" />
+                </AppBarButton.Icon>
+            </AppBarButton>
+            <AppBarSeparator />
+            <AppBarToggleButton
+                x:Name="PiecesToggleButton"
+                AutomationProperties.Name="Show pattern pieces panel"
+                Click="OnTogglePiecesClicked"
+                IsChecked="True"
+                Label="Pieces">
+                <AppBarToggleButton.Icon>
+                    <FontIcon Glyph="&#xE8A5;" />
+                </AppBarToggleButton.Icon>
+            </AppBarToggleButton>
+            <AppBarToggleButton
+                x:Name="InspectorToggleButton"
+                AutomationProperties.Name="Show avatar and material inspector"
+                Click="OnToggleInspectorClicked"
+                IsChecked="True"
+                Label="Inspector">
+                <AppBarToggleButton.Icon>
+                    <FontIcon Glyph="&#xE713;" />
+                </AppBarToggleButton.Icon>
+            </AppBarToggleButton>
+            <AppBarButton
+                x:Name="SimulateCommandButton"
+                AutomationProperties.HelpText="Recalculate the current garment drape"
+                AutomationProperties.Name="Run drape simulation"
+                Click="OnRunSimulationClicked"
+                Icon="Play"
+                Label="Simulate" />
+        </CommandBar>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="PiecesColumn" Width="244" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition x:Name="InspectorColumn" Width="420" />
+            </Grid.ColumnDefinitions>
+
+            <Grid
+                x:Name="PiecesPanel"
+                Grid.Column="0"
+                Padding="16,12,12,16"
+                Background="{ThemeResource LayerFillColorDefaultBrush}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Spacing="3">
+                    <TextBlock Style="{StaticResource EyebrowStyle}" Text="PATTERN PIECES" />
+                        <TextBlock x:Name="PatternPieceCountText" Style="{StaticResource PanelHeadingStyle}" Text="8 pieces" />
+                        <TextBlock
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="Authoritative 2D source · fit view"
+                            TextWrapping="Wrap" />
+                        <ComboBox
+                            x:Name="GarmentTemplateComboBox"
+                            Margin="0,8,0,0"
+                            AutomationProperties.Name="Garment document"
+                            Header="Garment document"
+                            SelectedIndex="0"
+                            SelectionChanged="OnGarmentTemplateChanged">
+                            <ComboBoxItem Content="Adaptive crew-neck shirt" Tag="adaptive-shirt" />
+                            <ComboBoxItem Content="Wrap dress prototype" Tag="wrap-dress" />
+                        </ComboBox>
+                    </StackPanel>
+
+                <ListView
+                    x:Name="PatternPiecesList"
+                    Grid.Row="1"
+                    Margin="0,16,0,12"
+                    AutomationProperties.Name="Pattern pieces"
+                    IsItemClickEnabled="True"
+                    ItemClick="OnPatternPieceClicked"
+                    ItemsSource="{x:Bind PatternPieceItems}"
+                    SelectionMode="Single"
+                    SelectedIndex="0">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                        <Grid ColumnSpacing="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="36" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border
+                                Width="34"
+                                Height="42"
+                                Background="{Binding Swatch}"
+                                CornerRadius="9,4,9,4" />
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
+                                <TextBlock
+                                    FontSize="12"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="{Binding Detail}" />
+                            </StackPanel>
+                        </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <StackPanel Grid.Row="2" Spacing="10">
+                    <Button
+                        HorizontalAlignment="Stretch"
+                        AutomationProperties.Name="Create a new editable pattern piece"
+                        Click="OnAddPatternPieceClicked"
+                        Content="Draft new piece" />
+                    <Button
+                        x:Name="DrawPolygonPieceButton"
+                        HorizontalAlignment="Stretch"
+                        AutomationProperties.Name="Draw a polygon pattern piece directly on the canvas"
+                        Click="OnStartCanvasPolygonDraftClicked"
+                        Content="Draw polygon on canvas" />
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button
+                            x:Name="AddInternalPathButton"
+                            HorizontalAlignment="Stretch"
+                            AutomationProperties.Name="Add a precise internal line to the selected pattern piece"
+                            Click="OnAddInternalPathClicked"
+                            Content="Internal lines" />
+                        <Button
+                            x:Name="AddDartButton"
+                            Grid.Column="1"
+                            HorizontalAlignment="Stretch"
+                            AutomationProperties.Name="Add a precise dart to the selected pattern piece"
+                            Click="OnAddDartClicked"
+                            Content="Darts" />
+                    </Grid>
+                    <Button
+                        x:Name="EditPatternPiecePropertiesButton"
+                        HorizontalAlignment="Stretch"
+                        AutomationProperties.Name="Edit construction properties for the selected pattern piece"
+                        Click="OnEditPatternPiecePropertiesClicked"
+                        Content="Piece settings" />
+                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                    <ToggleSwitch
+                        x:Name="SeamAllowanceToggle"
+                        AutomationProperties.Name="Show seam allowance"
+                        Header="Seam allowance"
+                        IsOn="True"
+                        Toggled="OnPatternDisplayOptionChanged" />
+                    <ToggleSwitch
+                        x:Name="GrainlinesToggle"
+                        AutomationProperties.Name="Show grainlines"
+                        Header="Grainlines and notches"
+                        IsOn="True"
+                        Toggled="OnPatternDisplayOptionChanged" />
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button
+                            HorizontalAlignment="Stretch"
+                            AutomationProperties.Name="Zoom pattern to fit"
+                            Click="OnFitPatternClicked"
+                            Content="Fit view" />
+                        <Button
+                            Grid.Column="1"
+                            HorizontalAlignment="Stretch"
+                            AutomationProperties.Name="Export pattern"
+                            Click="OnExportClicked"
+                            Content="Export" />
+                    </Grid>
+                </StackPanel>
+            </Grid>
+
+            <Grid Grid.Column="1" Padding="10,0,10,10">
+                <TabView
+                    x:Name="WorkspaceTabs"
+                    AutomationProperties.Name="Pattern workspace views"
+                    HorizontalContentAlignment="Stretch"
+                    IsAddTabButtonVisible="False"
+                    SizeChanged="OnWorkspaceTabsSizeChanged"
+                    TabWidthMode="Equal"
+                    VerticalContentAlignment="Stretch">
+                    <TabViewItem
+                        HorizontalContentAlignment="Stretch"
+                        VerticalContentAlignment="Stretch"
+                        Header="2D FLAT"
+                        IsClosable="False">
+                        <Grid Background="{ThemeResource PatternCanvasBackgroundBrush}">
+                            <Viewbox
+                                x:Name="PatternViewbox"
+                                Margin="12"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                Stretch="Uniform">
+                                <Canvas
+                                    x:Name="PatternCanvas"
+                                    Width="960"
+                                    Height="720"
+                                    AutomationProperties.Name="Interactive two dimensional pattern layout"
+                                    PointerMoved="OnPatternCanvasPointerMoved"
+                                    PointerPressed="OnPatternCanvasPointerPressed" />
+                            </Viewbox>
+
+                            <StackPanel
+                                Margin="20"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Top"
+                                Spacing="4">
+                                <Border
+                                    Padding="8,4"
+                                    HorizontalAlignment="Left"
+                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                    CornerRadius="4">
+                                    <TextBlock
+                                        FontSize="12"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Text="SMART LAYOUT · 86% FABRIC USE" />
+                                </Border>
+                            </StackPanel>
+
+                            <Border
+                                x:Name="PatternPointInspector"
+                                Width="240"
+                                Margin="16"
+                                Padding="12"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top"
+                                Background="{ThemeResource PatternOverlayBackgroundBrush}"
+                                BorderBrush="{ThemeResource PatternOverlayBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Visibility="Collapsed">
+                                <StackPanel Spacing="6">
+                                    <TextBlock
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Text="PATTERN POINT" />
+                                    <TextBlock
+                                        x:Name="SelectedPatternPointText"
+                                        FontWeight="SemiBold"
+                                        Text="Select an anchor or curve control" />
+                                    <Grid ColumnSpacing="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <NumberBox
+                                            x:Name="SelectedPatternPointXNumberBox"
+                                            AutomationProperties.Name="Selected pattern point X coordinate in centimeters"
+                                            Header="X (cm)"
+                                            IsEnabled="False"
+                                            Maximum="300"
+                                            Minimum="-100"
+                                            SmallChange="0.1"
+                                            SpinButtonPlacementMode="Compact"
+                                            ValueChanged="OnSelectedPatternPointValueChanged" />
+                                        <NumberBox
+                                            x:Name="SelectedPatternPointYNumberBox"
+                                            Grid.Column="1"
+                                            AutomationProperties.Name="Selected pattern point Y coordinate in centimeters"
+                                            Header="Y (cm)"
+                                            IsEnabled="False"
+                                            Maximum="300"
+                                            Minimum="-100"
+                                            SmallChange="0.1"
+                                            SpinButtonPlacementMode="Compact"
+                                            ValueChanged="OnSelectedPatternPointValueChanged" />
+                                    </Grid>
+                                    <Grid ColumnSpacing="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <NumberBox
+                                            x:Name="SelectedPatternSegmentLengthNumberBox"
+                                            AutomationProperties.Name="Selected pattern segment length in centimeters"
+                                            Header="Length (cm)"
+                                            IsEnabled="False"
+                                            Maximum="500"
+                                            Minimum="0.1"
+                                            SmallChange="0.1"
+                                            SpinButtonPlacementMode="Compact"
+                                            ValueChanged="OnSelectedPatternSegmentValueChanged" />
+                                        <NumberBox
+                                            x:Name="SelectedPatternSegmentAngleNumberBox"
+                                            Grid.Column="1"
+                                            AutomationProperties.Name="Selected pattern segment angle in degrees"
+                                            Header="Angle (deg)"
+                                            IsEnabled="False"
+                                            Maximum="360"
+                                            Minimum="-360"
+                                            SmallChange="0.1"
+                                            SpinButtonPlacementMode="Compact"
+                                            ValueChanged="OnSelectedPatternSegmentValueChanged" />
+                                    </Grid>
+                                    <Button
+                                        x:Name="ResetPatternPointButton"
+                                        HorizontalAlignment="Stretch"
+                                        AutomationProperties.Name="Reset selected point to generated position"
+                                        Click="OnResetPatternPointClicked"
+                                        Content="Reset to generated point"
+                                        IsEnabled="False" />
+                                    <Button
+                                        x:Name="SplitPatternSegmentButton"
+                                        HorizontalAlignment="Stretch"
+                                        AutomationProperties.Name="Split selected pattern segment at its midpoint"
+                                        Click="OnSplitPatternSegmentClicked"
+                                        Content="Split segment at midpoint"
+                                        IsEnabled="False" />
+                                    <Grid ColumnSpacing="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Button
+                                            x:Name="ConvertPatternSegmentToCurveButton"
+                                            HorizontalAlignment="Stretch"
+                                            AutomationProperties.Name="Convert selected straight segment to an editable cubic curve"
+                                            Click="OnConvertPatternSegmentToCurveClicked"
+                                            Content="Make curve"
+                                            IsEnabled="False" />
+                                        <Button
+                                            x:Name="ConvertPatternSegmentToLineButton"
+                                            Grid.Column="1"
+                                            HorizontalAlignment="Stretch"
+                                            AutomationProperties.Name="Convert selected cubic segment to a straight line"
+                                            Click="OnConvertPatternSegmentToLineClicked"
+                                            Content="Make line"
+                                            IsEnabled="False" />
+                                    </Grid>
+                                    <Button
+                                        x:Name="AddPatternNotchButton"
+                                        HorizontalAlignment="Stretch"
+                                        AutomationProperties.Name="Add a construction notch to the selected pattern segment"
+                                        Click="OnAddPatternNotchClicked"
+                                        Content="Add notch at midpoint"
+                                        IsEnabled="False" />
+                                    <TextBlock
+                                        x:Name="PendingSewingEdgeText"
+                                        FontSize="11"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Text="Free sewing: select an edge, mark it, then select its partner."
+                                        TextWrapping="Wrap" />
+                                    <Grid ColumnSpacing="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Button
+                                            x:Name="MarkSewingEdgeButton"
+                                            HorizontalAlignment="Stretch"
+                                            AutomationProperties.Name="Mark selected edge as the first free sewing side"
+                                            Click="OnMarkSewingEdgeClicked"
+                                            Content="Mark edge"
+                                            IsEnabled="False" />
+                                        <Button
+                                            x:Name="CompleteSewingEdgeButton"
+                                            Grid.Column="1"
+                                            HorizontalAlignment="Stretch"
+                                            AutomationProperties.Name="Sew the marked edge to the selected edge"
+                                            Click="OnCompleteSewingEdgeClicked"
+                                            Content="Sew edges"
+                                            IsEnabled="False" />
+                                    </Grid>
+                                    <TextBlock
+                                        FontSize="11"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Text="Drag to edit. Shift bypasses the 0.1 cm snap. Coordinate and structural edits survive measurement changes."
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border
+                                x:Name="CanvasDraftToolbar"
+                                Canvas.ZIndex="150"
+                                Margin="20"
+                                Padding="12"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Bottom"
+                                Background="{ThemeResource PatternOverlayBackgroundBrush}"
+                                BorderBrush="{ThemeResource PatternOverlayBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Visibility="Collapsed">
+                                <StackPanel Spacing="8">
+                                    <TextBlock
+                                        x:Name="CanvasDraftStatusText"
+                                        FontWeight="SemiBold"
+                                        Text="Click to place polygon points"
+                                        TextAlignment="Center" />
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Button
+                                            x:Name="UndoCanvasDraftPointButton"
+                                            AutomationProperties.Name="Remove the most recent polygon point"
+                                            Click="OnUndoCanvasDraftPointClicked"
+                                            Content="Undo point"
+                                            IsEnabled="False" />
+                                        <Button
+                                            x:Name="FinishCanvasDraftButton"
+                                            AutomationProperties.Name="Finish the polygon pattern piece"
+                                            Click="OnFinishCanvasDraftClicked"
+                                            Content="Finish piece"
+                                            IsEnabled="False" />
+                                        <Button
+                                            AutomationProperties.Name="Cancel canvas pattern drafting"
+                                            Click="OnCancelCanvasDraftClicked"
+                                            Content="Cancel" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Border
+                                x:Name="AssemblyInspector"
+                                Canvas.ZIndex="100"
+                                Width="280"
+                                Margin="20"
+                                Padding="12"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top"
+                                Background="#FF1D2028"
+                                BorderBrush="{ThemeResource PatternOverlayBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Visibility="Collapsed">
+                                <StackPanel Spacing="8">
+                                    <TextBlock
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Text="SEAM GRAPH" />
+                                    <TextBlock
+                                        x:Name="AssemblySummaryText"
+                                        FontWeight="SemiBold"
+                                        Text="11 permanent seams · 3 closures" />
+                                    <ComboBox
+                                        x:Name="AssemblyRelationshipComboBox"
+                                        HorizontalAlignment="Stretch"
+                                        AutomationProperties.Name="Selected seam or garment closure"
+                                        Header="Relationship"
+                                        SelectionChanged="OnAssemblyRelationshipSelectionChanged" />
+                                    <TextBlock
+                                        x:Name="AssemblyRelationshipTypeText"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Text="Select a colored edge or relationship"
+                                        TextWrapping="Wrap" />
+                                    <Border
+                                        x:Name="AssemblySeamFitCard"
+                                        Padding="10,8"
+                                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                        CornerRadius="6"
+                                        Visibility="Collapsed">
+                                        <StackPanel Spacing="3">
+                                            <TextBlock
+                                                FontSize="10"
+                                                FontWeight="SemiBold"
+                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                Text="SEWN LENGTH COMPATIBILITY" />
+                                            <TextBlock
+                                                x:Name="AssemblySeamLengthText"
+                                                FontWeight="SemiBold"
+                                                Text="Side A 0.00 cm · Side B 0.00 cm" />
+                                            <TextBlock
+                                                x:Name="AssemblySeamMismatchText"
+                                                FontSize="11"
+                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                Text="Select a permanent seam"
+                                                TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Border>
+                                    <ToggleSwitch
+                                        x:Name="ReverseSeamSideBToggle"
+                                        AutomationProperties.Name="Reverse selected seam side B sewing direction"
+                                        Header="Reverse side B direction"
+                                        IsEnabled="False"
+                                        Toggled="OnReverseSeamSideBToggled" />
+                                    <ToggleSwitch
+                                        x:Name="ClosureStateToggle"
+                                        AutomationProperties.Name="Close selected temporary garment closure"
+                                        Header="Closure engaged"
+                                        IsEnabled="False"
+                                        Toggled="OnClosureStateToggled" />
+                                    <TextBlock
+                                        x:Name="AssemblyRelationshipLocationText"
+                                        FontSize="11"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Text="Permanent seams are cyan. Closures are gold."
+                                        TextWrapping="Wrap" />
+                                    <Button
+                                        x:Name="ResetAssemblyEditButton"
+                                        HorizontalAlignment="Stretch"
+                                        AutomationProperties.Name="Reset selected assembly relationship"
+                                        Click="OnResetAssemblyEditClicked"
+                                        Content="Reset relationship"
+                                        IsEnabled="False" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border
+                                Margin="20"
+                                Padding="10,6"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Bottom"
+                                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                CornerRadius="4">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE82D;" />
+                                    <TextBlock x:Name="CanvasScaleText" Text="1:4 · 12.5 mm grid" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </TabViewItem>
+
+                    <TabViewItem
+                        HorizontalContentAlignment="Stretch"
+                        VerticalContentAlignment="Stretch"
+                        Header="3D DRAPE"
+                        IsClosable="False">
+                        <Grid x:Name="DrapeSurfaceGrid" Background="#0B0C10">
+                            <Image
+                                x:Name="HighFidelityPreviewImage"
+                                AutomationProperties.Name="High fidelity Patternal cloth preview"
+                                Source="ms-appx:///Assets/Production/patterna-production-front.png"
+                                Stretch="Uniform" />
+
+                            <WebView2
+                                x:Name="DrapeWebView"
+                                AutomationProperties.HelpText="Drag to orbit and use the mouse wheel to zoom"
+                                AutomationProperties.Name="Internal browser cloth diagnostic"
+                                Visibility="Collapsed" />
+
+                            <Border
+                                x:Name="UnacceptedGarmentNotice"
+                                Width="520"
+                                Padding="28"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Background="#F2191A21"
+                                BorderBrush="#80F2B84B"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Visibility="Collapsed">
+                                <StackPanel Spacing="10">
+                                    <TextBlock
+                                        FontFamily="Segoe UI Variable Display"
+                                        FontSize="22"
+                                        FontWeight="SemiBold"
+                                        Foreground="White"
+                                        Text="No accepted full-dress equilibrium" />
+                                    <TextBlock
+                                        Foreground="#D8FFFFFF"
+                                        Text="This pattern remains editable in 2D, but its current bodice continuity and initial strain fail the 3D quality gate. Patternal will not present the shirt simulation as if it were this dress."
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border
+                                x:Name="StaleSimulationNotice"
+                                Width="430"
+                                Margin="20"
+                                Padding="16"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Bottom"
+                                Background="#F2191A21"
+                                BorderBrush="#8056C7FF"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Visibility="Collapsed">
+                                <StackPanel Spacing="12">
+                                    <TextBlock
+                                        FontFamily="Segoe UI Variable Display"
+                                        FontSize="18"
+                                        FontWeight="SemiBold"
+                                        Foreground="White"
+                                        Text="3D cloth is out of date" />
+                                    <TextBlock
+                                        x:Name="StaleSimulationDetailText"
+                                        Foreground="#D8FFFFFF"
+                                        Text="The current pattern, measurements, seams, or fabric differ from the accepted simulation. Patternal has hidden the old result because it is no longer truthful."
+                                        TextWrapping="Wrap" />
+                                    <Button
+                                        HorizontalAlignment="Left"
+                                        AutomationProperties.Name="Regenerate current cloth simulation"
+                                        Click="OnRunSimulationClicked"
+                                        Content="Regenerate current cloth" />
+                                </StackPanel>
+                            </Border>
+
+                            <StackPanel
+                                x:Name="AcceptedShirtControls"
+                                Margin="20"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Top"
+                                Orientation="Horizontal"
+                                Spacing="8">
+                                <Button
+                                    AutomationProperties.Name="Show front cloth view"
+                                    Click="OnDrapeCameraViewClicked"
+                                    Content="Front"
+                                    Tag="front" />
+                                <Button
+                                    AutomationProperties.Name="Show right side cloth view"
+                                    Click="OnDrapeCameraViewClicked"
+                                    Content="Right"
+                                    Tag="right" />
+                                <Button
+                                    AutomationProperties.Name="Show rear cloth view"
+                                    Click="OnDrapeCameraViewClicked"
+                                    Content="Rear"
+                                    Tag="rear" />
+                                <Button
+                                    AutomationProperties.Name="Show left side cloth view"
+                                    Click="OnDrapeCameraViewClicked"
+                                    Content="Left"
+                                    Tag="left" />
+                                <Button
+                                    AutomationProperties.Name="Show front oblique cloth view"
+                                    Click="OnDrapeCameraViewClicked"
+                                    Content="Oblique"
+                                    Tag="oblique" />
+                                <Button
+                                    AutomationProperties.Name="Reset three dimensional camera"
+                                    Click="OnResetDrapeCameraClicked"
+                                    Content="Fit view" />
+                            </StackPanel>
+
+                            <Border
+                                x:Name="AcceptedEquilibriumCard"
+                                Width="360"
+                                Margin="20,20,20,64"
+                                Padding="12,9"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Bottom"
+                                Background="#E6191A21"
+                                BorderBrush="#5038BDF8"
+                                BorderThickness="1"
+                                CornerRadius="6">
+                                <StackPanel Spacing="2">
+                                    <TextBlock
+                                        x:Name="AcceptedEquilibriumHeaderText"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="#69D1FF"
+                                        Text="NEWTON STYLE3D EQUILIBRIUM" />
+                                    <TextBlock
+                                        x:Name="AcceptedEquilibriumTopologyText"
+                                        Foreground="White"
+                                        Text="Exact measured MPFB body · topology pending"
+                                        TextWrapping="Wrap" />
+                                    <TextBlock
+                                        x:Name="AcceptedEquilibriumDetailText"
+                                        FontSize="11"
+                                        Foreground="#B8FFFFFF"
+                                        Text="High-resolution Newton Style3D cloth on the exact measured avatar"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border
+                                Margin="20"
+                                Padding="10,7"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Bottom"
+                                Background="#CC191A21"
+                                CornerRadius="5">
+                                <StackPanel Orientation="Horizontal" Spacing="9">
+                                    <ProgressRing
+                                        x:Name="SimulationProgressRing"
+                                        Width="16"
+                                        Height="16"
+                                        IsActive="False"
+                                        Visibility="Collapsed" />
+                                    <TextBlock
+                                        x:Name="SimulationStatusText"
+                                        Foreground="White"
+                                        Text="Body-aware fitted preview · open interactive 3D for orbit inspection" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </TabViewItem>
+                </TabView>
+            </Grid>
+
+            <ScrollViewer
+                x:Name="InspectorPanel"
+                Grid.Column="2"
+                Padding="12,10,16,24"
+                AutomationProperties.Name="Avatar and material inspector"
+                Background="{ThemeResource LayerFillColorDefaultBrush}"
+                VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="18">
+                    <StackPanel Spacing="3">
+                        <TextBlock Style="{StaticResource EyebrowStyle}" Text="CUSTOM AVATAR" />
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Style="{StaticResource PanelHeadingStyle}" Text="Maya · precise fit" />
+                            <Border
+                                Grid.Column="1"
+                                Padding="7,3"
+                                VerticalAlignment="Center"
+                                Background="{ThemeResource SystemFillColorSuccessBackgroundBrush}"
+                                CornerRadius="4">
+                                <TextBlock
+                                    FontSize="11"
+                                    Foreground="{ThemeResource SystemFillColorSuccessBrush}"
+                                    Text="LIVE" />
+                            </Border>
+                        </Grid>
+                        <TextBlock
+                            x:Name="PhotoStatusText"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="Manual measurements · no photos linked"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <Button
+                        x:Name="AvatarPhotoButton"
+                        HorizontalAlignment="Stretch"
+                        AutomationProperties.HelpText="Photos remain on this device in the current prototype"
+                        AutomationProperties.Name="Create avatar draft from photos"
+                        Click="OnImportPhotosClicked">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE91B;" />
+                            <TextBlock Text="Create photo-based draft" />
+                        </StackPanel>
+                    </Button>
+
+                    <InfoBar
+                        x:Name="PhotoPrivacyInfo"
+                        IsClosable="True"
+                        IsOpen="True"
+                        Message="Photo calibration is a local prototype. No image is uploaded."
+                        Severity="Informational"
+                        Title="Private by design" />
+
+                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                    <StackPanel Spacing="10">
+                        <TextBlock FontWeight="SemiBold" Text="Garment ease and fit" />
+                        <TextBlock
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="Finished garment allowance beyond the measured body. Negative values create compression fit."
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            x:Name="GarmentEaseResultText"
+                            AutomationProperties.LiveSetting="Polite"
+                            Foreground="{ThemeResource SystemFillColorSuccessBrush}"
+                            Text="Drafted garment measurements update from the pattern geometry."
+                            TextWrapping="Wrap" />
+                        <Grid ColumnSpacing="10" RowSpacing="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <NumberBox
+                                x:Name="ChestEaseNumberBox"
+                                AutomationProperties.Name="Finished chest ease in centimeters"
+                                Header="Chest ease (cm)"
+                                Maximum="40"
+                                Minimum="-20"
+                                SmallChange="0.5"
+                                Value="6"
+                                ValueChanged="OnGarmentEaseChanged" />
+                            <NumberBox
+                                x:Name="WaistEaseNumberBox"
+                                Grid.Column="1"
+                                AutomationProperties.Name="Finished waist ease in centimeters"
+                                Header="Waist ease (cm)"
+                                Maximum="50"
+                                Minimum="-20"
+                                SmallChange="0.5"
+                                Value="6"
+                                ValueChanged="OnGarmentEaseChanged" />
+                            <NumberBox
+                                x:Name="HipEaseNumberBox"
+                                Grid.Row="1"
+                                AutomationProperties.Name="Finished hip ease in centimeters"
+                                Header="Hip ease (cm)"
+                                Maximum="50"
+                                Minimum="-20"
+                                SmallChange="0.5"
+                                Value="8"
+                                ValueChanged="OnGarmentEaseChanged" />
+                            <NumberBox
+                                x:Name="UpperArmEaseNumberBox"
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                AutomationProperties.Name="Finished upper arm ease in centimeters"
+                                Header="Upper arm ease (cm)"
+                                Maximum="25"
+                                Minimum="-3"
+                                SmallChange="0.5"
+                                Value="5"
+                                ValueChanged="OnGarmentEaseChanged" />
+                            <NumberBox
+                                x:Name="ArmscyeEaseNumberBox"
+                                Grid.Row="2"
+                                AutomationProperties.Name="Finished armscye ease in centimeters"
+                                Header="Armscye ease (cm)"
+                                Maximum="15"
+                                Minimum="0"
+                                SmallChange="0.25"
+                                Value="2.5"
+                                ValueChanged="OnGarmentEaseChanged" />
+                        </Grid>
+                        <Expander Header="Shirt construction draft">
+                            <StackPanel Padding="0,8,0,0" Spacing="10">
+                                <TextBlock
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="Patternmaking dimensions reshape the actual neckline, shoulder, armscye, sleeve cap, bust distribution, and front balance."
+                                    TextWrapping="Wrap" />
+                                <TextBlock
+                                    x:Name="ShirtConstructionResultText"
+                                    AutomationProperties.LiveSetting="Polite"
+                                    Foreground="{ThemeResource SystemFillColorSuccessBrush}"
+                                    Text="Construction profile follows the source block."
+                                    TextWrapping="Wrap" />
+                                <Grid ColumnSpacing="10" RowSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <NumberBox
+                                        x:Name="FrontWidthShareNumberBox"
+                                        AutomationProperties.Name="Front torso share of chest width in percent"
+                                        Header="Front width share (%)"
+                                        Maximum="65"
+                                        Minimum="40"
+                                        SmallChange="0.25"
+                                        Value="52.5"
+                                        ValueChanged="OnShirtConstructionChanged" />
+                                    <NumberBox
+                                        x:Name="NecklineWidthNumberBox"
+                                        Grid.Column="1"
+                                        AutomationProperties.Name="Finished neckline width in centimeters"
+                                        Header="Neckline width (cm)"
+                                        Maximum="30"
+                                        Minimum="6"
+                                        SmallChange="0.1"
+                                        Value="14.2"
+                                        ValueChanged="OnShirtConstructionChanged" />
+                                    <NumberBox
+                                        x:Name="FrontNeckDepthNumberBox"
+                                        Grid.Row="1"
+                                        AutomationProperties.Name="Front neckline depth in centimeters"
+                                        Header="Front neck depth (cm)"
+                                        Maximum="30"
+                                        Minimum="1"
+                                        SmallChange="0.1"
+                                        Value="9.1"
+                                        ValueChanged="OnShirtConstructionChanged" />
+                                    <NumberBox
+                                        x:Name="BackNeckDepthNumberBox"
+                                        Grid.Row="1"
+                                        Grid.Column="1"
+                                        AutomationProperties.Name="Back neckline depth in centimeters"
+                                        Header="Back neck depth (cm)"
+                                        Maximum="15"
+                                        Minimum="0.5"
+                                        SmallChange="0.1"
+                                        Value="4.1"
+                                        ValueChanged="OnShirtConstructionChanged" />
+                                    <NumberBox
+                                        x:Name="ShoulderLengthNumberBox"
+                                        Grid.Row="2"
+                                        AutomationProperties.Name="Shoulder seam length in centimeters"
+                                        Header="Shoulder length (cm)"
+                                        Maximum="25"
+                                        Minimum="5"
+                                        SmallChange="0.1"
+                                        Value="11.7"
+                                        ValueChanged="OnShirtConstructionChanged" />
+                                    <NumberBox
+                                        x:Name="ShoulderDropNumberBox"
+                                        Grid.Row="2"
+                                        Grid.Column="1"
+                                        AutomationProperties.Name="Shoulder seam drop in centimeters"
+                                        Header="Shoulder drop (cm)"
+                                        Maximum="8"
+                                        Minimum="0.1"
+                                        SmallChange="0.1"
+                                        Value="2.4"
+                                        ValueChanged="OnShirtConstructionChanged" />
+                                    <NumberBox
+                                        x:Name="ArmscyeDepthNumberBox"
+                                        Grid.Row="3"
+                                        AutomationProperties.Name="Armscye depth in centimeters"
+                                        Header="Armscye depth (cm)"
+                                        Maximum="35"
+                                        Minimum="10"
+                                        SmallChange="0.1"
+                                        Value="18"
+                                        ValueChanged="OnShirtConstructionChanged" />
+                                    <NumberBox
+                                        x:Name="SleeveCapHeightNumberBox"
+                                        Grid.Row="3"
+                                        Grid.Column="1"
+                                        AutomationProperties.Name="Sleeve cap height in centimeters"
+                                        Header="Sleeve cap height (cm)"
+                                        Maximum="30"
+                                        Minimum="5"
+                                        SmallChange="0.1"
+                                        Value="15.2"
+                                        ValueChanged="OnShirtConstructionChanged" />
+                                    <NumberBox
+                                        x:Name="FrontBalanceNumberBox"
+                                        Grid.Row="4"
+                                        AutomationProperties.Name="Front garment balance adjustment in centimeters"
+                                        Header="Front balance (cm)"
+                                        Maximum="8"
+                                        Minimum="-8"
+                                        SmallChange="0.1"
+                                        Value="0"
+                                        ValueChanged="OnShirtConstructionChanged" />
+                                    <NumberBox
+                                        x:Name="ArmscyeScoopNumberBox"
+                                        Grid.Row="4"
+                                        Grid.Column="1"
+                                        AutomationProperties.Name="Armscye curve scoop in centimeters"
+                                        Header="Armscye curve shape (cm)"
+                                        Maximum="20"
+                                        Minimum="-12"
+                                        SmallChange="0.1"
+                                        Value="0"
+                                        ValueChanged="OnShirtConstructionChanged" />
+                                    <NumberBox
+                                        x:Name="UnderarmExtensionNumberBox"
+                                        Grid.Row="5"
+                                        AutomationProperties.Name="Underarm junction extension in centimeters"
+                                        Header="Underarm extension (cm)"
+                                        Maximum="3"
+                                        Minimum="0"
+                                        SmallChange="0.05"
+                                        Value="0"
+                                        ValueChanged="OnShirtConstructionChanged" />
+                                </Grid>
+                            </StackPanel>
+                        </Expander>
+                        <Expander Header="Bust shaping draft">
+                            <StackPanel Padding="0,8,0,0" Spacing="10">
+                                <TextBlock
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="Generate editable left and right bust intake from detailed circumference, bust-point, height, and projection measurements. Transfer the same measured fullness between side-seam and shoulder darts without asking the cloth solver to stretch it into existence."
+                                    TextWrapping="Wrap" />
+                                <TextBlock
+                                    x:Name="BustShapingResultText"
+                                    AutomationProperties.LiveSetting="Polite"
+                                    Foreground="{ThemeResource SystemFillColorSuccessBrush}"
+                                    Text="Measurement-driven side darts shape the default full-bust block."
+                                    TextWrapping="Wrap" />
+                                <ComboBox
+                                    x:Name="BustShapingModeComboBox"
+                                    HorizontalAlignment="Stretch"
+                                    AutomationProperties.Name="Bust shaping construction mode"
+                                    Header="Construction mode"
+                                    SelectedIndex="1"
+                                    SelectionChanged="OnBustShapingModeChanged">
+                                    <ComboBoxItem Content="Source block without darts" Tag="none" />
+                                    <ComboBoxItem Content="Measurement-driven side darts" Tag="side-darts" />
+                                    <ComboBoxItem Content="Rotate intake to shoulder darts" Tag="shoulder-darts" />
+                                    <ComboBoxItem Content="Distribute intake across side and shoulder" Tag="distributed-darts" />
+                                </ComboBox>
+                                <Button
+                                    HorizontalAlignment="Stretch"
+                                    AutomationProperties.Name="Estimate bust shaping from detailed body measurements"
+                                    Click="OnEstimateBustShapingClicked"
+                                    Content="Estimate from body measurements" />
+                                <Grid ColumnSpacing="10" RowSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <NumberBox
+                                        x:Name="LeftDartIntakeNumberBox"
+                                        AutomationProperties.Name="Left bust dart intake in centimeters"
+                                        Header="Left intake (cm)"
+                                        Maximum="8"
+                                        Minimum="0"
+                                        SmallChange="0.1"
+                                        Value="0"
+                                        ValueChanged="OnBustShapingValueChanged" />
+                                    <NumberBox
+                                        x:Name="RightDartIntakeNumberBox"
+                                        Grid.Column="1"
+                                        AutomationProperties.Name="Right bust dart intake in centimeters"
+                                        Header="Right intake (cm)"
+                                        Maximum="8"
+                                        Minimum="0"
+                                        SmallChange="0.1"
+                                        Value="0"
+                                        ValueChanged="OnBustShapingValueChanged" />
+                                    <NumberBox
+                                        x:Name="BustPointSeparationNumberBox"
+                                        Grid.Row="1"
+                                        AutomationProperties.Name="Bust point separation in centimeters"
+                                        Header="Bust separation (cm)"
+                                        Maximum="50"
+                                        Minimum="5"
+                                        SmallChange="0.1"
+                                        Value="18.6"
+                                        ValueChanged="OnBustShapingValueChanged" />
+                                    <NumberBox
+                                        x:Name="DartTipOffsetNumberBox"
+                                        Grid.Row="1"
+                                        Grid.Column="1"
+                                        AutomationProperties.Name="Dart tip distance from bust point in centimeters"
+                                        Header="Tip offset (cm)"
+                                        Maximum="8"
+                                        Minimum="0.5"
+                                        SmallChange="0.1"
+                                        Value="2.5"
+                                        ValueChanged="OnBustShapingValueChanged" />
+                                    <NumberBox
+                                        x:Name="LeftBustHeightNumberBox"
+                                        Grid.Row="2"
+                                        AutomationProperties.Name="Left shoulder to bust point height in centimeters"
+                                        Header="Left bust height (cm)"
+                                        Maximum="60"
+                                        Minimum="5"
+                                        SmallChange="0.1"
+                                        Value="25.8"
+                                        ValueChanged="OnBustShapingValueChanged" />
+                                    <NumberBox
+                                        x:Name="RightBustHeightNumberBox"
+                                        Grid.Row="2"
+                                        Grid.Column="1"
+                                        AutomationProperties.Name="Right shoulder to bust point height in centimeters"
+                                        Header="Right bust height (cm)"
+                                        Maximum="60"
+                                        Minimum="5"
+                                        SmallChange="0.1"
+                                        Value="25.6"
+                                        ValueChanged="OnBustShapingValueChanged" />
+                                    <NumberBox
+                                        x:Name="LeftBustProjectionNumberBox"
+                                        Grid.Row="3"
+                                        AutomationProperties.Name="Left bust projection in centimeters"
+                                        Header="Left projection (cm)"
+                                        Maximum="20"
+                                        Minimum="0"
+                                        SmallChange="0.1"
+                                        Value="4.8"
+                                        ValueChanged="OnBustShapingValueChanged" />
+                                    <NumberBox
+                                        x:Name="RightBustProjectionNumberBox"
+                                        Grid.Row="3"
+                                        Grid.Column="1"
+                                        AutomationProperties.Name="Right bust projection in centimeters"
+                                        Header="Right projection (cm)"
+                                        Maximum="20"
+                                        Minimum="0"
+                                        SmallChange="0.1"
+                                        Value="4.7"
+                                        ValueChanged="OnBustShapingValueChanged" />
+                                    <NumberBox
+                                        x:Name="DartMouthDropNumberBox"
+                                        Grid.Row="4"
+                                        AutomationProperties.Name="Dart mouth drop below bust point in centimeters"
+                                        Header="Mouth drop (cm)"
+                                        Maximum="15"
+                                        Minimum="-10"
+                                        SmallChange="0.1"
+                                        Value="5"
+                                        ValueChanged="OnBustShapingValueChanged" />
+                                    <NumberBox
+                                        x:Name="ShoulderDartMouthOffsetNumberBox"
+                                        Grid.Row="4"
+                                        Grid.Column="1"
+                                        AutomationProperties.Name="Shoulder dart mouth distance from neckline in centimeters"
+                                        Header="Shoulder mouth from neck (cm)"
+                                        Maximum="12"
+                                        Minimum="1"
+                                        SmallChange="0.1"
+                                        Value="5"
+                                        ValueChanged="OnBustShapingValueChanged" />
+                                    <NumberBox
+                                        x:Name="ShoulderDartShareNumberBox"
+                                        Grid.Row="5"
+                                        Grid.ColumnSpan="2"
+                                        AutomationProperties.Name="Percent of bust dart intake allocated to the shoulder"
+                                        Header="Shoulder share of intake (%)"
+                                        Maximum="99"
+                                        Minimum="1"
+                                        SmallChange="1"
+                                        Value="35"
+                                        ValueChanged="OnBustShapingValueChanged" />
+                                </Grid>
+                            </StackPanel>
+                        </Expander>
+                    </StackPanel>
+
+                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                    <StackPanel Spacing="12">
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Spacing="2">
+                                <TextBlock FontWeight="SemiBold" Text="Anatomical measurement profile" />
+                                <TextBlock
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="{x:Bind DetailedMeasurementCountText}"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Border
+                                Grid.Column="1"
+                                Padding="7,3"
+                                VerticalAlignment="Top"
+                                Background="{ThemeResource AccentSoftBrush}"
+                                CornerRadius="4">
+                                <TextBlock
+                                    FontSize="11"
+                                    Foreground="{ThemeResource AccentStrongBrush}"
+                                    Text="0.1 CM" />
+                            </Border>
+                        </Grid>
+
+                        <ComboBox
+                            x:Name="BodyTemplateComboBox"
+                            HorizontalAlignment="Stretch"
+                            AutomationProperties.Name="Body morphology starting template"
+                            Header="Morphology starting template"
+                            SelectedIndex="1"
+                            SelectionChanged="OnAvatarProfileChanged">
+                            <ComboBoxItem Content="Individual neutral" Tag="neutral" />
+                            <ComboBoxItem Content="Estrogen-dominant frame" Tag="feminine" />
+                            <ComboBoxItem Content="Testosterone-dominant frame" Tag="masculine" />
+                        </ComboBox>
+
+                        <ToggleSwitch
+                            x:Name="LinkProportionsToggle"
+                            AutomationProperties.HelpText="Updates likely secondary measurements when a key measurement changes"
+                            AutomationProperties.Name="Link proportional measurements"
+                            Header="Link proportional baseline"
+                            IsOn="True"
+                            Toggled="OnLinkProportionsToggled" />
+
+                        <ToggleSwitch
+                            x:Name="ShowBraToggle"
+                            AutomationProperties.HelpText="Shows or hides the fitted bra without changing the supported body or collision shape"
+                            AutomationProperties.Name="Show fitted bra"
+                            Header="Show fitted support bra"
+                            IsOn="False"
+                            Toggled="OnAvatarDisplayOptionToggled" />
+
+                        <TextBlock
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="Display only. The supported bust shape and cloth collision body stay identical when this is off."
+                            TextWrapping="Wrap" />
+
+                        <TextBlock
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="Key dimensions drive the pattern immediately. Open any region below to correct surface, landmark, depth, projection, or left and right asymmetry values."
+                            TextWrapping="Wrap" />
+
+                        <StackPanel Spacing="3">
+                            <Grid>
+                                <TextBlock Text="Height" />
+                                <TextBlock x:Name="HeightValueText" Style="{StaticResource MeasurementValueStyle}" Text="167 cm" />
+                            </Grid>
+                            <Slider
+                                x:Name="HeightSlider"
+                                AutomationProperties.Name="Height in centimeters"
+                                Maximum="205"
+                                Minimum="140"
+                                SmallChange="0.5"
+                                StepFrequency="0.5"
+                                Value="167"
+                                ValueChanged="OnMeasurementChanged" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="3">
+                            <Grid>
+                                <TextBlock Text="Full bust circumference" />
+                                <TextBlock x:Name="ChestValueText" Style="{StaticResource MeasurementValueStyle}" Text="112 cm" />
+                            </Grid>
+                            <Slider
+                                x:Name="ChestSlider"
+                                AutomationProperties.Name="Full bust circumference in centimeters"
+                                Maximum="145"
+                                Minimum="65"
+                                SmallChange="0.5"
+                                StepFrequency="0.5"
+                                Value="112"
+                                ValueChanged="OnMeasurementChanged" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="3">
+                            <Grid>
+                                <TextBlock Text="Natural waist" />
+                                <TextBlock x:Name="WaistValueText" Style="{StaticResource MeasurementValueStyle}" Text="82 cm" />
+                            </Grid>
+                            <Slider
+                                x:Name="WaistSlider"
+                                AutomationProperties.Name="Natural waist circumference in centimeters"
+                                Maximum="135"
+                                Minimum="50"
+                                SmallChange="0.5"
+                                StepFrequency="0.5"
+                                Value="82"
+                                ValueChanged="OnMeasurementChanged" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="3">
+                            <Grid>
+                                <TextBlock Text="Full hip" />
+                                <TextBlock x:Name="HipValueText" Style="{StaticResource MeasurementValueStyle}" Text="108 cm" />
+                            </Grid>
+                            <Slider
+                                x:Name="HipSlider"
+                                AutomationProperties.Name="Full hip circumference in centimeters"
+                                Maximum="155"
+                                Minimum="70"
+                                SmallChange="0.5"
+                                StepFrequency="0.5"
+                                Value="108"
+                                ValueChanged="OnMeasurementChanged" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="3">
+                            <Grid>
+                                <TextBlock Text="Shoulder breadth" />
+                                <TextBlock x:Name="ShoulderValueText" Style="{StaticResource MeasurementValueStyle}" Text="37 cm" />
+                            </Grid>
+                            <Slider
+                                x:Name="ShoulderSlider"
+                                AutomationProperties.Name="Shoulder breadth in centimeters"
+                                Maximum="55"
+                                Minimum="30"
+                                SmallChange="0.5"
+                                StepFrequency="0.5"
+                                Value="37"
+                                ValueChanged="OnMeasurementChanged" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="3">
+                            <Grid>
+                                <TextBlock Text="Torso length" />
+                                <TextBlock x:Name="TorsoValueText" Style="{StaticResource MeasurementValueStyle}" Text="44 cm" />
+                            </Grid>
+                            <Slider
+                                x:Name="TorsoSlider"
+                                AutomationProperties.Name="Torso length in centimeters"
+                                Maximum="58"
+                                Minimum="32"
+                                SmallChange="0.5"
+                                StepFrequency="0.5"
+                                Value="44"
+                                ValueChanged="OnMeasurementChanged" />
+                        </StackPanel>
+
+                        <ComboBox
+                            x:Name="PostureComboBox"
+                            HorizontalAlignment="Stretch"
+                            AutomationProperties.Name="Posture profile"
+                            Header="Posture profile"
+                            SelectedIndex="1"
+                            SelectionChanged="OnAvatarProfileChanged">
+                            <ComboBoxItem Content="Forward shoulder" />
+                            <ComboBoxItem Content="Balanced" />
+                            <ComboBoxItem Content="Erect" />
+                        </ComboBox>
+
+                        <ItemsControl ItemsSource="{x:Bind MeasurementGroups, Mode=OneWay}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Expander
+                                        Margin="0,2,0,0"
+                                        AutomationProperties.Name="{Binding Title}"
+                                        Header="{Binding Title}"
+                                        IsExpanded="{Binding IsExpanded, Mode=TwoWay}">
+                                        <StackPanel Padding="0,10,0,6" Spacing="8">
+                                            <TextBlock
+                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                Text="{Binding Description}"
+                                                TextWrapping="Wrap" />
+                                            <ItemsControl ItemsSource="{Binding Measurements}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <ItemsWrapGrid
+                                                            MaximumRowsOrColumns="2"
+                                                            Orientation="Horizontal" />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <NumberBox
+                                                            Width="184"
+                                                            Margin="0,0,6,8"
+                                                            AutomationProperties.Name="{Binding AutomationName}"
+                                                            Header="{Binding DisplayLabel}"
+                                                            Maximum="{Binding Maximum}"
+                                                            Minimum="{Binding Minimum}"
+                                                            SmallChange="{Binding Increment}"
+                                                            SpinButtonPlacementMode="Compact"
+                                                            Tag="{Binding Key}"
+                                                            Value="{Binding Value, Mode=TwoWay}"
+                                                            ValueChanged="OnDetailedMeasurementChanged" />
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Expander>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <Expander Header="User-defined measurements">
+                            <StackPanel Padding="0,10,0,6" Spacing="8">
+                                <TextBlock
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="Add uncommon tailoring dimensions or named landmarks. Photo estimates never lock manual entry."
+                                    TextWrapping="Wrap" />
+                                <ItemsControl ItemsSource="{x:Bind CustomMeasurements, Mode=OneWay}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,0,0,8" ColumnSpacing="6">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="104" />
+                                                    <ColumnDefinition Width="42" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox
+                                                    AutomationProperties.Name="Custom measurement name"
+                                                    PlaceholderText="Measurement or landmark"
+                                                    Text="{Binding Name, Mode=TwoWay}" />
+                                                <NumberBox
+                                                    Grid.Column="1"
+                                                    AutomationProperties.Name="Custom measurement value"
+                                                    Maximum="999"
+                                                    Minimum="-999"
+                                                    SmallChange="0.1"
+                                                    SpinButtonPlacementMode="Compact"
+                                                    Value="{Binding Value, Mode=TwoWay}"
+                                                    ValueChanged="OnCustomMeasurementChanged" />
+                                                <Button
+                                                    Grid.Column="2"
+                                                    AutomationProperties.Name="Remove custom measurement"
+                                                    Click="OnRemoveCustomMeasurementClicked"
+                                                    Content="×"
+                                                    Tag="{Binding}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Button
+                                    HorizontalAlignment="Left"
+                                    AutomationProperties.Name="Add custom measurement"
+                                    Click="OnAddCustomMeasurementClicked"
+                                    Content="Add measurement" />
+                            </StackPanel>
+                        </Expander>
+                    </StackPanel>
+
+                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                    <StackPanel Spacing="12">
+                        <TextBlock FontWeight="SemiBold" Text="Fabric physics" />
+                        <ComboBox
+                            x:Name="FabricPresetComboBox"
+                            HorizontalAlignment="Stretch"
+                            AutomationProperties.Name="Fabric preset"
+                            Header="Material"
+                            SelectedIndex="1"
+                            SelectionChanged="OnFabricPresetChanged">
+                            <ComboBoxItem Content="Silk charmeuse" Tag="silk" />
+                            <ComboBoxItem Content="Lightweight cotton jersey" Tag="cotton" />
+                            <ComboBoxItem Content="Linen twill" Tag="linen" />
+                            <ComboBoxItem Content="Wool crepe" Tag="wool" />
+                        </ComboBox>
+
+                        <StackPanel Spacing="3">
+                            <Grid>
+                                <TextBlock Text="Weight" />
+                                <TextBlock x:Name="FabricWeightValueText" Style="{StaticResource MeasurementValueStyle}" Text="180 g/m²" />
+                            </Grid>
+                            <Slider
+                                x:Name="FabricWeightSlider"
+                                AutomationProperties.Name="Fabric weight in grams per square meter"
+                                Maximum="420"
+                                Minimum="35"
+                                StepFrequency="5"
+                                Value="180"
+                                ValueChanged="OnFabricPhysicsChanged" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="3">
+                            <Grid>
+                                <TextBlock Text="Bias stretch" />
+                                <TextBlock x:Name="FabricStretchValueText" Style="{StaticResource MeasurementValueStyle}" Text="35%" />
+                            </Grid>
+                            <Slider
+                                x:Name="FabricStretchSlider"
+                                AutomationProperties.Name="Fabric bias stretch percentage"
+                                Maximum="40"
+                                Minimum="0"
+                                StepFrequency="1"
+                                Value="35"
+                                ValueChanged="OnFabricPhysicsChanged" />
+                        </StackPanel>
+
+                        <Expander Header="Advanced material physics">
+                            <StackPanel Padding="0,10,0,4" Spacing="10">
+                                <NumberBox
+                                    x:Name="BendNumberBox"
+                                    AutomationProperties.Name="Fabric bending resistance"
+                                    Header="Bending resistance"
+                                    Maximum="100"
+                                    Minimum="1"
+                                    SmallChange="1"
+                                    Value="8"
+                                    ValueChanged="OnAdvancedPhysicsChanged" />
+                                <NumberBox
+                                    x:Name="FrictionNumberBox"
+                                    AutomationProperties.Name="Surface friction"
+                                    Header="Surface friction"
+                                    Maximum="1"
+                                    Minimum="0"
+                                    SmallChange="0.05"
+                                    Value="0.4"
+                                    ValueChanged="OnAdvancedPhysicsChanged" />
+                            </StackPanel>
+                        </Expander>
+                    </StackPanel>
+
+                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                    <StackPanel Spacing="10">
+                        <Grid>
+                            <TextBlock FontWeight="SemiBold" Text="Simulation evidence" />
+                            <TextBlock
+                                x:Name="FitEvidenceStatusText"
+                                HorizontalAlignment="Right"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="Not simulated" />
+                        </Grid>
+
+                        <StackPanel Spacing="4">
+                            <Grid>
+                                <TextBlock
+                                    x:Name="PeakStrainLabelText"
+                                    Text="Peak material strain" />
+                                <TextBlock
+                                    x:Name="PeakStrainText"
+                                    HorizontalAlignment="Right"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="No evidence" />
+                            </Grid>
+                            <ProgressBar
+                                x:Name="PeakStrainProgress"
+                                AutomationProperties.Name="Peak material strain relative to acceptance limit"
+                                Maximum="100"
+                                Value="84" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="4">
+                            <Grid>
+                                <TextBlock Text="95th percentile strain" />
+                                <TextBlock
+                                    x:Name="P95StrainText"
+                                    HorizontalAlignment="Right"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="No evidence" />
+                            </Grid>
+                            <ProgressBar
+                                x:Name="P95StrainProgress"
+                                AutomationProperties.Name="95th percentile material strain relative to acceptance limit"
+                                Maximum="100"
+                                Value="92" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="4">
+                            <Grid>
+                                <TextBlock Text="Localized strain (99.9th)" />
+                                <TextBlock
+                                    x:Name="P999StrainText"
+                                    HorizontalAlignment="Right"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="No evidence" />
+                            </Grid>
+                            <ProgressBar
+                                x:Name="P999StrainProgress"
+                                AutomationProperties.Name="99.9th percentile material strain relative to acceptance limit"
+                                Maximum="100"
+                                Value="0" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="4">
+                            <Grid>
+                                <TextBlock Text="Final intersections" />
+                                <TextBlock
+                                    x:Name="CollisionEvidenceText"
+                                    HorizontalAlignment="Right"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="No evidence" />
+                            </Grid>
+                            <ProgressBar
+                                x:Name="CollisionEvidenceProgress"
+                                AutomationProperties.Name="Final body and self intersection count"
+                                Maximum="100"
+                                Value="88" />
+                        </StackPanel>
+
+                        <Button
+                            x:Name="RunSimulationButton"
+                            HorizontalAlignment="Stretch"
+                            AutomationProperties.Name="Recalculate garment drape"
+                            Click="OnRunSimulationClicked"
+                            Content="Recalculate drape" />
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+
+            <VisualStateManager.VisualStateGroups>
+                <VisualStateGroup x:Name="EditorWidthStates">
+                    <VisualState x:Name="WideEditor">
+                        <VisualState.StateTriggers>
+                            <AdaptiveTrigger MinWindowWidth="1320" />
+                        </VisualState.StateTriggers>
+                        <VisualState.Setters>
+                            <Setter Target="PiecesPanel.Visibility" Value="Visible" />
+                            <Setter Target="PiecesColumn.Width" Value="244" />
+                            <Setter Target="InspectorPanel.Visibility" Value="Visible" />
+                            <Setter Target="InspectorColumn.Width" Value="420" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="MediumEditor">
+                        <VisualState.StateTriggers>
+                            <AdaptiveTrigger MinWindowWidth="900" />
+                        </VisualState.StateTriggers>
+                        <VisualState.Setters>
+                            <Setter Target="PiecesPanel.Visibility" Value="Collapsed" />
+                            <Setter Target="PiecesColumn.Width" Value="0" />
+                            <Setter Target="InspectorPanel.Visibility" Value="Visible" />
+                            <Setter Target="InspectorColumn.Width" Value="380" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="CompactEditor">
+                        <VisualState.StateTriggers>
+                            <AdaptiveTrigger MinWindowWidth="0" />
+                        </VisualState.StateTriggers>
+                        <VisualState.Setters>
+                            <Setter Target="PiecesPanel.Visibility" Value="Collapsed" />
+                            <Setter Target="PiecesColumn.Width" Value="0" />
+                            <Setter Target="InspectorPanel.Visibility" Value="Collapsed" />
+                            <Setter Target="InspectorColumn.Width" Value="0" />
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateManager.VisualStateGroups>
+        </Grid>
+
+        <InfoBar
+            x:Name="WorkspaceInfoBar"
+            Grid.Row="2"
+            IsClosable="True"
+            IsOpen="False"
+            Severity="Success" />
+    </Grid>
+</Page>

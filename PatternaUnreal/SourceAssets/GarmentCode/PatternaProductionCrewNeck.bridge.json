@@ -1,0 +1,3522 @@
+{
+  "schemaVersion": "patterna.unreal-bridge/1.0",
+  "generatedAtUtc": "1970-01-01T00:00:00+00:00",
+  "body": {
+    "units": "centimeters",
+    "posture": "balanced",
+    "bodyTemplate": "neutral",
+    "linkedPhotoCount": 0,
+    "measurements": [],
+    "customMeasurements": []
+  },
+  "garment": {
+    "schemaVersion": "patterna.garment/1.1",
+    "id": "PatternaFullPanel.specification",
+    "name": "GarmentCode fitted garment",
+    "units": "centimeters",
+    "pieces": [
+      {
+        "id": "left-collar-back",
+        "name": "Left Collar Back",
+        "cutQuantity": 1,
+        "mirrored": false,
+        "cutOnFold": false,
+        "scaleX": 1,
+        "scaleY": 1,
+        "seamAllowanceCm": 1,
+        "start": {
+          "x": 8.617541406191325,
+          "y": 0
+        },
+        "boundary": [
+          {
+            "id": "edge-0",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 8.617541406191325,
+                "y": 0
+              },
+              "end": {
+                "x": 0,
+                "y": 0
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-1",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 0.8
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 0,
+                "y": 0
+              },
+              "end": {
+                "x": 0,
+                "y": 0.8
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-2",
+            "kind": "line",
+            "end": {
+              "x": 8.617541406191325,
+              "y": 0.8
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 0,
+                "y": 0.8
+              },
+              "end": {
+                "x": 8.617541406191325,
+                "y": 0.8
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-3",
+            "kind": "line",
+            "end": {
+              "x": 8.617541406191325,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 8.617541406191325,
+                "y": 0.8
+              },
+              "end": {
+                "x": 8.617541406191325,
+                "y": 0
+              },
+              "control1": null,
+              "control2": null
+            }
+          }
+        ],
+        "layout": {
+          "left": 20,
+          "top": 45,
+          "labelX": 2,
+          "labelY": 2,
+          "showGrainline": true
+        },
+        "internalPaths": [],
+        "notches": [],
+        "darts": [],
+        "grainline": null
+      },
+      {
+        "id": "left-collar-front",
+        "name": "Left Collar Front",
+        "cutQuantity": 1,
+        "mirrored": false,
+        "cutOnFold": false,
+        "scaleX": 1,
+        "scaleY": 1,
+        "seamAllowanceCm": 1,
+        "start": {
+          "x": 13.25795579649575,
+          "y": 0
+        },
+        "boundary": [
+          {
+            "id": "edge-0",
+            "kind": "line",
+            "end": {
+              "x": 13.25795579649575,
+              "y": 0.8
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 13.25795579649575,
+                "y": 0
+              },
+              "end": {
+                "x": 13.25795579649575,
+                "y": 0.8
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-1",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 0.8
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 13.25795579649575,
+                "y": 0.8
+              },
+              "end": {
+                "x": 0,
+                "y": 0.8
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-2",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 0,
+                "y": 0.8
+              },
+              "end": {
+                "x": 0,
+                "y": 0
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-3",
+            "kind": "line",
+            "end": {
+              "x": 13.25795579649575,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 0,
+                "y": 0
+              },
+              "end": {
+                "x": 13.25795579649575,
+                "y": 0
+              },
+              "control1": null,
+              "control2": null
+            }
+          }
+        ],
+        "layout": {
+          "left": 235,
+          "top": 45,
+          "labelX": 2,
+          "labelY": 2,
+          "showGrainline": true
+        },
+        "internalPaths": [],
+        "notches": [],
+        "darts": [],
+        "grainline": null
+      },
+      {
+        "id": "left-sleeve-f",
+        "name": "Left Sleeve Front",
+        "cutQuantity": 1,
+        "mirrored": false,
+        "cutOnFold": false,
+        "scaleX": 1,
+        "scaleY": 1,
+        "seamAllowanceCm": 1,
+        "start": {
+          "x": 24.441980419822777,
+          "y": 15.193220404681453
+        },
+        "boundary": [
+          {
+            "id": "edge-0",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 15.193220404681453
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 24.441980419822777,
+                "y": 15.193220404681453
+              },
+              "end": {
+                "x": 0,
+                "y": 15.193220404681453
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-1",
+            "kind": "cubic",
+            "end": {
+              "x": 13.66590468468873,
+              "y": 0
+            },
+            "control1": {
+              "x": 0.26707892252581544,
+              "y": 5.743400408184808
+            },
+            "control2": {
+              "x": 9.543929266121777,
+              "y": 5.127279074353874
+            },
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": "{\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.3525533580989215,\r\n                  -0.2995337093983529\r\n                ],\r\n                [\r\n                  0.6785600328869821,\r\n                  0.01782324791165352\r\n                ]\r\n              ]\r\n            }",
+              "start": {
+                "x": 0,
+                "y": 15.193220404681453
+              },
+              "end": {
+                "x": 13.66590468468873,
+                "y": 0
+              },
+              "control1": {
+                "x": 0.26707892252581544,
+                "y": 5.743400408184808
+              },
+              "control2": {
+                "x": 9.543929266121777,
+                "y": 5.127279074353874
+              }
+            }
+          },
+          {
+            "id": "edge-2",
+            "kind": "line",
+            "end": {
+              "x": 24.441980419822777,
+              "y": 1.0635254283277007
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 13.66590468468873,
+                "y": 0
+              },
+              "end": {
+                "x": 24.441980419822777,
+                "y": 1.0635254283277007
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-3",
+            "kind": "line",
+            "end": {
+              "x": 24.441980419822777,
+              "y": 15.193220404681453
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 24.441980419822777,
+                "y": 1.0635254283277007
+              },
+              "end": {
+                "x": 24.441980419822777,
+                "y": 15.193220404681453
+              },
+              "control1": null,
+              "control2": null
+            }
+          }
+        ],
+        "layout": {
+          "left": 450,
+          "top": 45,
+          "labelX": 2,
+          "labelY": 2,
+          "showGrainline": true
+        },
+        "internalPaths": [],
+        "notches": [],
+        "darts": [],
+        "grainline": null
+      },
+      {
+        "id": "left-sleeve-b",
+        "name": "Left Sleeve Back",
+        "cutQuantity": 1,
+        "mirrored": false,
+        "cutOnFold": false,
+        "scaleX": 1,
+        "scaleY": 1,
+        "seamAllowanceCm": 1,
+        "start": {
+          "x": 24.447620637492122,
+          "y": 15.193220404681473
+        },
+        "boundary": [
+          {
+            "id": "edge-0",
+            "kind": "line",
+            "end": {
+              "x": 24.447620637492122,
+              "y": 1.0635254283277025
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 24.447620637492122,
+                "y": 15.193220404681473
+              },
+              "end": {
+                "x": 24.447620637492122,
+                "y": 1.0635254283277025
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-1",
+            "kind": "line",
+            "end": {
+              "x": 13.671544902358077,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 24.447620637492122,
+                "y": 1.0635254283277025
+              },
+              "end": {
+                "x": 13.671544902358077,
+                "y": 0
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-2",
+            "kind": "cubic",
+            "end": {
+              "x": 0,
+              "y": 14.683910194875498
+            },
+            "control1": {
+              "x": 9.5860656350706,
+              "y": 4.948440785612622
+            },
+            "control2": {
+              "x": 0.34022734597412807,
+              "y": 5.556985228900356
+            },
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": "{\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.3192750786277482,\r\n                  -0.01903473275621314\r\n                ],\r\n                [\r\n                  0.6555015888426627,\r\n                  0.2975772864968461\r\n                ]\r\n              ]\r\n            }",
+              "start": {
+                "x": 13.671544902358077,
+                "y": 0
+              },
+              "end": {
+                "x": 0,
+                "y": 14.683910194875498
+              },
+              "control1": {
+                "x": 9.5860656350706,
+                "y": 4.948440785612622
+              },
+              "control2": {
+                "x": 0.34022734597412807,
+                "y": 5.556985228900356
+              }
+            }
+          },
+          {
+            "id": "edge-3",
+            "kind": "cubic",
+            "end": {
+              "x": 0.005640217669345304,
+              "y": 15.193220404681473
+            },
+            "control1": {
+              "x": -0.0009854408641523094,
+              "y": 14.856487781737528
+            },
+            "control2": {
+              "x": 0.0009206849855978305,
+              "y": 15.026233306234202
+            },
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": "{\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.3387827493207235,\r\n                  0.0056866115329645235\r\n                ],\r\n                [\r\n                  0.672068461491963,\r\n                  0.005634930089097011\r\n                ]\r\n              ]\r\n            }",
+              "start": {
+                "x": 0,
+                "y": 14.683910194875498
+              },
+              "end": {
+                "x": 0.005640217669345304,
+                "y": 15.193220404681473
+              },
+              "control1": {
+                "x": -0.0009854408641523094,
+                "y": 14.856487781737528
+              },
+              "control2": {
+                "x": 0.0009206849855978305,
+                "y": 15.026233306234202
+              }
+            }
+          },
+          {
+            "id": "edge-4",
+            "kind": "line",
+            "end": {
+              "x": 24.447620637492122,
+              "y": 15.193220404681473
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 0.005640217669345304,
+                "y": 15.193220404681473
+              },
+              "end": {
+                "x": 24.447620637492122,
+                "y": 15.193220404681473
+              },
+              "control1": null,
+              "control2": null
+            }
+          }
+        ],
+        "layout": {
+          "left": 665,
+          "top": 45,
+          "labelX": 2,
+          "labelY": 2,
+          "showGrainline": true
+        },
+        "internalPaths": [],
+        "notches": [],
+        "darts": [],
+        "grainline": null
+      },
+      {
+        "id": "sl-left-cuff-f",
+        "name": "Sl Left Cuff Front",
+        "cutQuantity": 1,
+        "mirrored": false,
+        "cutOnFold": false,
+        "scaleX": 1,
+        "scaleY": 1,
+        "seamAllowanceCm": 1,
+        "start": {
+          "x": 14.129694976353761,
+          "y": 0
+        },
+        "boundary": [
+          {
+            "id": "edge-0",
+            "kind": "line",
+            "end": {
+              "x": 14.129694976353761,
+              "y": 1
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 14.129694976353761,
+                "y": 0
+              },
+              "end": {
+                "x": 14.129694976353761,
+                "y": 1
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-1",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 1
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 14.129694976353761,
+                "y": 1
+              },
+              "end": {
+                "x": 0,
+                "y": 1
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-2",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 0,
+                "y": 1
+              },
+              "end": {
+                "x": 0,
+                "y": 0
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-3",
+            "kind": "line",
+            "end": {
+              "x": 14.129694976353761,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 0,
+                "y": 0
+              },
+              "end": {
+                "x": 14.129694976353761,
+                "y": 0
+              },
+              "control1": null,
+              "control2": null
+            }
+          }
+        ],
+        "layout": {
+          "left": 20,
+          "top": 385,
+          "labelX": 2,
+          "labelY": 2,
+          "showGrainline": true
+        },
+        "internalPaths": [],
+        "notches": [],
+        "darts": [],
+        "grainline": null
+      },
+      {
+        "id": "sl-left-cuff-b",
+        "name": "Sl Left Cuff Back",
+        "cutQuantity": 1,
+        "mirrored": false,
+        "cutOnFold": false,
+        "scaleX": 1,
+        "scaleY": 1,
+        "seamAllowanceCm": 1,
+        "start": {
+          "x": 14.129694976353761,
+          "y": 0
+        },
+        "boundary": [
+          {
+            "id": "edge-0",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 14.129694976353761,
+                "y": 0
+              },
+              "end": {
+                "x": 0,
+                "y": 0
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-1",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 1
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 0,
+                "y": 0
+              },
+              "end": {
+                "x": 0,
+                "y": 1
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-2",
+            "kind": "line",
+            "end": {
+              "x": 14.129694976353761,
+              "y": 1
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 0,
+                "y": 1
+              },
+              "end": {
+                "x": 14.129694976353761,
+                "y": 1
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-3",
+            "kind": "line",
+            "end": {
+              "x": 14.129694976353761,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 14.129694976353761,
+                "y": 1
+              },
+              "end": {
+                "x": 14.129694976353761,
+                "y": 0
+              },
+              "control1": null,
+              "control2": null
+            }
+          }
+        ],
+        "layout": {
+          "left": 235,
+          "top": 385,
+          "labelX": 2,
+          "labelY": 2,
+          "showGrainline": true
+        },
+        "internalPaths": [],
+        "notches": [],
+        "darts": [],
+        "grainline": null
+      },
+      {
+        "id": "back-torso",
+        "name": "Back Torso",
+        "cutQuantity": 1,
+        "mirrored": false,
+        "cutOnFold": false,
+        "scaleX": 1,
+        "scaleY": 1,
+        "seamAllowanceCm": 1,
+        "start": {
+          "x": 0,
+          "y": 0
+        },
+        "boundary": [
+          {
+            "id": "edge-0",
+            "kind": "line",
+            "end": {
+              "x": 6.062090163934428,
+              "y": 15.864999999999995
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 0,
+                "y": 0
+              },
+              "end": {
+                "x": 6.062090163934428,
+                "y": 15.864999999999995
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-1",
+            "kind": "line",
+            "end": {
+              "x": 2.817590163934426,
+              "y": 35.08633333333333
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 6.062090163934428,
+                "y": 15.864999999999995
+              },
+              "end": {
+                "x": 2.817590163934426,
+                "y": 35.08633333333333
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-2",
+            "kind": "line",
+            "end": {
+              "x": 2.817590163934426,
+              "y": 40.41171647100424
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 2.817590163934426,
+                "y": 35.08633333333333
+              },
+              "end": {
+                "x": 2.817590163934426,
+                "y": 40.41171647100424
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-3",
+            "kind": "cubic",
+            "end": {
+              "x": 7.543590163934425,
+              "y": 58.598009271004244
+            },
+            "control1": {
+              "x": 10.127992643934427,
+              "y": 42.39487503100424
+            },
+            "control2": {
+              "x": 8.817848723934425,
+              "y": 48.55966287100424
+            },
+            "label": "right_armhole",
+            "garmentCodeSource": {
+              "curvatureJson": "{\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.19999999999999996,\r\n                  -0.35\r\n                ],\r\n                [\r\n                  0.5,\r\n                  -0.2\r\n                ]\r\n              ]\r\n            }",
+              "start": {
+                "x": 2.817590163934426,
+                "y": 40.41171647100424
+              },
+              "end": {
+                "x": 7.543590163934425,
+                "y": 58.598009271004244
+              },
+              "control1": {
+                "x": 10.127992643934427,
+                "y": 42.39487503100424
+              },
+              "control2": {
+                "x": 8.817848723934425,
+                "y": 48.55966287100424
+              }
+            }
+          },
+          {
+            "id": "edge-4",
+            "kind": "line",
+            "end": {
+              "x": 18.940159763934425,
+              "y": 60.96849954397763
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 7.543590163934425,
+                "y": 58.598009271004244
+              },
+              "end": {
+                "x": 18.940159763934425,
+                "y": 60.96849954397763
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-5",
+            "kind": "cubic",
+            "end": {
+              "x": 26.043590163934425,
+              "y": 56.82649691107515
+            },
+            "control1": {
+              "x": 20.388764530393097,
+              "y": 58.40884663911015
+            },
+            "control2": {
+              "x": 23.102454539247372,
+              "y": 56.826496911075154
+            },
+            "label": "right_collar",
+            "garmentCodeSource": {
+              "curvatureJson": "{\r\n              \u0022type\u0022: \u0022circle\u0022,\r\n              \u0022params\u0022: [\r\n                8.162103606780509,\r\n                0,\r\n                1\r\n              ]\r\n            }",
+              "start": {
+                "x": 18.940159763934425,
+                "y": 60.96849954397763
+              },
+              "end": {
+                "x": 26.043590163934425,
+                "y": 56.82649691107515
+              },
+              "control1": {
+                "x": 20.388764530393097,
+                "y": 58.40884663911015
+              },
+              "control2": {
+                "x": 23.102454539247372,
+                "y": 56.826496911075154
+              }
+            }
+          },
+          {
+            "id": "edge-6",
+            "kind": "cubic",
+            "end": {
+              "x": 33.147020563934426,
+              "y": 60.96849954397763
+            },
+            "control1": {
+              "x": 28.98472578862148,
+              "y": 56.826496911075154
+            },
+            "control2": {
+              "x": 31.698415797475754,
+              "y": 58.40884663911015
+            },
+            "label": "left_collar",
+            "garmentCodeSource": {
+              "curvatureJson": "{\r\n              \u0022type\u0022: \u0022circle\u0022,\r\n              \u0022params\u0022: [\r\n                8.162103606780509,\r\n                0,\r\n                1\r\n              ]\r\n            }",
+              "start": {
+                "x": 26.043590163934425,
+                "y": 56.82649691107515
+              },
+              "end": {
+                "x": 33.147020563934426,
+                "y": 60.96849954397763
+              },
+              "control1": {
+                "x": 28.98472578862148,
+                "y": 56.826496911075154
+              },
+              "control2": {
+                "x": 31.698415797475754,
+                "y": 58.40884663911015
+              }
+            }
+          },
+          {
+            "id": "edge-7",
+            "kind": "line",
+            "end": {
+              "x": 44.543590163934425,
+              "y": 58.598009271004244
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 33.147020563934426,
+                "y": 60.96849954397763
+              },
+              "end": {
+                "x": 44.543590163934425,
+                "y": 58.598009271004244
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-8",
+            "kind": "cubic",
+            "end": {
+              "x": 49.269590163934424,
+              "y": 40.41171647100424
+            },
+            "control1": {
+              "x": 43.269331603934425,
+              "y": 48.55966287100424
+            },
+            "control2": {
+              "x": 41.959187683934424,
+              "y": 42.39487503100424
+            },
+            "label": "left_armhole",
+            "garmentCodeSource": {
+              "curvatureJson": "{\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.5,\r\n                  -0.2\r\n                ],\r\n                [\r\n                  0.8,\r\n                  -0.35\r\n                ]\r\n              ]\r\n            }",
+              "start": {
+                "x": 44.543590163934425,
+                "y": 58.598009271004244
+              },
+              "end": {
+                "x": 49.269590163934424,
+                "y": 40.41171647100424
+              },
+              "control1": {
+                "x": 43.269331603934425,
+                "y": 48.55966287100424
+              },
+              "control2": {
+                "x": 41.959187683934424,
+                "y": 42.39487503100424
+              }
+            }
+          },
+          {
+            "id": "edge-9",
+            "kind": "line",
+            "end": {
+              "x": 49.269590163934424,
+              "y": 35.08633333333333
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 49.269590163934424,
+                "y": 40.41171647100424
+              },
+              "end": {
+                "x": 49.269590163934424,
+                "y": 35.08633333333333
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-10",
+            "kind": "line",
+            "end": {
+              "x": 46.02509016393442,
+              "y": 15.864999999999995
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 49.269590163934424,
+                "y": 35.08633333333333
+              },
+              "end": {
+                "x": 46.02509016393442,
+                "y": 15.864999999999995
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-11",
+            "kind": "line",
+            "end": {
+              "x": 52.08718032786885,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 46.02509016393442,
+                "y": 15.864999999999995
+              },
+              "end": {
+                "x": 52.08718032786885,
+                "y": 0
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-12",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 52.08718032786885,
+                "y": 0
+              },
+              "end": {
+                "x": 0,
+                "y": 0
+              },
+              "control1": null,
+              "control2": null
+            }
+          }
+        ],
+        "layout": {
+          "left": 450,
+          "top": 385,
+          "labelX": 2,
+          "labelY": 2,
+          "showGrainline": true
+        },
+        "internalPaths": [],
+        "notches": [],
+        "darts": [],
+        "grainline": null
+      },
+      {
+        "id": "right-collar-back",
+        "name": "Right Collar Back",
+        "cutQuantity": 1,
+        "mirrored": false,
+        "cutOnFold": false,
+        "scaleX": 1,
+        "scaleY": 1,
+        "seamAllowanceCm": 1,
+        "start": {
+          "x": 0,
+          "y": 0
+        },
+        "boundary": [
+          {
+            "id": "edge-0",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 0.8
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 0,
+                "y": 0
+              },
+              "end": {
+                "x": 0,
+                "y": 0.8
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-1",
+            "kind": "line",
+            "end": {
+              "x": 8.617541406191325,
+              "y": 0.8
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 0,
+                "y": 0.8
+              },
+              "end": {
+                "x": 8.617541406191325,
+                "y": 0.8
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-2",
+            "kind": "line",
+            "end": {
+              "x": 8.617541406191325,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 8.617541406191325,
+                "y": 0.8
+              },
+              "end": {
+                "x": 8.617541406191325,
+                "y": 0
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-3",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 8.617541406191325,
+                "y": 0
+              },
+              "end": {
+                "x": 0,
+                "y": 0
+              },
+              "control1": null,
+              "control2": null
+            }
+          }
+        ],
+        "layout": {
+          "left": 665,
+          "top": 385,
+          "labelX": 2,
+          "labelY": 2,
+          "showGrainline": true
+        },
+        "internalPaths": [],
+        "notches": [],
+        "darts": [],
+        "grainline": null
+      },
+      {
+        "id": "right-collar-front",
+        "name": "Right Collar Front",
+        "cutQuantity": 1,
+        "mirrored": false,
+        "cutOnFold": false,
+        "scaleX": 1,
+        "scaleY": 1,
+        "seamAllowanceCm": 1,
+        "start": {
+          "x": 0,
+          "y": 0
+        },
+        "boundary": [
+          {
+            "id": "edge-0",
+            "kind": "line",
+            "end": {
+              "x": 13.25795579649575,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 0,
+                "y": 0
+              },
+              "end": {
+                "x": 13.25795579649575,
+                "y": 0
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-1",
+            "kind": "line",
+            "end": {
+              "x": 13.25795579649575,
+              "y": 0.8
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 13.25795579649575,
+                "y": 0
+              },
+              "end": {
+                "x": 13.25795579649575,
+                "y": 0.8
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-2",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 0.8
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 13.25795579649575,
+                "y": 0.8
+              },
+              "end": {
+                "x": 0,
+                "y": 0.8
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-3",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 0,
+                "y": 0.8
+              },
+              "end": {
+                "x": 0,
+                "y": 0
+              },
+              "control1": null,
+              "control2": null
+            }
+          }
+        ],
+        "layout": {
+          "left": 20,
+          "top": 725,
+          "labelX": 2,
+          "labelY": 2,
+          "showGrainline": true
+        },
+        "internalPaths": [],
+        "notches": [],
+        "darts": [],
+        "grainline": null
+      },
+      {
+        "id": "front-torso",
+        "name": "Front Torso",
+        "cutQuantity": 1,
+        "mirrored": false,
+        "cutOnFold": false,
+        "scaleX": 1,
+        "scaleY": 1,
+        "seamAllowanceCm": 1,
+        "start": {
+          "x": 25.774,
+          "y": 51.93586970221431
+        },
+        "boundary": [
+          {
+            "id": "edge-0",
+            "kind": "cubic",
+            "end": {
+              "x": 18.670569600000004,
+              "y": 61.00094709730395
+            },
+            "control1": {
+              "x": 21.02521979246285,
+              "y": 51.93586970221432
+            },
+            "control2": {
+              "x": 17.53499191906519,
+              "y": 56.389941047637635
+            },
+            "label": "right_collar",
+            "garmentCodeSource": {
+              "curvatureJson": "{\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.25432800232704045,\r\n                  0.3245619221993296\r\n                ],\r\n                [\r\n                  0.7456719976729591,\r\n                  0.3245619221993296\r\n                ]\r\n              ]\r\n            }",
+              "start": {
+                "x": 25.774,
+                "y": 51.93586970221431
+              },
+              "end": {
+                "x": 18.670569600000004,
+                "y": 61.00094709730395
+              },
+              "control1": {
+                "x": 21.02521979246285,
+                "y": 51.93586970221432
+              },
+              "control2": {
+                "x": 17.53499191906519,
+                "y": 56.389941047637635
+              }
+            }
+          },
+          {
+            "id": "edge-1",
+            "kind": "line",
+            "end": {
+              "x": 7.274000000000001,
+              "y": 58.630457605829875
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 18.670569600000004,
+                "y": 61.00094709730395
+              },
+              "end": {
+                "x": 7.274000000000001,
+                "y": 58.630457605829875
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-2",
+            "kind": "cubic",
+            "end": {
+              "x": 7.274393160970767,
+              "y": 58.128371755427686
+            },
+            "control1": {
+              "x": 7.274004127556257,
+              "y": 58.46207408884934
+            },
+            "control2": {
+              "x": 7.274147265234149,
+              "y": 58.29471016611801
+            },
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": "{\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.3353677798909527,\r\n                  -0.00025439068945575264\r\n                ],\r\n                [\r\n                  0.6687050608728993,\r\n                  -0.00023032614173229324\r\n                ]\r\n              ]\r\n            }",
+              "start": {
+                "x": 7.274000000000001,
+                "y": 58.630457605829875
+              },
+              "end": {
+                "x": 7.274393160970767,
+                "y": 58.128371755427686
+              },
+              "control1": {
+                "x": 7.274004127556257,
+                "y": 58.46207408884934
+              },
+              "control2": {
+                "x": 7.274147265234149,
+                "y": 58.29471016611801
+              }
+            }
+          },
+          {
+            "id": "edge-3",
+            "kind": "cubic",
+            "end": {
+              "x": 0,
+              "y": 40.44416480582987
+            },
+            "control1": {
+              "x": 7.28955076253817,
+              "y": 47.874874117524406
+            },
+            "control2": {
+              "x": 7.695166851296115,
+              "y": 41.51810132122982
+            },
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": "{\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.4955988438555555,\r\n                  0.20472156044168044\r\n                ],\r\n                [\r\n                  0.7949684106305311,\r\n                  0.35080376957163867\r\n                ]\r\n              ]\r\n            }",
+              "start": {
+                "x": 7.274393160970767,
+                "y": 58.128371755427686
+              },
+              "end": {
+                "x": 0,
+                "y": 40.44416480582987
+              },
+              "control1": {
+                "x": 7.28955076253817,
+                "y": 47.874874117524406
+              },
+              "control2": {
+                "x": 7.695166851296115,
+                "y": 41.51810132122982
+              }
+            }
+          },
+          {
+            "id": "edge-4",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 34.58879661781067
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 0,
+                "y": 40.44416480582987
+              },
+              "end": {
+                "x": 0,
+                "y": 34.58879661781067
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-5",
+            "kind": "line",
+            "end": {
+              "x": 7.255499999999998,
+              "y": 15.367463284477338
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 0,
+                "y": 34.58879661781067
+              },
+              "end": {
+                "x": 7.255499999999998,
+                "y": 15.367463284477338
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-6",
+            "kind": "line",
+            "end": {
+              "x": 1.813453882521646,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 7.255499999999998,
+                "y": 15.367463284477338
+              },
+              "end": {
+                "x": 1.813453882521646,
+                "y": 0
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-7",
+            "kind": "line",
+            "end": {
+              "x": 49.73454611747836,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 1.813453882521646,
+                "y": 0
+              },
+              "end": {
+                "x": 49.73454611747836,
+                "y": 0
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-8",
+            "kind": "line",
+            "end": {
+              "x": 44.292500000000004,
+              "y": 15.367463284477338
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 49.73454611747836,
+                "y": 0
+              },
+              "end": {
+                "x": 44.292500000000004,
+                "y": 15.367463284477338
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-9",
+            "kind": "line",
+            "end": {
+              "x": 51.548,
+              "y": 34.58879661781067
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 44.292500000000004,
+                "y": 15.367463284477338
+              },
+              "end": {
+                "x": 51.548,
+                "y": 34.58879661781067
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-10",
+            "kind": "line",
+            "end": {
+              "x": 51.548,
+              "y": 40.44416480582987
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 51.548,
+                "y": 34.58879661781067
+              },
+              "end": {
+                "x": 51.548,
+                "y": 40.44416480582987
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-11",
+            "kind": "cubic",
+            "end": {
+              "x": 44.273606839029235,
+              "y": 58.128371755427686
+            },
+            "control1": {
+              "x": 43.85283314870389,
+              "y": 41.51810132122982
+            },
+            "control2": {
+              "x": 44.25844923746183,
+              "y": 47.874874117524406
+            },
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": "{\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.20503158936946886,\r\n                  0.35080376957163867\r\n                ],\r\n                [\r\n                  0.5044011561444445,\r\n                  0.20472156044168044\r\n                ]\r\n              ]\r\n            }",
+              "start": {
+                "x": 51.548,
+                "y": 40.44416480582987
+              },
+              "end": {
+                "x": 44.273606839029235,
+                "y": 58.128371755427686
+              },
+              "control1": {
+                "x": 43.85283314870389,
+                "y": 41.51810132122982
+              },
+              "control2": {
+                "x": 44.25844923746183,
+                "y": 47.874874117524406
+              }
+            }
+          },
+          {
+            "id": "edge-12",
+            "kind": "cubic",
+            "end": {
+              "x": 44.274,
+              "y": 58.630457605829875
+            },
+            "control1": {
+              "x": 44.27385273476585,
+              "y": 58.29471016611801
+            },
+            "control2": {
+              "x": 44.27399587244375,
+              "y": 58.46207408884934
+            },
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": "{\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.33129493912710073,\r\n                  -0.00023032614173229324\r\n                ],\r\n                [\r\n                  0.6646322201090473,\r\n                  -0.00025439068945575264\r\n                ]\r\n              ]\r\n            }",
+              "start": {
+                "x": 44.273606839029235,
+                "y": 58.128371755427686
+              },
+              "end": {
+                "x": 44.274,
+                "y": 58.630457605829875
+              },
+              "control1": {
+                "x": 44.27385273476585,
+                "y": 58.29471016611801
+              },
+              "control2": {
+                "x": 44.27399587244375,
+                "y": 58.46207408884934
+              }
+            }
+          },
+          {
+            "id": "edge-13",
+            "kind": "line",
+            "end": {
+              "x": 32.8774304,
+              "y": 61.00094709730395
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 44.274,
+                "y": 58.630457605829875
+              },
+              "end": {
+                "x": 32.8774304,
+                "y": 61.00094709730395
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-14",
+            "kind": "cubic",
+            "end": {
+              "x": 25.774,
+              "y": 51.93586970221431
+            },
+            "control1": {
+              "x": 34.01300808093481,
+              "y": 56.389941047637635
+            },
+            "control2": {
+              "x": 30.522780207537153,
+              "y": 51.93586970221432
+            },
+            "label": "left_collar",
+            "garmentCodeSource": {
+              "curvatureJson": "{\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.2543280023270409,\r\n                  0.32456192219932967\r\n                ],\r\n                [\r\n                  0.7456719976729596,\r\n                  0.3245619221993296\r\n                ]\r\n              ]\r\n            }",
+              "start": {
+                "x": 32.8774304,
+                "y": 61.00094709730395
+              },
+              "end": {
+                "x": 25.774,
+                "y": 51.93586970221431
+              },
+              "control1": {
+                "x": 34.01300808093481,
+                "y": 56.389941047637635
+              },
+              "control2": {
+                "x": 30.522780207537153,
+                "y": 51.93586970221432
+              }
+            }
+          }
+        ],
+        "layout": {
+          "left": 235,
+          "top": 725,
+          "labelX": 2,
+          "labelY": 2,
+          "showGrainline": true
+        },
+        "internalPaths": [],
+        "notches": [],
+        "darts": [],
+        "grainline": null
+      },
+      {
+        "id": "right-sleeve-b",
+        "name": "Right Sleeve Back",
+        "cutQuantity": 1,
+        "mirrored": false,
+        "cutOnFold": false,
+        "scaleX": 1,
+        "scaleY": 1,
+        "seamAllowanceCm": 1,
+        "start": {
+          "x": 0,
+          "y": 15.193220404681473
+        },
+        "boundary": [
+          {
+            "id": "edge-0",
+            "kind": "line",
+            "end": {
+              "x": 24.441980419822777,
+              "y": 15.193220404681473
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 0,
+                "y": 15.193220404681473
+              },
+              "end": {
+                "x": 24.441980419822777,
+                "y": 15.193220404681473
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-1",
+            "kind": "cubic",
+            "end": {
+              "x": 24.447620637492122,
+              "y": 14.683910194875498
+            },
+            "control1": {
+              "x": 24.446699952506524,
+              "y": 15.026233306234202
+            },
+            "control2": {
+              "x": 24.448606078356274,
+              "y": 14.856487781737528
+            },
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": "{\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.327931538508037,\r\n                  0.005634930089097011\r\n                ],\r\n                [\r\n                  0.6612172506792765,\r\n                  0.0056866115329645235\r\n                ]\r\n              ]\r\n            }",
+              "start": {
+                "x": 24.441980419822777,
+                "y": 15.193220404681473
+              },
+              "end": {
+                "x": 24.447620637492122,
+                "y": 14.683910194875498
+              },
+              "control1": {
+                "x": 24.446699952506524,
+                "y": 15.026233306234202
+              },
+              "control2": {
+                "x": 24.448606078356274,
+                "y": 14.856487781737528
+              }
+            }
+          },
+          {
+            "id": "edge-2",
+            "kind": "cubic",
+            "end": {
+              "x": 10.776075735134045,
+              "y": 0
+            },
+            "control1": {
+              "x": 24.107393291517994,
+              "y": 5.556985228900356
+            },
+            "control2": {
+              "x": 14.861555002421522,
+              "y": 4.948440785612622
+            },
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": "{\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.34449841115733726,\r\n                  0.2975772864968461\r\n                ],\r\n                [\r\n                  0.6807249213722518,\r\n                  -0.01903473275621314\r\n                ]\r\n              ]\r\n            }",
+              "start": {
+                "x": 24.447620637492122,
+                "y": 14.683910194875498
+              },
+              "end": {
+                "x": 10.776075735134045,
+                "y": 0
+              },
+              "control1": {
+                "x": 24.107393291517994,
+                "y": 5.556985228900356
+              },
+              "control2": {
+                "x": 14.861555002421522,
+                "y": 4.948440785612622
+              }
+            }
+          },
+          {
+            "id": "edge-3",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 1.0635254283277025
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 10.776075735134045,
+                "y": 0
+              },
+              "end": {
+                "x": 0,
+                "y": 1.0635254283277025
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-4",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 15.193220404681473
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 0,
+                "y": 1.0635254283277025
+              },
+              "end": {
+                "x": 0,
+                "y": 15.193220404681473
+              },
+              "control1": null,
+              "control2": null
+            }
+          }
+        ],
+        "layout": {
+          "left": 450,
+          "top": 725,
+          "labelX": 2,
+          "labelY": 2,
+          "showGrainline": true
+        },
+        "internalPaths": [],
+        "notches": [],
+        "darts": [],
+        "grainline": null
+      },
+      {
+        "id": "right-sleeve-f",
+        "name": "Right Sleeve Front",
+        "cutQuantity": 1,
+        "mirrored": false,
+        "cutOnFold": false,
+        "scaleX": 1,
+        "scaleY": 1,
+        "seamAllowanceCm": 1,
+        "start": {
+          "x": 0,
+          "y": 15.193220404681453
+        },
+        "boundary": [
+          {
+            "id": "edge-0",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 1.0635254283277007
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 0,
+                "y": 15.193220404681453
+              },
+              "end": {
+                "x": 0,
+                "y": 1.0635254283277007
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-1",
+            "kind": "line",
+            "end": {
+              "x": 10.776075735134047,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 0,
+                "y": 1.0635254283277007
+              },
+              "end": {
+                "x": 10.776075735134047,
+                "y": 0
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-2",
+            "kind": "cubic",
+            "end": {
+              "x": 24.441980419822777,
+              "y": 15.193220404681453
+            },
+            "control1": {
+              "x": 14.898051153701,
+              "y": 5.127279074353876
+            },
+            "control2": {
+              "x": 24.17490149729696,
+              "y": 5.74340040818481
+            },
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": "{\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.321439967113018,\r\n                  0.01782324791165352\r\n                ],\r\n                [\r\n                  0.6474466419010785,\r\n                  -0.2995337093983529\r\n                ]\r\n              ]\r\n            }",
+              "start": {
+                "x": 10.776075735134047,
+                "y": 0
+              },
+              "end": {
+                "x": 24.441980419822777,
+                "y": 15.193220404681453
+              },
+              "control1": {
+                "x": 14.898051153701,
+                "y": 5.127279074353876
+              },
+              "control2": {
+                "x": 24.17490149729696,
+                "y": 5.74340040818481
+              }
+            }
+          },
+          {
+            "id": "edge-3",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 15.193220404681453
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 24.441980419822777,
+                "y": 15.193220404681453
+              },
+              "end": {
+                "x": 0,
+                "y": 15.193220404681453
+              },
+              "control1": null,
+              "control2": null
+            }
+          }
+        ],
+        "layout": {
+          "left": 665,
+          "top": 725,
+          "labelX": 2,
+          "labelY": 2,
+          "showGrainline": true
+        },
+        "internalPaths": [],
+        "notches": [],
+        "darts": [],
+        "grainline": null
+      },
+      {
+        "id": "sl-right-cuff-f",
+        "name": "Sl Right Cuff Front",
+        "cutQuantity": 1,
+        "mirrored": false,
+        "cutOnFold": false,
+        "scaleX": 1,
+        "scaleY": 1,
+        "seamAllowanceCm": 1,
+        "start": {
+          "x": 0,
+          "y": 0
+        },
+        "boundary": [
+          {
+            "id": "edge-0",
+            "kind": "line",
+            "end": {
+              "x": 14.129694976353761,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 0,
+                "y": 0
+              },
+              "end": {
+                "x": 14.129694976353761,
+                "y": 0
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-1",
+            "kind": "line",
+            "end": {
+              "x": 14.129694976353761,
+              "y": 1
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 14.129694976353761,
+                "y": 0
+              },
+              "end": {
+                "x": 14.129694976353761,
+                "y": 1
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-2",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 1
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 14.129694976353761,
+                "y": 1
+              },
+              "end": {
+                "x": 0,
+                "y": 1
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-3",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 0,
+                "y": 1
+              },
+              "end": {
+                "x": 0,
+                "y": 0
+              },
+              "control1": null,
+              "control2": null
+            }
+          }
+        ],
+        "layout": {
+          "left": 20,
+          "top": 1065,
+          "labelX": 2,
+          "labelY": 2,
+          "showGrainline": true
+        },
+        "internalPaths": [],
+        "notches": [],
+        "darts": [],
+        "grainline": null
+      },
+      {
+        "id": "sl-right-cuff-b",
+        "name": "Sl Right Cuff Back",
+        "cutQuantity": 1,
+        "mirrored": false,
+        "cutOnFold": false,
+        "scaleX": 1,
+        "scaleY": 1,
+        "seamAllowanceCm": 1,
+        "start": {
+          "x": 0,
+          "y": 0
+        },
+        "boundary": [
+          {
+            "id": "edge-0",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 1
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 0,
+                "y": 0
+              },
+              "end": {
+                "x": 0,
+                "y": 1
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-1",
+            "kind": "line",
+            "end": {
+              "x": 14.129694976353761,
+              "y": 1
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 0,
+                "y": 1
+              },
+              "end": {
+                "x": 14.129694976353761,
+                "y": 1
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-2",
+            "kind": "line",
+            "end": {
+              "x": 14.129694976353761,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 14.129694976353761,
+                "y": 1
+              },
+              "end": {
+                "x": 14.129694976353761,
+                "y": 0
+              },
+              "control1": null,
+              "control2": null
+            }
+          },
+          {
+            "id": "edge-3",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null,
+            "garmentCodeSource": {
+              "curvatureJson": null,
+              "start": {
+                "x": 14.129694976353761,
+                "y": 0
+              },
+              "end": {
+                "x": 0,
+                "y": 0
+              },
+              "control1": null,
+              "control2": null
+            }
+          }
+        ],
+        "layout": {
+          "left": 235,
+          "top": 1065,
+          "labelX": 2,
+          "labelY": 2,
+          "showGrainline": true
+        },
+        "internalPaths": [],
+        "notches": [],
+        "darts": [],
+        "grainline": null
+      }
+    ],
+    "panels": [
+      {
+        "id": "left-collar-back-panel",
+        "pieceId": "left-collar-back",
+        "name": "Left Collar Back",
+        "placement": "torsoBack",
+        "reverseWinding": false,
+        "pinnedEdges": [],
+        "sourcePlacement": {
+          "x": 8.617541406191325,
+          "y": 144.58700000000002,
+          "z": -10,
+          "rotationXDegrees": -0,
+          "rotationYDegrees": 0,
+          "rotationZDegrees": 0,
+          "coordinateSystem": "GarmentCode intrinsic XYZ, centimeters"
+        },
+        "sourcePatternOrigin": {
+          "x": -8.617541406191325,
+          "y": 0
+        },
+        "sourceLabel": "body"
+      },
+      {
+        "id": "left-collar-front-panel",
+        "pieceId": "left-collar-front",
+        "name": "Left Collar Front",
+        "placement": "torsoFront",
+        "reverseWinding": false,
+        "pinnedEdges": [],
+        "sourcePlacement": {
+          "x": 13.25795579649575,
+          "y": 144.58700000000002,
+          "z": 10,
+          "rotationXDegrees": -0,
+          "rotationYDegrees": 0,
+          "rotationZDegrees": 0,
+          "coordinateSystem": "GarmentCode intrinsic XYZ, centimeters"
+        },
+        "sourcePatternOrigin": {
+          "x": -13.25795579649575,
+          "y": 0
+        },
+        "sourceLabel": "body"
+      },
+      {
+        "id": "left-sleeve-f-panel",
+        "pieceId": "left-sleeve-f",
+        "name": "Left Sleeve Front",
+        "placement": "sleeveLeft",
+        "reverseWinding": false,
+        "pinnedEdges": [],
+        "sourcePlacement": {
+          "x": 35.29698742196165,
+          "y": 124.82959120539276,
+          "z": 17.5,
+          "rotationXDegrees": -0,
+          "rotationYDegrees": 0,
+          "rotationZDegrees": -45.75,
+          "coordinateSystem": "GarmentCode intrinsic XYZ, centimeters"
+        },
+        "sourcePatternOrigin": {
+          "x": -24.441980419822777,
+          "y": -15.193220404681453
+        },
+        "sourceLabel": "arm"
+      },
+      {
+        "id": "left-sleeve-b-panel",
+        "pieceId": "left-sleeve-b",
+        "name": "Left Sleeve Back",
+        "placement": "sleeveLeft",
+        "reverseWinding": false,
+        "pinnedEdges": [],
+        "sourcePlacement": {
+          "x": 35.29698742196165,
+          "y": 124.82959120539276,
+          "z": -12.5,
+          "rotationXDegrees": -0,
+          "rotationYDegrees": 0,
+          "rotationZDegrees": -45.75,
+          "coordinateSystem": "GarmentCode intrinsic XYZ, centimeters"
+        },
+        "sourcePatternOrigin": {
+          "x": -24.447620637492122,
+          "y": -15.193220404681473
+        },
+        "sourceLabel": "arm"
+      },
+      {
+        "id": "sl-left-cuff-f-panel",
+        "pieceId": "sl-left-cuff-f",
+        "name": "Sl Left Cuff Front",
+        "placement": "torsoFront",
+        "reverseWinding": false,
+        "pinnedEdges": [],
+        "sourcePlacement": {
+          "x": 37.39035880148671,
+          "y": 122.68068537511881,
+          "z": 17.5,
+          "rotationXDegrees": -0,
+          "rotationYDegrees": 0,
+          "rotationZDegrees": 44.25,
+          "coordinateSystem": "GarmentCode intrinsic XYZ, centimeters"
+        },
+        "sourcePatternOrigin": {
+          "x": -14.129694976353761,
+          "y": 0
+        },
+        "sourceLabel": "arm"
+      },
+      {
+        "id": "sl-left-cuff-b-panel",
+        "pieceId": "sl-left-cuff-b",
+        "name": "Sl Left Cuff Back",
+        "placement": "torsoBack",
+        "reverseWinding": false,
+        "pinnedEdges": [],
+        "sourcePlacement": {
+          "x": 37.39035880148671,
+          "y": 122.68068537511881,
+          "z": -12.5,
+          "rotationXDegrees": -0,
+          "rotationYDegrees": 0,
+          "rotationZDegrees": 44.25,
+          "coordinateSystem": "GarmentCode intrinsic XYZ, centimeters"
+        },
+        "sourcePatternOrigin": {
+          "x": -14.129694976353761,
+          "y": 0
+        },
+        "sourceLabel": "arm"
+      },
+      {
+        "id": "back-torso-panel",
+        "pieceId": "back-torso",
+        "name": "Back Torso",
+        "placement": "torsoBack",
+        "reverseWinding": false,
+        "pinnedEdges": [],
+        "sourcePlacement": {
+          "x": 0,
+          "y": 81.34098505237077,
+          "z": -25,
+          "rotationXDegrees": -0,
+          "rotationYDegrees": 0,
+          "rotationZDegrees": 0,
+          "coordinateSystem": "GarmentCode intrinsic XYZ, centimeters"
+        },
+        "sourcePatternOrigin": {
+          "x": -26.043590163934425,
+          "y": 0
+        },
+        "sourceLabel": "body"
+      },
+      {
+        "id": "right-collar-back-panel",
+        "pieceId": "right-collar-back",
+        "name": "Right Collar Back",
+        "placement": "torsoBack",
+        "reverseWinding": false,
+        "pinnedEdges": [],
+        "sourcePlacement": {
+          "x": -8.617541406191325,
+          "y": 144.58700000000002,
+          "z": -10,
+          "rotationXDegrees": -0,
+          "rotationYDegrees": 0,
+          "rotationZDegrees": 0,
+          "coordinateSystem": "GarmentCode intrinsic XYZ, centimeters"
+        },
+        "sourcePatternOrigin": {
+          "x": 0,
+          "y": 0
+        },
+        "sourceLabel": "body"
+      },
+      {
+        "id": "right-collar-front-panel",
+        "pieceId": "right-collar-front",
+        "name": "Right Collar Front",
+        "placement": "torsoFront",
+        "reverseWinding": false,
+        "pinnedEdges": [],
+        "sourcePlacement": {
+          "x": -13.25795579649575,
+          "y": 144.58700000000002,
+          "z": 10,
+          "rotationXDegrees": -0,
+          "rotationYDegrees": 0,
+          "rotationZDegrees": 0,
+          "coordinateSystem": "GarmentCode intrinsic XYZ, centimeters"
+        },
+        "sourcePatternOrigin": {
+          "x": 0,
+          "y": 0
+        },
+        "sourceLabel": "body"
+      },
+      {
+        "id": "front-torso-panel",
+        "pieceId": "front-torso",
+        "name": "Front Torso",
+        "placement": "torsoFront",
+        "reverseWinding": false,
+        "pinnedEdges": [],
+        "sourcePlacement": {
+          "x": 0,
+          "y": 81.30853700570624,
+          "z": 30,
+          "rotationXDegrees": -0,
+          "rotationYDegrees": 0,
+          "rotationZDegrees": 0,
+          "coordinateSystem": "GarmentCode intrinsic XYZ, centimeters"
+        },
+        "sourcePatternOrigin": {
+          "x": -25.774,
+          "y": 0
+        },
+        "sourceLabel": "body"
+      },
+      {
+        "id": "right-sleeve-b-panel",
+        "pieceId": "right-sleeve-b",
+        "name": "Right Sleeve Back",
+        "placement": "sleeveRight",
+        "reverseWinding": false,
+        "pinnedEdges": [],
+        "sourcePlacement": {
+          "x": -35.29698742196165,
+          "y": 124.82959120539276,
+          "z": -12.5,
+          "rotationXDegrees": -0,
+          "rotationYDegrees": 0,
+          "rotationZDegrees": 45.75,
+          "coordinateSystem": "GarmentCode intrinsic XYZ, centimeters"
+        },
+        "sourcePatternOrigin": {
+          "x": 0,
+          "y": -15.193220404681473
+        },
+        "sourceLabel": "arm"
+      },
+      {
+        "id": "right-sleeve-f-panel",
+        "pieceId": "right-sleeve-f",
+        "name": "Right Sleeve Front",
+        "placement": "sleeveRight",
+        "reverseWinding": false,
+        "pinnedEdges": [],
+        "sourcePlacement": {
+          "x": -35.29698742196165,
+          "y": 124.82959120539276,
+          "z": 17.5,
+          "rotationXDegrees": -0,
+          "rotationYDegrees": 0,
+          "rotationZDegrees": 45.75,
+          "coordinateSystem": "GarmentCode intrinsic XYZ, centimeters"
+        },
+        "sourcePatternOrigin": {
+          "x": 0,
+          "y": -15.193220404681453
+        },
+        "sourceLabel": "arm"
+      },
+      {
+        "id": "sl-right-cuff-f-panel",
+        "pieceId": "sl-right-cuff-f",
+        "name": "Sl Right Cuff Front",
+        "placement": "torsoFront",
+        "reverseWinding": false,
+        "pinnedEdges": [],
+        "sourcePlacement": {
+          "x": -37.39035880148671,
+          "y": 122.68068537511881,
+          "z": 17.5,
+          "rotationXDegrees": -0,
+          "rotationYDegrees": 0,
+          "rotationZDegrees": -44.25,
+          "coordinateSystem": "GarmentCode intrinsic XYZ, centimeters"
+        },
+        "sourcePatternOrigin": {
+          "x": 0,
+          "y": 0
+        },
+        "sourceLabel": "arm"
+      },
+      {
+        "id": "sl-right-cuff-b-panel",
+        "pieceId": "sl-right-cuff-b",
+        "name": "Sl Right Cuff Back",
+        "placement": "torsoBack",
+        "reverseWinding": false,
+        "pinnedEdges": [],
+        "sourcePlacement": {
+          "x": -37.39035880148671,
+          "y": 122.68068537511881,
+          "z": -12.5,
+          "rotationXDegrees": -0,
+          "rotationYDegrees": 0,
+          "rotationZDegrees": -44.25,
+          "coordinateSystem": "GarmentCode intrinsic XYZ, centimeters"
+        },
+        "sourcePatternOrigin": {
+          "x": 0,
+          "y": 0
+        },
+        "sourceLabel": "arm"
+      }
+    ],
+    "seams": [
+      {
+        "id": "stitch-0",
+        "name": "Stitch 1",
+        "sideA": {
+          "panelId": "left-collar-front-panel",
+          "edgeIds": [
+            "edge-0"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "left-collar-back-panel",
+          "edgeIds": [
+            "edge-3"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-1",
+        "name": "Stitch 2",
+        "sideA": {
+          "panelId": "sl-left-cuff-f-panel",
+          "edgeIds": [
+            "edge-0"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "sl-left-cuff-b-panel",
+          "edgeIds": [
+            "edge-3"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-2",
+        "name": "Stitch 3",
+        "sideA": {
+          "panelId": "sl-left-cuff-f-panel",
+          "edgeIds": [
+            "edge-2"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "sl-left-cuff-b-panel",
+          "edgeIds": [
+            "edge-1"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-3",
+        "name": "Stitch 4",
+        "sideA": {
+          "panelId": "left-sleeve-f-panel",
+          "edgeIds": [
+            "edge-0"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "left-sleeve-b-panel",
+          "edgeIds": [
+            "edge-4"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-4",
+        "name": "Stitch 5",
+        "sideA": {
+          "panelId": "left-sleeve-f-panel",
+          "edgeIds": [
+            "edge-2"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "left-sleeve-b-panel",
+          "edgeIds": [
+            "edge-1"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-5",
+        "name": "Stitch 6",
+        "sideA": {
+          "panelId": "sl-left-cuff-f-panel",
+          "edgeIds": [
+            "edge-1"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "left-sleeve-f-panel",
+          "edgeIds": [
+            "edge-3"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-6",
+        "name": "Stitch 7",
+        "sideA": {
+          "panelId": "sl-left-cuff-b-panel",
+          "edgeIds": [
+            "edge-2"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "left-sleeve-b-panel",
+          "edgeIds": [
+            "edge-0"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-7",
+        "name": "Stitch 8",
+        "sideA": {
+          "panelId": "left-sleeve-f-panel",
+          "edgeIds": [
+            "edge-1"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "front-torso-panel",
+          "edgeIds": [
+            "edge-11"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-8",
+        "name": "Stitch 9",
+        "sideA": {
+          "panelId": "left-sleeve-b-panel",
+          "edgeIds": [
+            "edge-3"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "front-torso-panel",
+          "edgeIds": [
+            "edge-12"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-9",
+        "name": "Stitch 10",
+        "sideA": {
+          "panelId": "left-sleeve-b-panel",
+          "edgeIds": [
+            "edge-2"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "back-torso-panel",
+          "edgeIds": [
+            "edge-8"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-10",
+        "name": "Stitch 11",
+        "sideA": {
+          "panelId": "front-torso-panel",
+          "edgeIds": [
+            "edge-14"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "left-collar-front-panel",
+          "edgeIds": [
+            "edge-3"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-11",
+        "name": "Stitch 12",
+        "sideA": {
+          "panelId": "back-torso-panel",
+          "edgeIds": [
+            "edge-6"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "left-collar-back-panel",
+          "edgeIds": [
+            "edge-0"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-12",
+        "name": "Stitch 13",
+        "sideA": {
+          "panelId": "front-torso-panel",
+          "edgeIds": [
+            "edge-13"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "back-torso-panel",
+          "edgeIds": [
+            "edge-7"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-13",
+        "name": "Stitch 14",
+        "sideA": {
+          "panelId": "front-torso-panel",
+          "edgeIds": [
+            "edge-8"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "back-torso-panel",
+          "edgeIds": [
+            "edge-11"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-14",
+        "name": "Stitch 15",
+        "sideA": {
+          "panelId": "front-torso-panel",
+          "edgeIds": [
+            "edge-9"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "back-torso-panel",
+          "edgeIds": [
+            "edge-10"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-15",
+        "name": "Stitch 16",
+        "sideA": {
+          "panelId": "front-torso-panel",
+          "edgeIds": [
+            "edge-10"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "back-torso-panel",
+          "edgeIds": [
+            "edge-9"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-16",
+        "name": "Stitch 17",
+        "sideA": {
+          "panelId": "right-collar-front-panel",
+          "edgeIds": [
+            "edge-3"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "right-collar-back-panel",
+          "edgeIds": [
+            "edge-0"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-17",
+        "name": "Stitch 18",
+        "sideA": {
+          "panelId": "sl-right-cuff-f-panel",
+          "edgeIds": [
+            "edge-3"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "sl-right-cuff-b-panel",
+          "edgeIds": [
+            "edge-0"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-18",
+        "name": "Stitch 19",
+        "sideA": {
+          "panelId": "sl-right-cuff-f-panel",
+          "edgeIds": [
+            "edge-1"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "sl-right-cuff-b-panel",
+          "edgeIds": [
+            "edge-2"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-19",
+        "name": "Stitch 20",
+        "sideA": {
+          "panelId": "right-sleeve-f-panel",
+          "edgeIds": [
+            "edge-3"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "right-sleeve-b-panel",
+          "edgeIds": [
+            "edge-0"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-20",
+        "name": "Stitch 21",
+        "sideA": {
+          "panelId": "right-sleeve-f-panel",
+          "edgeIds": [
+            "edge-1"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "right-sleeve-b-panel",
+          "edgeIds": [
+            "edge-3"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-21",
+        "name": "Stitch 22",
+        "sideA": {
+          "panelId": "sl-right-cuff-f-panel",
+          "edgeIds": [
+            "edge-2"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "right-sleeve-f-panel",
+          "edgeIds": [
+            "edge-0"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-22",
+        "name": "Stitch 23",
+        "sideA": {
+          "panelId": "sl-right-cuff-b-panel",
+          "edgeIds": [
+            "edge-1"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "right-sleeve-b-panel",
+          "edgeIds": [
+            "edge-4"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-23",
+        "name": "Stitch 24",
+        "sideA": {
+          "panelId": "right-sleeve-f-panel",
+          "edgeIds": [
+            "edge-2"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "front-torso-panel",
+          "edgeIds": [
+            "edge-3"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-24",
+        "name": "Stitch 25",
+        "sideA": {
+          "panelId": "right-sleeve-b-panel",
+          "edgeIds": [
+            "edge-1"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "front-torso-panel",
+          "edgeIds": [
+            "edge-2"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-25",
+        "name": "Stitch 26",
+        "sideA": {
+          "panelId": "right-sleeve-b-panel",
+          "edgeIds": [
+            "edge-2"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "back-torso-panel",
+          "edgeIds": [
+            "edge-3"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-26",
+        "name": "Stitch 27",
+        "sideA": {
+          "panelId": "front-torso-panel",
+          "edgeIds": [
+            "edge-0"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "right-collar-front-panel",
+          "edgeIds": [
+            "edge-0"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-27",
+        "name": "Stitch 28",
+        "sideA": {
+          "panelId": "back-torso-panel",
+          "edgeIds": [
+            "edge-5"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "right-collar-back-panel",
+          "edgeIds": [
+            "edge-3"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-28",
+        "name": "Stitch 29",
+        "sideA": {
+          "panelId": "front-torso-panel",
+          "edgeIds": [
+            "edge-1"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "back-torso-panel",
+          "edgeIds": [
+            "edge-4"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-29",
+        "name": "Stitch 30",
+        "sideA": {
+          "panelId": "front-torso-panel",
+          "edgeIds": [
+            "edge-6"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "back-torso-panel",
+          "edgeIds": [
+            "edge-0"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-30",
+        "name": "Stitch 31",
+        "sideA": {
+          "panelId": "front-torso-panel",
+          "edgeIds": [
+            "edge-5"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "back-torso-panel",
+          "edgeIds": [
+            "edge-1"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-31",
+        "name": "Stitch 32",
+        "sideA": {
+          "panelId": "front-torso-panel",
+          "edgeIds": [
+            "edge-4"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "back-torso-panel",
+          "edgeIds": [
+            "edge-2"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-32",
+        "name": "Stitch 33",
+        "sideA": {
+          "panelId": "right-collar-front-panel",
+          "edgeIds": [
+            "edge-1"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "left-collar-front-panel",
+          "edgeIds": [
+            "edge-2"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-33",
+        "name": "Stitch 34",
+        "sideA": {
+          "panelId": "right-collar-back-panel",
+          "edgeIds": [
+            "edge-2"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "left-collar-back-panel",
+          "edgeIds": [
+            "edge-1"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      }
+    ],
+    "fabric": {
+      "id": "cotton",
+      "name": "Cotton poplin",
+      "massGramsPerSquareMeter": 120,
+      "thicknessMillimeters": 0.34,
+      "warpStretchPercent": 4.95,
+      "weftStretchPercent": 9,
+      "biasStretchPercent": 12.6,
+      "bendResistance": 38,
+      "shearResistance": 79.1,
+      "staticFriction": 0.5175,
+      "dynamicFriction": 0.45,
+      "calibration": "prototype-unvalidated"
+    },
+    "closures": [],
+    "source": {
+      "format": "GarmentCode JSON",
+      "schemaVersion": "garmentcode.pattern/2",
+      "sourcePath": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\artifacts\\full-panel-validation\\PatternaFullPanel.specification.json",
+      "revision": "e3469c92cdc0ae6e019527ff90f32f8c096884a35f95696a5e3f4c325891b3e3",
+      "rawDocumentJson": "{\r\n  \u0022pattern\u0022: {\r\n    \u0022panels\u0022: {\r\n      \u0022left_collar_back\u0022: {\r\n        \u0022translation\u0022: [\r\n          8.617541406191325,\r\n          144.58700000000002,\r\n          -10.0\r\n        ],\r\n        \u0022rotation\u0022: [\r\n          -0.0,\r\n          0.0,\r\n          0.0\r\n        ],\r\n        \u0022vertices\u0022: [\r\n          [\r\n            0.0,\r\n            0.0\r\n          ],\r\n          [\r\n            -8.617541406191325,\r\n            0.0\r\n          ],\r\n          [\r\n            -8.617541406191325,\r\n            0.8\r\n          ],\r\n          [\r\n            0.0,\r\n            0.8\r\n          ]\r\n        ],\r\n        \u0022edges\u0022: [\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              0,\r\n              1\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              1,\r\n              2\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              2,\r\n              3\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              3,\r\n              0\r\n            ]\r\n          }\r\n        ],\r\n        \u0022label\u0022: \u0022body\u0022\r\n      },\r\n      \u0022left_collar_front\u0022: {\r\n        \u0022translation\u0022: [\r\n          13.25795579649575,\r\n          144.58700000000002,\r\n          10.0\r\n        ],\r\n        \u0022rotation\u0022: [\r\n          -0.0,\r\n          0.0,\r\n          0.0\r\n        ],\r\n        \u0022vertices\u0022: [\r\n          [\r\n            0.0,\r\n            0.0\r\n          ],\r\n          [\r\n            0.0,\r\n            0.8\r\n          ],\r\n          [\r\n            -13.25795579649575,\r\n            0.8\r\n          ],\r\n          [\r\n            -13.25795579649575,\r\n            0.0\r\n          ]\r\n        ],\r\n        \u0022edges\u0022: [\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              0,\r\n              1\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              1,\r\n              2\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              2,\r\n              3\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              3,\r\n              0\r\n            ]\r\n          }\r\n        ],\r\n        \u0022label\u0022: \u0022body\u0022\r\n      },\r\n      \u0022left_sleeve_f\u0022: {\r\n        \u0022translation\u0022: [\r\n          35.29698742196165,\r\n          124.82959120539276,\r\n          17.5\r\n        ],\r\n        \u0022rotation\u0022: [\r\n          -0.0,\r\n          0.0,\r\n          -45.75\r\n        ],\r\n        \u0022vertices\u0022: [\r\n          [\r\n            0.0,\r\n            0.0\r\n          ],\r\n          [\r\n            -24.441980419822777,\r\n            0.0\r\n          ],\r\n          [\r\n            -10.776075735134047,\r\n            -15.193220404681453\r\n          ],\r\n          [\r\n            0.0,\r\n            -14.129694976353752\r\n          ]\r\n        ],\r\n        \u0022edges\u0022: [\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              0,\r\n              1\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              1,\r\n              2\r\n            ],\r\n            \u0022curvature\u0022: {\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.3525533580989215,\r\n                  -0.2995337093983529\r\n                ],\r\n                [\r\n                  0.6785600328869821,\r\n                  0.01782324791165352\r\n                ]\r\n              ]\r\n            }\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              2,\r\n              3\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              3,\r\n              0\r\n            ]\r\n          }\r\n        ],\r\n        \u0022label\u0022: \u0022arm\u0022\r\n      },\r\n      \u0022left_sleeve_b\u0022: {\r\n        \u0022translation\u0022: [\r\n          35.29698742196165,\r\n          124.82959120539276,\r\n          -12.5\r\n        ],\r\n        \u0022rotation\u0022: [\r\n          -0.0,\r\n          0.0,\r\n          -45.75\r\n        ],\r\n        \u0022vertices\u0022: [\r\n          [\r\n            0.0,\r\n            0.0\r\n          ],\r\n          [\r\n            0.0,\r\n            -14.12969497635377\r\n          ],\r\n          [\r\n            -10.776075735134045,\r\n            -15.193220404681473\r\n          ],\r\n          [\r\n            -24.447620637492122,\r\n            -0.5093102098059745\r\n          ],\r\n          [\r\n            -24.441980419822777,\r\n            0.0\r\n          ]\r\n        ],\r\n        \u0022edges\u0022: [\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              0,\r\n              1\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              1,\r\n              2\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              2,\r\n              3\r\n            ],\r\n            \u0022curvature\u0022: {\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.3192750786277482,\r\n                  -0.01903473275621314\r\n                ],\r\n                [\r\n                  0.6555015888426627,\r\n                  0.2975772864968461\r\n                ]\r\n              ]\r\n            }\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              3,\r\n              4\r\n            ],\r\n            \u0022curvature\u0022: {\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.3387827493207235,\r\n                  0.0056866115329645235\r\n                ],\r\n                [\r\n                  0.672068461491963,\r\n                  0.005634930089097011\r\n                ]\r\n              ]\r\n            }\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              4,\r\n              0\r\n            ]\r\n          }\r\n        ],\r\n        \u0022label\u0022: \u0022arm\u0022\r\n      },\r\n      \u0022sl_left_cuff_f\u0022: {\r\n        \u0022translation\u0022: [\r\n          37.39035880148671,\r\n          122.68068537511881,\r\n          17.5\r\n        ],\r\n        \u0022rotation\u0022: [\r\n          -0.0,\r\n          0.0,\r\n          44.25\r\n        ],\r\n        \u0022vertices\u0022: [\r\n          [\r\n            0.0,\r\n            0.0\r\n          ],\r\n          [\r\n            0.0,\r\n            1.0\r\n          ],\r\n          [\r\n            -14.129694976353761,\r\n            1.0\r\n          ],\r\n          [\r\n            -14.129694976353761,\r\n            0.0\r\n          ]\r\n        ],\r\n        \u0022edges\u0022: [\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              0,\r\n              1\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              1,\r\n              2\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              2,\r\n              3\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              3,\r\n              0\r\n            ]\r\n          }\r\n        ],\r\n        \u0022label\u0022: \u0022arm\u0022\r\n      },\r\n      \u0022sl_left_cuff_b\u0022: {\r\n        \u0022translation\u0022: [\r\n          37.39035880148671,\r\n          122.68068537511881,\r\n          -12.5\r\n        ],\r\n        \u0022rotation\u0022: [\r\n          -0.0,\r\n          0.0,\r\n          44.25\r\n        ],\r\n        \u0022vertices\u0022: [\r\n          [\r\n            0.0,\r\n            0.0\r\n          ],\r\n          [\r\n            -14.129694976353761,\r\n            0.0\r\n          ],\r\n          [\r\n            -14.129694976353761,\r\n            1.0\r\n          ],\r\n          [\r\n            0.0,\r\n            1.0\r\n          ]\r\n        ],\r\n        \u0022edges\u0022: [\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              0,\r\n              1\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              1,\r\n              2\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              2,\r\n              3\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              3,\r\n              0\r\n            ]\r\n          }\r\n        ],\r\n        \u0022label\u0022: \u0022arm\u0022\r\n      },\r\n      \u0022back_torso\u0022: {\r\n        \u0022translation\u0022: [\r\n          0.0,\r\n          81.34098505237077,\r\n          -25.0\r\n        ],\r\n        \u0022rotation\u0022: [\r\n          -0.0,\r\n          0.0,\r\n          0.0\r\n        ],\r\n        \u0022vertices\u0022: [\r\n          [\r\n            -26.043590163934425,\r\n            0\r\n          ],\r\n          [\r\n            -19.981499999999997,\r\n            15.864999999999995\r\n          ],\r\n          [\r\n            -23.226,\r\n            35.08633333333333\r\n          ],\r\n          [\r\n            -23.226,\r\n            40.41171647100424\r\n          ],\r\n          [\r\n            -18.5,\r\n            58.598009271004244\r\n          ],\r\n          [\r\n            -7.103430400000001,\r\n            60.96849954397763\r\n          ],\r\n          [\r\n            0.0,\r\n            56.82649691107515\r\n          ],\r\n          [\r\n            7.103430400000001,\r\n            60.96849954397763\r\n          ],\r\n          [\r\n            18.5,\r\n            58.598009271004244\r\n          ],\r\n          [\r\n            23.226,\r\n            40.41171647100424\r\n          ],\r\n          [\r\n            23.226,\r\n            35.08633333333333\r\n          ],\r\n          [\r\n            19.981499999999997,\r\n            15.864999999999995\r\n          ],\r\n          [\r\n            26.043590163934425,\r\n            0.0\r\n          ]\r\n        ],\r\n        \u0022edges\u0022: [\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              0,\r\n              1\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              1,\r\n              2\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              2,\r\n              3\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              3,\r\n              4\r\n            ],\r\n            \u0022label\u0022: \u0022right_armhole\u0022,\r\n            \u0022curvature\u0022: {\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.19999999999999996,\r\n                  -0.35\r\n                ],\r\n                [\r\n                  0.5,\r\n                  -0.2\r\n                ]\r\n              ]\r\n            }\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              4,\r\n              5\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              5,\r\n              6\r\n            ],\r\n            \u0022label\u0022: \u0022right_collar\u0022,\r\n            \u0022curvature\u0022: {\r\n              \u0022type\u0022: \u0022circle\u0022,\r\n              \u0022params\u0022: [\r\n                8.162103606780509,\r\n                0,\r\n                1\r\n              ]\r\n            }\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              6,\r\n              7\r\n            ],\r\n            \u0022label\u0022: \u0022left_collar\u0022,\r\n            \u0022curvature\u0022: {\r\n              \u0022type\u0022: \u0022circle\u0022,\r\n              \u0022params\u0022: [\r\n                8.162103606780509,\r\n                0,\r\n                1\r\n              ]\r\n            }\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              7,\r\n              8\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              8,\r\n              9\r\n            ],\r\n            \u0022label\u0022: \u0022left_armhole\u0022,\r\n            \u0022curvature\u0022: {\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.5,\r\n                  -0.2\r\n                ],\r\n                [\r\n                  0.8,\r\n                  -0.35\r\n                ]\r\n              ]\r\n            }\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              9,\r\n              10\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              10,\r\n              11\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              11,\r\n              12\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              12,\r\n              0\r\n            ]\r\n          }\r\n        ],\r\n        \u0022label\u0022: \u0022body\u0022\r\n      },\r\n      \u0022right_collar_back\u0022: {\r\n        \u0022translation\u0022: [\r\n          -8.617541406191325,\r\n          144.58700000000002,\r\n          -10.0\r\n        ],\r\n        \u0022rotation\u0022: [\r\n          -0.0,\r\n          0.0,\r\n          0.0\r\n        ],\r\n        \u0022vertices\u0022: [\r\n          [\r\n            0,\r\n            0\r\n          ],\r\n          [\r\n            0,\r\n            0.8\r\n          ],\r\n          [\r\n            8.617541406191325,\r\n            0.8\r\n          ],\r\n          [\r\n            8.617541406191325,\r\n            0\r\n          ]\r\n        ],\r\n        \u0022edges\u0022: [\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              0,\r\n              1\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              1,\r\n              2\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              2,\r\n              3\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              3,\r\n              0\r\n            ]\r\n          }\r\n        ],\r\n        \u0022label\u0022: \u0022body\u0022\r\n      },\r\n      \u0022right_collar_front\u0022: {\r\n        \u0022translation\u0022: [\r\n          -13.25795579649575,\r\n          144.58700000000002,\r\n          10.0\r\n        ],\r\n        \u0022rotation\u0022: [\r\n          -0.0,\r\n          0.0,\r\n          0.0\r\n        ],\r\n        \u0022vertices\u0022: [\r\n          [\r\n            0,\r\n            0\r\n          ],\r\n          [\r\n            13.25795579649575,\r\n            0\r\n          ],\r\n          [\r\n            13.25795579649575,\r\n            0.8\r\n          ],\r\n          [\r\n            0,\r\n            0.8\r\n          ]\r\n        ],\r\n        \u0022edges\u0022: [\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              0,\r\n              1\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              1,\r\n              2\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              2,\r\n              3\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              3,\r\n              0\r\n            ]\r\n          }\r\n        ],\r\n        \u0022label\u0022: \u0022body\u0022\r\n      },\r\n      \u0022front_torso\u0022: {\r\n        \u0022translation\u0022: [\r\n          0.0,\r\n          81.30853700570624,\r\n          30.0\r\n        ],\r\n        \u0022rotation\u0022: [\r\n          -0.0,\r\n          0.0,\r\n          0.0\r\n        ],\r\n        \u0022vertices\u0022: [\r\n          [\r\n            0.0,\r\n            51.93586970221431\r\n          ],\r\n          [\r\n            -7.103430399999998,\r\n            61.00094709730395\r\n          ],\r\n          [\r\n            -18.5,\r\n            58.630457605829875\r\n          ],\r\n          [\r\n            -18.499606839029234,\r\n            58.128371755427686\r\n          ],\r\n          [\r\n            -25.774,\r\n            40.44416480582987\r\n          ],\r\n          [\r\n            -25.774,\r\n            34.58879661781067\r\n          ],\r\n          [\r\n            -18.518500000000003,\r\n            15.367463284477338\r\n          ],\r\n          [\r\n            -23.960546117478355,\r\n            0\r\n          ],\r\n          [\r\n            23.960546117478355,\r\n            0.0\r\n          ],\r\n          [\r\n            18.518500000000003,\r\n            15.367463284477338\r\n          ],\r\n          [\r\n            25.774,\r\n            34.58879661781067\r\n          ],\r\n          [\r\n            25.774,\r\n            40.44416480582987\r\n          ],\r\n          [\r\n            18.499606839029234,\r\n            58.128371755427686\r\n          ],\r\n          [\r\n            18.5,\r\n            58.630457605829875\r\n          ],\r\n          [\r\n            7.103430399999998,\r\n            61.00094709730395\r\n          ]\r\n        ],\r\n        \u0022edges\u0022: [\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              0,\r\n              1\r\n            ],\r\n            \u0022label\u0022: \u0022right_collar\u0022,\r\n            \u0022curvature\u0022: {\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.25432800232704045,\r\n                  0.3245619221993296\r\n                ],\r\n                [\r\n                  0.7456719976729591,\r\n                  0.3245619221993296\r\n                ]\r\n              ]\r\n            }\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              1,\r\n              2\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              2,\r\n              3\r\n            ],\r\n            \u0022curvature\u0022: {\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.3353677798909527,\r\n                  -0.00025439068945575264\r\n                ],\r\n                [\r\n                  0.6687050608728993,\r\n                  -0.00023032614173229324\r\n                ]\r\n              ]\r\n            }\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              3,\r\n              4\r\n            ],\r\n            \u0022curvature\u0022: {\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.4955988438555555,\r\n                  0.20472156044168044\r\n                ],\r\n                [\r\n                  0.7949684106305311,\r\n                  0.35080376957163867\r\n                ]\r\n              ]\r\n            }\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              4,\r\n              5\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              5,\r\n              6\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              6,\r\n              7\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              7,\r\n              8\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              8,\r\n              9\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              9,\r\n              10\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              10,\r\n              11\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              11,\r\n              12\r\n            ],\r\n            \u0022curvature\u0022: {\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.20503158936946886,\r\n                  0.35080376957163867\r\n                ],\r\n                [\r\n                  0.5044011561444445,\r\n                  0.20472156044168044\r\n                ]\r\n              ]\r\n            }\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              12,\r\n              13\r\n            ],\r\n            \u0022curvature\u0022: {\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.33129493912710073,\r\n                  -0.00023032614173229324\r\n                ],\r\n                [\r\n                  0.6646322201090473,\r\n                  -0.00025439068945575264\r\n                ]\r\n              ]\r\n            }\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              13,\r\n              14\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              14,\r\n              0\r\n            ],\r\n            \u0022label\u0022: \u0022left_collar\u0022,\r\n            \u0022curvature\u0022: {\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.2543280023270409,\r\n                  0.32456192219932967\r\n                ],\r\n                [\r\n                  0.7456719976729596,\r\n                  0.3245619221993296\r\n                ]\r\n              ]\r\n            }\r\n          }\r\n        ],\r\n        \u0022label\u0022: \u0022body\u0022\r\n      },\r\n      \u0022right_sleeve_b\u0022: {\r\n        \u0022translation\u0022: [\r\n          -35.29698742196165,\r\n          124.82959120539276,\r\n          -12.5\r\n        ],\r\n        \u0022rotation\u0022: [\r\n          -0.0,\r\n          0.0,\r\n          45.75\r\n        ],\r\n        \u0022vertices\u0022: [\r\n          [\r\n            0,\r\n            0\r\n          ],\r\n          [\r\n            24.441980419822777,\r\n            0.0\r\n          ],\r\n          [\r\n            24.447620637492122,\r\n            -0.5093102098059745\r\n          ],\r\n          [\r\n            10.776075735134045,\r\n            -15.193220404681473\r\n          ],\r\n          [\r\n            0,\r\n            -14.12969497635377\r\n          ]\r\n        ],\r\n        \u0022edges\u0022: [\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              0,\r\n              1\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              1,\r\n              2\r\n            ],\r\n            \u0022curvature\u0022: {\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.327931538508037,\r\n                  0.005634930089097011\r\n                ],\r\n                [\r\n                  0.6612172506792765,\r\n                  0.0056866115329645235\r\n                ]\r\n              ]\r\n            }\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              2,\r\n              3\r\n            ],\r\n            \u0022curvature\u0022: {\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.34449841115733726,\r\n                  0.2975772864968461\r\n                ],\r\n                [\r\n                  0.6807249213722518,\r\n                  -0.01903473275621314\r\n                ]\r\n              ]\r\n            }\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              3,\r\n              4\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              4,\r\n              0\r\n            ]\r\n          }\r\n        ],\r\n        \u0022label\u0022: \u0022arm\u0022\r\n      },\r\n      \u0022right_sleeve_f\u0022: {\r\n        \u0022translation\u0022: [\r\n          -35.29698742196165,\r\n          124.82959120539276,\r\n          17.5\r\n        ],\r\n        \u0022rotation\u0022: [\r\n          -0.0,\r\n          0.0,\r\n          45.75\r\n        ],\r\n        \u0022vertices\u0022: [\r\n          [\r\n            0,\r\n            0\r\n          ],\r\n          [\r\n            0,\r\n            -14.129694976353752\r\n          ],\r\n          [\r\n            10.776075735134047,\r\n            -15.193220404681453\r\n          ],\r\n          [\r\n            24.441980419822777,\r\n            0.0\r\n          ]\r\n        ],\r\n        \u0022edges\u0022: [\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              0,\r\n              1\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              1,\r\n              2\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              2,\r\n              3\r\n            ],\r\n            \u0022curvature\u0022: {\r\n              \u0022type\u0022: \u0022cubic\u0022,\r\n              \u0022params\u0022: [\r\n                [\r\n                  0.321439967113018,\r\n                  0.01782324791165352\r\n                ],\r\n                [\r\n                  0.6474466419010785,\r\n                  -0.2995337093983529\r\n                ]\r\n              ]\r\n            }\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              3,\r\n              0\r\n            ]\r\n          }\r\n        ],\r\n        \u0022label\u0022: \u0022arm\u0022\r\n      },\r\n      \u0022sl_right_cuff_f\u0022: {\r\n        \u0022translation\u0022: [\r\n          -37.39035880148671,\r\n          122.68068537511881,\r\n          17.5\r\n        ],\r\n        \u0022rotation\u0022: [\r\n          -0.0,\r\n          0.0,\r\n          -44.25\r\n        ],\r\n        \u0022vertices\u0022: [\r\n          [\r\n            0,\r\n            0\r\n          ],\r\n          [\r\n            14.129694976353761,\r\n            0\r\n          ],\r\n          [\r\n            14.129694976353761,\r\n            1.0\r\n          ],\r\n          [\r\n            0,\r\n            1.0\r\n          ]\r\n        ],\r\n        \u0022edges\u0022: [\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              0,\r\n              1\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              1,\r\n              2\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              2,\r\n              3\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              3,\r\n              0\r\n            ]\r\n          }\r\n        ],\r\n        \u0022label\u0022: \u0022arm\u0022\r\n      },\r\n      \u0022sl_right_cuff_b\u0022: {\r\n        \u0022translation\u0022: [\r\n          -37.39035880148671,\r\n          122.68068537511881,\r\n          -12.5\r\n        ],\r\n        \u0022rotation\u0022: [\r\n          -0.0,\r\n          0.0,\r\n          -44.25\r\n        ],\r\n        \u0022vertices\u0022: [\r\n          [\r\n            0,\r\n            0\r\n          ],\r\n          [\r\n            0,\r\n            1.0\r\n          ],\r\n          [\r\n            14.129694976353761,\r\n            1.0\r\n          ],\r\n          [\r\n            14.129694976353761,\r\n            0\r\n          ]\r\n        ],\r\n        \u0022edges\u0022: [\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              0,\r\n              1\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              1,\r\n              2\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              2,\r\n              3\r\n            ]\r\n          },\r\n          {\r\n            \u0022endpoints\u0022: [\r\n              3,\r\n              0\r\n            ]\r\n          }\r\n        ],\r\n        \u0022label\u0022: \u0022arm\u0022\r\n      }\r\n    },\r\n    \u0022stitches\u0022: [\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022left_collar_front\u0022,\r\n          \u0022edge\u0022: 0\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022left_collar_back\u0022,\r\n          \u0022edge\u0022: 3\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022sl_left_cuff_f\u0022,\r\n          \u0022edge\u0022: 0\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022sl_left_cuff_b\u0022,\r\n          \u0022edge\u0022: 3\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022sl_left_cuff_f\u0022,\r\n          \u0022edge\u0022: 2\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022sl_left_cuff_b\u0022,\r\n          \u0022edge\u0022: 1\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022left_sleeve_f\u0022,\r\n          \u0022edge\u0022: 0\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022left_sleeve_b\u0022,\r\n          \u0022edge\u0022: 4\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022left_sleeve_f\u0022,\r\n          \u0022edge\u0022: 2\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022left_sleeve_b\u0022,\r\n          \u0022edge\u0022: 1\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022sl_left_cuff_f\u0022,\r\n          \u0022edge\u0022: 1\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022left_sleeve_f\u0022,\r\n          \u0022edge\u0022: 3\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022sl_left_cuff_b\u0022,\r\n          \u0022edge\u0022: 2\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022left_sleeve_b\u0022,\r\n          \u0022edge\u0022: 0\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022left_sleeve_f\u0022,\r\n          \u0022edge\u0022: 1\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022front_torso\u0022,\r\n          \u0022edge\u0022: 11\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022left_sleeve_b\u0022,\r\n          \u0022edge\u0022: 3\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022front_torso\u0022,\r\n          \u0022edge\u0022: 12\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022left_sleeve_b\u0022,\r\n          \u0022edge\u0022: 2\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022back_torso\u0022,\r\n          \u0022edge\u0022: 8\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022front_torso\u0022,\r\n          \u0022edge\u0022: 14\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022left_collar_front\u0022,\r\n          \u0022edge\u0022: 3\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022back_torso\u0022,\r\n          \u0022edge\u0022: 6\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022left_collar_back\u0022,\r\n          \u0022edge\u0022: 0\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022front_torso\u0022,\r\n          \u0022edge\u0022: 13\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022back_torso\u0022,\r\n          \u0022edge\u0022: 7\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022front_torso\u0022,\r\n          \u0022edge\u0022: 8\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022back_torso\u0022,\r\n          \u0022edge\u0022: 11\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022front_torso\u0022,\r\n          \u0022edge\u0022: 9\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022back_torso\u0022,\r\n          \u0022edge\u0022: 10\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022front_torso\u0022,\r\n          \u0022edge\u0022: 10\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022back_torso\u0022,\r\n          \u0022edge\u0022: 9\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022right_collar_front\u0022,\r\n          \u0022edge\u0022: 3\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022right_collar_back\u0022,\r\n          \u0022edge\u0022: 0\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022sl_right_cuff_f\u0022,\r\n          \u0022edge\u0022: 3\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022sl_right_cuff_b\u0022,\r\n          \u0022edge\u0022: 0\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022sl_right_cuff_f\u0022,\r\n          \u0022edge\u0022: 1\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022sl_right_cuff_b\u0022,\r\n          \u0022edge\u0022: 2\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022right_sleeve_f\u0022,\r\n          \u0022edge\u0022: 3\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022right_sleeve_b\u0022,\r\n          \u0022edge\u0022: 0\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022right_sleeve_f\u0022,\r\n          \u0022edge\u0022: 1\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022right_sleeve_b\u0022,\r\n          \u0022edge\u0022: 3\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022sl_right_cuff_f\u0022,\r\n          \u0022edge\u0022: 2\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022right_sleeve_f\u0022,\r\n          \u0022edge\u0022: 0\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022sl_right_cuff_b\u0022,\r\n          \u0022edge\u0022: 1\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022right_sleeve_b\u0022,\r\n          \u0022edge\u0022: 4\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022right_sleeve_f\u0022,\r\n          \u0022edge\u0022: 2\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022front_torso\u0022,\r\n          \u0022edge\u0022: 3\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022right_sleeve_b\u0022,\r\n          \u0022edge\u0022: 1\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022front_torso\u0022,\r\n          \u0022edge\u0022: 2\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022right_sleeve_b\u0022,\r\n          \u0022edge\u0022: 2\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022back_torso\u0022,\r\n          \u0022edge\u0022: 3\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022front_torso\u0022,\r\n          \u0022edge\u0022: 0\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022right_collar_front\u0022,\r\n          \u0022edge\u0022: 0\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022back_torso\u0022,\r\n          \u0022edge\u0022: 5\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022right_collar_back\u0022,\r\n          \u0022edge\u0022: 3\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022front_torso\u0022,\r\n          \u0022edge\u0022: 1\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022back_torso\u0022,\r\n          \u0022edge\u0022: 4\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022front_torso\u0022,\r\n          \u0022edge\u0022: 6\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022back_torso\u0022,\r\n          \u0022edge\u0022: 0\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022front_torso\u0022,\r\n          \u0022edge\u0022: 5\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022back_torso\u0022,\r\n          \u0022edge\u0022: 1\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022front_torso\u0022,\r\n          \u0022edge\u0022: 4\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022back_torso\u0022,\r\n          \u0022edge\u0022: 2\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022right_collar_front\u0022,\r\n          \u0022edge\u0022: 1\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022left_collar_front\u0022,\r\n          \u0022edge\u0022: 2\r\n        }\r\n      ],\r\n      [\r\n        {\r\n          \u0022panel\u0022: \u0022right_collar_back\u0022,\r\n          \u0022edge\u0022: 2\r\n        },\r\n        {\r\n          \u0022panel\u0022: \u0022left_collar_back\u0022,\r\n          \u0022edge\u0022: 1\r\n        }\r\n      ]\r\n    ]\r\n  },\r\n  \u0022parameters\u0022: {},\r\n  \u0022parameter_order\u0022: [],\r\n  \u0022properties\u0022: {\r\n    \u0022curvature_coords\u0022: \u0022relative\u0022,\r\n    \u0022normalize_panel_translation\u0022: false,\r\n    \u0022normalized_edge_loops\u0022: true,\r\n    \u0022units_in_meter\u0022: 100\r\n  },\r\n  \u0022patterna\u0022: {\r\n    \u0022generator\u0022: \u0022tools/generate_garmentcode_pattern.py\u0022,\r\n    \u0022style\u0022: \u0022patterna-shaped-crew-neck-shirt\u0022,\r\n    \u0022body_parameter_count\u0022: 26,\r\n    \u0022design\u0022: {\r\n      \u0022shirt_width\u0022: 1.0,\r\n      \u0022shirt_length\u0022: 1.38,\r\n      \u0022shirt_flare\u0022: 1.0,\r\n      \u0022chest_ease_cm\u0022: 6.0,\r\n      \u0022waist_ease_cm\u0022: 6.0,\r\n      \u0022hip_ease_cm\u0022: 8.0,\r\n      \u0022hem_extension_depth_cm\u0022: 0.0,\r\n      \u0022hem_extension_ease_cm\u0022: 4.0,\r\n      \u0022neck_width\u0022: -0.2,\r\n      \u0022front_neck_depth\u0022: 0.23,\r\n      \u0022back_neck_depth\u0022: 0.035,\r\n      \u0022neck_band_depth\u0022: 0.8,\r\n      \u0022sleeve_length\u0022: 0.27,\r\n      \u0022sleeve_angle\u0022: 42,\r\n      \u0022sleeve_end_width\u0022: 0.93,\r\n      \u0022sleeve_cuff_depth\u0022: 1.0\r\n    },\r\n    \u0022torso_construction\u0022: \u0022uninterrupted-full-front-and-back\u0022\r\n  }\r\n}\r\n",
+      "structuralSignature": "f5bc91afc770019f5edb0f37bf88e03d0847648f207c61631ae188a11c901113"
+    },
+    "easeProfile": {
+      "chestEaseCm": 6,
+      "waistEaseCm": 6,
+      "hipEaseCm": 8,
+      "upperArmEaseCm": 5
+    }
+  },
+  "unrealGeneration": {
+    "profile": "garmentcode-v1",
+    "garmentId": "PatternaFullPanel.specification",
+    "bodyWaistCircumferenceCm": 71,
+    "bodyHipCircumferenceCm": 99,
+    "waistEaseCm": 2,
+    "hipEaseCm": 5,
+    "hemCircumferenceCm": 190,
+    "skirtLengthCm": 62,
+    "waistHeightCm": 103,
+    "dressingClearanceCm": 0,
+    "renderThicknessCm": 0.034,
+    "panelColumns": 72,
+    "verticalRows": 48,
+    "fabric": {
+      "id": "cotton",
+      "name": "Cotton poplin",
+      "massGramsPerSquareMeter": 120,
+      "thicknessMillimeters": 0.34,
+      "warpStretchPercent": 4.95,
+      "weftStretchPercent": 9,
+      "biasStretchPercent": 12.6,
+      "bendResistance": 38,
+      "shearResistance": 79.1,
+      "staticFriction": 0.5175,
+      "dynamicFriction": 0.45,
+      "calibration": "prototype-unvalidated"
+    }
+  },
+  "patternTopology": {
+    "schemaVersion": "patterna.topology/1.1",
+    "isValid": true,
+    "panelCount": 8,
+    "vertexCount": 0,
+    "triangleCount": 0,
+    "seamCount": 11,
+    "warningCount": 0,
+    "diagnostics": []
+  }
+}

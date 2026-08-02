@@ -1,0 +1,57 @@
+{
+  "FileVersion": 3,
+  "EngineAssociation": "5.8",
+  "Category": "Fashion Design",
+  "Description": "Isolated Unreal Engine vertical slice for Patterna avatar and cloth validation.",
+  "Modules": [
+    {
+      "Name": "PatternaUnreal",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    },
+    {
+      "Name": "PatternaUnrealEditor",
+      "Type": "Editor",
+      "LoadingPhase": "Default"
+    }
+  ],
+  "Plugins": [
+    {
+      "Name": "MetaHumanCharacter",
+      "Enabled": true
+    },
+    {
+      "Name": "MetaHumanCoreTech",
+      "Enabled": true
+    },
+    {
+      "Name": "ChaosClothAsset",
+      "Enabled": true
+    },
+    {
+      "Name": "ChaosClothAssetDataflowNodes",
+      "Enabled": true
+    },
+    {
+      "Name": "ChaosOutfitAsset",
+      "Enabled": true
+    },
+    {
+      "Name": "InterchangeOpenUSDChaosClothAsset",
+      "Enabled": true,
+      "SupportedTargetPlatforms": [
+        "Win64",
+        "Linux",
+        "Mac"
+      ]
+    },
+    {
+      "Name": "PythonScriptPlugin",
+      "Enabled": true
+    },
+    {
+      "Name": "EditorScriptingUtilities",
+      "Enabled": true
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "schema_version": "patterna.dressed-garment-pose/1.0",
+  "accepted": true,
+  "issues": [],
+  "method": "interpolated MPFB arm-rig transform transfer",
+  "source_garment": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\artifacts\\full-panel-validation\\warp-zero-contact-v3\\PatternaFullPanel\\PatternaFullPanel_sim.obj",
+  "source_garment_sha256": "eba04eaf66542b829d3f9107e107a01767fe1958986c9b4b47e11b79ad548a97",
+  "source_warp_report": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\PatternaUnreal\\SourceAssets\\GarmentCode\\PatternaProductionCrewNeck.warp-report.json",
+  "source_warp_report_sha256": "0336f41efb94dbf784db9c6fb55f21e253c50ceaf2287c9f5484b00235275aa6",
+  "source_body": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\third_party\\GarmentCode\\assets\\bodies\\patterna_mpfb_female.obj",
+  "source_body_sha256": "c4abd1812014a1551beecb2dbbad81277e96f97b61bc0442ce1c564b7dedc452",
+  "posed_body": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\artifacts\\relaxed-body\\garmentcode\\patterna_relaxed_female.obj",
+  "posed_body_sha256": "d8f04b0febd3db70d5c651ac22571c374dfeb87de3f5814c99b8f2d14dcaa0ec",
+  "posed_body_report": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\artifacts\\relaxed-body\\garmentcode\\patterna_relaxed_female.report.json",
+  "posed_body_report_sha256": "68b5edf798bcc2db2b635217af4e76932f3d0374f7a63969d5bdc249ba5c8717",
+  "body_pose_report": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\artifacts\\relaxed-body\\PatternaDefaultFemale.relaxed.pose-report.json",
+  "body_pose_report_sha256": "1110aab10d372aa95d3a7579cae50c6fb7ee4c0055d801fe802a40061747aa09",
+  "rig_weights": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\third_party\\MPFB2\\src\\mpfb\\data\\rigs\\standard\\weights.default.json",
+  "rig_weights_sha256": "e2623c088b05eb0677d04ff4ae701c98264634ade7b8a6393f437d50f84e04c2",
+  "garment_segmentation": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\artifacts\\full-panel-validation\\warp-zero-contact-v3\\PatternaFullPanel\\PatternaFullPanel_sim_segmentation.txt",
+  "garment_segmentation_sha256": "04249e63bb742dabc49101f3b2f2e0f0330d436ab19c67ccae2eb14cdeb83fcd",
+  "output_garment": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\artifacts\\relaxed-body\\staged-panel-rig\\PatternaProductionCrewNeck.dressed-pose.obj",
+  "output_garment_sha256": "1bc672aa4aff47a72ef250dc1dd0e7f5c42f59830b39f9cf19c921ece5ed439e",
+  "garment_vertex_count": 7698,
+  "garment_face_count": 15193,
+  "body_vertex_count": 13380,
+  "body_face_count": 26756,
+  "topology_preserved": true,
+  "transfer": {
+    "neighbors": 16,
+    "maximum_nearest_body_distance_cm": 4.482224944166695,
+    "ninety_fifth_percentile_nearest_body_distance_cm": 3.0395406056057146,
+    "affected_vertex_count": 1638,
+    "maximum_displacement_cm": 9.93188816848135,
+    "sides": {
+      "positive_x_arm": {
+        "rig_suffix": ".L",
+        "shoulder_pivot_cm": [
+          12.32366592178218,
+          132.55516278712872,
+          -2.817871156435644
+        ],
+        "maximum_influence": 1.0,
+        "affected_vertex_count": 825,
+        "rigid_panel_vertex_count": 675
+      },
+      "negative_x_arm": {
+        "rig_suffix": ".R",
+        "shoulder_pivot_cm": [
+          -12.32366592178218,
+          132.55516278712872,
+          -2.817871156435644
+        ],
+        "maximum_influence": 1.0,
+        "affected_vertex_count": 822,
+        "rigid_panel_vertex_count": 673
+      }
+    }
+  },
+  "maximum_transfer_edge_strain_ratio": 4.6407322429331543e-14,
+  "maximum_transfer_strain_edge_vertices": [
+    783,
+    1009
+  ],
+  "maximum_transfer_strain_edge_labels": [
+    "right_sleeve_f",
+    "right_sleeve_f"
+  ],
+  "excluded_seam_edge_count": 1919,
+  "ninety_fifth_percentile_transfer_edge_strain_ratio": 7.771561172376096e-15,
+  "ninety_ninth_point_ninth_percentile_transfer_edge_strain_ratio": 2.9982016869212616e-14
+}

@@ -1,0 +1,93 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <!-- Keep the legacy Patterna namespace so existing saved documents and XAML types remain compatible. -->
+    <RootNamespace>Patterna</RootNamespace>
+    <AssemblyName>Patternal</AssemblyName>
+    <Product>Patternal</Product>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x86;x64;ARM64</Platforms>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture.ToString().ToLowerInvariant())</RuntimeIdentifier>
+    <PublishProfile Condition="Exists('Properties\PublishProfiles\win-$(Platform).pubxml')">win-$(Platform).pubxml</PublishProfile>
+    <UseWinUI>true</UseWinUI>
+    <WinUISDKReferences>false</WinUISDKReferences>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\SplashScreen.scale-200.png" />
+    <Content Include="Assets\LockScreenLogo.scale-200.png" />
+    <Content Include="Assets\Square150x150Logo.scale-200.png" />
+    <Content Include="Assets\Square44x44Logo.scale-200.png" />
+    <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
+    <Content Include="Assets\Square44x44Logo.targetsize-48_altform-lightunplated.png" />
+    <Content Include="Assets\StoreLogo.png" />
+    <Content Include="Assets\AppIcon.ico" />
+    <Content Include="Assets\Wide310x150Logo.scale-200.png" />
+    <Content Include="Assets\avatar3d.html" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\makehuman-base.obj" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\Production\patterna-mpfb-female.obj" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
+    <Content Include="Assets\Production\patterna-production-crew-neck.obj" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
+    <Content Include="Assets\Production\patterna-production-crew-neck.fit.json" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
+    <Content Include="Assets\Production\patterna-production-front.png" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
+    <Content Include="..\third_party\GarmentCode\assets\img\fabric_texture.png" Link="Assets\Production\fabric-texture.png" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
+    <Content Include="Assets\Production\Avatar\**\*" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
+    <Content Include="Assets\MAKEHUMAN-ASSET-NOTICE.md" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\PatternaUnreal\SourceAssets\GarmentCode\PatternaProductionCrewNeck.specification.json" Link="Assets\GarmentCode\PatternaProductionCrewNeck.specification.json" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
+    <Content Include="..\PatternaUnreal\Saved\Patterna\ShirtAcceptanceViews\PatternaShirt-01-front.png" Link="Assets\UnrealPreview\Patterna-01-front.png" CopyToOutputDirectory="PreserveNewest" Condition="Exists('..\PatternaUnreal\Saved\Patterna\ShirtAcceptanceViews\PatternaShirt-01-front.png')" />
+    <Content Include="..\PatternaUnreal\Saved\Patterna\ShirtAcceptanceViews\PatternaShirt-02-right-side.png" Link="Assets\UnrealPreview\Patterna-02-right-side.png" CopyToOutputDirectory="PreserveNewest" Condition="Exists('..\PatternaUnreal\Saved\Patterna\ShirtAcceptanceViews\PatternaShirt-02-right-side.png')" />
+    <Content Include="..\PatternaUnreal\Saved\Patterna\ShirtAcceptanceViews\PatternaShirt-03-rear.png" Link="Assets\UnrealPreview\Patterna-03-rear.png" CopyToOutputDirectory="PreserveNewest" Condition="Exists('..\PatternaUnreal\Saved\Patterna\ShirtAcceptanceViews\PatternaShirt-03-rear.png')" />
+    <Content Include="..\PatternaUnreal\Saved\Patterna\ShirtAcceptanceViews\PatternaShirt-04-left-side.png" Link="Assets\UnrealPreview\Patterna-04-left-side.png" CopyToOutputDirectory="PreserveNewest" Condition="Exists('..\PatternaUnreal\Saved\Patterna\ShirtAcceptanceViews\PatternaShirt-04-left-side.png')" />
+    <Content Include="..\PatternaUnreal\Saved\Patterna\ShirtAcceptanceViews\PatternaShirt-05-front-oblique.png" Link="Assets\UnrealPreview\Patterna-05-front-oblique.png" CopyToOutputDirectory="PreserveNewest" Condition="Exists('..\PatternaUnreal\Saved\Patterna\ShirtAcceptanceViews\PatternaShirt-05-front-oblique.png')" />
+    <Content Include="..\PatternaUnreal\Saved\Patterna\ShirtAcceptanceViews\PatternaShirt-06-rear-oblique.png" Link="Assets\UnrealPreview\Patterna-06-rear-oblique.png" CopyToOutputDirectory="PreserveNewest" Condition="Exists('..\PatternaUnreal\Saved\Patterna\ShirtAcceptanceViews\PatternaShirt-06-rear-oblique.png')" />
+    <Content Include="..\PatternaUnreal\Saved\Patterna\ShirtAcceptanceViews\PatternaShirt-07-fabric-detail.png" Link="Assets\UnrealPreview\Patterna-07-fabric-detail.png" CopyToOutputDirectory="PreserveNewest" Condition="Exists('..\PatternaUnreal\Saved\Patterna\ShirtAcceptanceViews\PatternaShirt-07-fabric-detail.png')" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Manifest Include="$(ApplicationManifest)" />
+  </ItemGroup>
+
+  <!--
+    Defining the "Msix" ProjectCapability here allows the Single-project MSIX Packaging
+    Tools extension to be activated for this project even if the Windows App SDK Nuget
+    package has not yet been restored.
+  -->
+  <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
+    <ProjectCapability Include="Msix" />
+  </ItemGroup>
+
+  <!--
+    Microsoft.Windows.SDK.BuildTools.WinApp adds first-class support for
+    `dotnet run` on packaged WinUI apps: it hooks the .NET CLI Run target to
+    register a debug identity via the winapp CLI and launch the app with
+    package identity (AUMID).
+    Set <EnableWinAppRunSupport>false</EnableWinAppRunSupport> in a
+    <PropertyGroup> above to opt out.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2270" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.3.1" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools.WinApp" Version="0.4.0" />
+  </ItemGroup>
+
+  <!--
+    Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution
+    Explorer "Package and Publish" context menu entry to be enabled for this project even if
+    the Windows App SDK Nuget package has not yet been restored.
+  -->
+  <PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
+    <HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
+  </PropertyGroup>
+
+  <!-- Publish Properties -->
+  <PropertyGroup>
+    <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
+    <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
+    <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
+    <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
+  </PropertyGroup>
+</Project>

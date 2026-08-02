@@ -1,0 +1,1304 @@
+{
+  "schemaVersion": "patterna.unreal-bridge/1.0",
+  "generatedAtUtc": "1970-01-01T00:00:00+00:00",
+  "body": {
+    "units": "centimeters",
+    "posture": "balanced",
+    "bodyTemplate": "neutral",
+    "linkedPhotoCount": 0,
+    "measurements": [],
+    "customMeasurements": []
+  },
+  "garment": {
+    "schemaVersion": "patterna.garment/1.1",
+    "id": "PatternaFemaleCrewNeck.specification",
+    "name": "GarmentCode fitted garment",
+    "units": "centimeters",
+    "pieces": [
+      {
+        "id": "right-sleeve-f",
+        "name": "Right Sleeve F",
+        "cutQuantity": 1,
+        "mirrored": false,
+        "cutOnFold": false,
+        "scaleX": 1,
+        "scaleY": 1,
+        "seamAllowanceCm": 1,
+        "start": {
+          "x": 0,
+          "y": 0
+        },
+        "boundary": [
+          {
+            "id": "edge-0",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": -12.888810965056196
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          },
+          {
+            "id": "edge-1",
+            "kind": "line",
+            "end": {
+              "x": 10.271161747989542,
+              "y": -14.009577135930646
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          },
+          {
+            "id": "edge-2",
+            "kind": "cubic",
+            "end": {
+              "x": 24.75565446469979,
+              "y": 0
+            },
+            "control1": {
+              "x": 14.497154692581184,
+              "y": -9.177691395316987
+            },
+            "control2": {
+              "x": 24.36915029686769,
+              "y": -9.057050089778366
+            },
+            "label": null
+          },
+          {
+            "id": "edge-3",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          }
+        ],
+        "layout": {
+          "left": 20,
+          "top": 20,
+          "labelX": 22,
+          "labelY": 22,
+          "showGrainline": true
+        }
+      },
+      {
+        "id": "right-sleeve-b",
+        "name": "Right Sleeve B",
+        "cutQuantity": 1,
+        "mirrored": false,
+        "cutOnFold": false,
+        "scaleX": 1,
+        "scaleY": 1,
+        "seamAllowanceCm": 1,
+        "start": {
+          "x": 0,
+          "y": 0
+        },
+        "boundary": [
+          {
+            "id": "edge-0",
+            "kind": "line",
+            "end": {
+              "x": 24.755654464699788,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          },
+          {
+            "id": "edge-1",
+            "kind": "cubic",
+            "end": {
+              "x": 24.767340684717446,
+              "y": -0.5593212335889426
+            },
+            "control1": {
+              "x": 24.763453813646,
+              "y": -0.18276411990515828
+            },
+            "control2": {
+              "x": 24.767390665406694,
+              "y": -0.3691671502462225
+            },
+            "label": null
+          },
+          {
+            "id": "edge-2",
+            "kind": "cubic",
+            "end": {
+              "x": 10.271161747989542,
+              "y": -14.009577135930588
+            },
+            "control1": {
+              "x": 24.38576728803483,
+              "y": -9.794043103164805
+            },
+            "control2": {
+              "x": 14.615110274965051,
+              "y": -9.46339480762962
+            },
+            "label": null
+          },
+          {
+            "id": "edge-3",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": -12.888810965056141
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          },
+          {
+            "id": "edge-4",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          }
+        ],
+        "layout": {
+          "left": 200,
+          "top": 20,
+          "labelX": 202,
+          "labelY": 22,
+          "showGrainline": true
+        }
+      },
+      {
+        "id": "right-ftorso",
+        "name": "Right Ftorso",
+        "cutQuantity": 1,
+        "mirrored": false,
+        "cutOnFold": false,
+        "scaleX": 1,
+        "scaleY": 1,
+        "seamAllowanceCm": 1,
+        "start": {
+          "x": 0,
+          "y": 0
+        },
+        "boundary": [
+          {
+            "id": "edge-0",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 40.98787647854081
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          },
+          {
+            "id": "edge-1",
+            "kind": "cubic",
+            "end": {
+              "x": -7.103430399999992,
+              "y": 48.349033744445634
+            },
+            "control1": {
+              "x": -4.024884566687077,
+              "y": 40.98787647854082
+            },
+            "control2": {
+              "x": -7.246813908985979,
+              "y": 44.32670395382594
+            },
+            "label": "right_collar"
+          },
+          {
+            "id": "edge-2",
+            "kind": "line",
+            "end": {
+              "x": -18.484319685692604,
+              "y": 45.98180576964997
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          },
+          {
+            "id": "edge-3",
+            "kind": "cubic",
+            "end": {
+              "x": -18.473011605565137,
+              "y": 45.42228431269114
+            },
+            "control1": {
+              "x": -18.480682768381666,
+              "y": 45.79401481509649
+            },
+            "control2": {
+              "x": -18.476896331781116,
+              "y": 45.60750521323166
+            },
+            "label": null
+          },
+          {
+            "id": "edge-4",
+            "kind": "cubic",
+            "end": {
+              "x": -25.353412739013685,
+              "y": 27.79551296964996
+            },
+            "control1": {
+              "x": -18.26037209356448,
+              "y": 35.2837881321232
+            },
+            "control2": {
+              "x": -17.753239743900046,
+              "y": 29.006465975268767
+            },
+            "label": null
+          },
+          {
+            "id": "edge-5",
+            "kind": "line",
+            "end": {
+              "x": -25.667116800000002,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          },
+          {
+            "id": "edge-6",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          }
+        ],
+        "layout": {
+          "left": 380,
+          "top": 20,
+          "labelX": 382,
+          "labelY": 22,
+          "showGrainline": true
+        }
+      },
+      {
+        "id": "right-btorso",
+        "name": "Right Btorso",
+        "cutQuantity": 1,
+        "mirrored": false,
+        "cutOnFold": false,
+        "scaleX": 1,
+        "scaleY": 1,
+        "seamAllowanceCm": 1,
+        "start": {
+          "x": 0,
+          "y": 0
+        },
+        "boundary": [
+          {
+            "id": "edge-0",
+            "kind": "line",
+            "end": {
+              "x": -23.129683200000002,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          },
+          {
+            "id": "edge-1",
+            "kind": "line",
+            "end": {
+              "x": -22.850325676755315,
+              "y": 27.77417058951549
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          },
+          {
+            "id": "edge-2",
+            "kind": "cubic",
+            "end": {
+              "x": -18.491244725174187,
+              "y": 45.960463389515496
+            },
+            "control1": {
+              "x": -15.613307006439088,
+              "y": 29.885750816462092
+            },
+            "control2": {
+              "x": -17.033526640964748,
+              "y": 35.99550079919927
+            },
+            "label": "right_armhole"
+          },
+          {
+            "id": "edge-3",
+            "kind": "line",
+            "end": {
+              "x": -7.103430399999996,
+              "y": 48.329132617701305
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          },
+          {
+            "id": "edge-4",
+            "kind": "cubic",
+            "end": {
+              "x": 0,
+              "y": 44.52678353594
+            },
+            "control1": {
+              "x": -5.520332492136706,
+              "y": 45.9536877725604
+            },
+            "control2": {
+              "x": -2.8546343370364635,
+              "y": 44.52678353593999
+            },
+            "label": "right_collar"
+          },
+          {
+            "id": "edge-5",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          }
+        ],
+        "layout": {
+          "left": 20,
+          "top": 240,
+          "labelX": 22,
+          "labelY": 242,
+          "showGrainline": true
+        }
+      },
+      {
+        "id": "left-sleeve-b",
+        "name": "Left Sleeve B",
+        "cutQuantity": 1,
+        "mirrored": false,
+        "cutOnFold": false,
+        "scaleX": 1,
+        "scaleY": 1,
+        "seamAllowanceCm": 1,
+        "start": {
+          "x": 0,
+          "y": 0
+        },
+        "boundary": [
+          {
+            "id": "edge-0",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": -12.888810965056141
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          },
+          {
+            "id": "edge-1",
+            "kind": "line",
+            "end": {
+              "x": -10.271161747989542,
+              "y": -14.009577135930588
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          },
+          {
+            "id": "edge-2",
+            "kind": "cubic",
+            "end": {
+              "x": -24.767340684717446,
+              "y": -0.5593212335889426
+            },
+            "control1": {
+              "x": -14.615110274965051,
+              "y": -9.463394807629617
+            },
+            "control2": {
+              "x": -24.385767288034828,
+              "y": -9.794043103164805
+            },
+            "label": null
+          },
+          {
+            "id": "edge-3",
+            "kind": "cubic",
+            "end": {
+              "x": -24.755654464699788,
+              "y": 0
+            },
+            "control1": {
+              "x": -24.767390665406694,
+              "y": -0.36916715024622254
+            },
+            "control2": {
+              "x": -24.763453813646,
+              "y": -0.18276411990515828
+            },
+            "label": null
+          },
+          {
+            "id": "edge-4",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          }
+        ],
+        "layout": {
+          "left": 200,
+          "top": 240,
+          "labelX": 202,
+          "labelY": 242,
+          "showGrainline": true
+        }
+      },
+      {
+        "id": "left-sleeve-f",
+        "name": "Left Sleeve F",
+        "cutQuantity": 1,
+        "mirrored": false,
+        "cutOnFold": false,
+        "scaleX": 1,
+        "scaleY": 1,
+        "seamAllowanceCm": 1,
+        "start": {
+          "x": 0,
+          "y": 0
+        },
+        "boundary": [
+          {
+            "id": "edge-0",
+            "kind": "line",
+            "end": {
+              "x": -24.75565446469979,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          },
+          {
+            "id": "edge-1",
+            "kind": "cubic",
+            "end": {
+              "x": -10.271161747989542,
+              "y": -14.009577135930646
+            },
+            "control1": {
+              "x": -24.36915029686769,
+              "y": -9.057050089778365
+            },
+            "control2": {
+              "x": -14.497154692581184,
+              "y": -9.177691395316987
+            },
+            "label": null
+          },
+          {
+            "id": "edge-2",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": -12.888810965056196
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          },
+          {
+            "id": "edge-3",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          }
+        ],
+        "layout": {
+          "left": 380,
+          "top": 240,
+          "labelX": 382,
+          "labelY": 242,
+          "showGrainline": true
+        }
+      },
+      {
+        "id": "left-btorso",
+        "name": "Left Btorso",
+        "cutQuantity": 1,
+        "mirrored": false,
+        "cutOnFold": false,
+        "scaleX": 1,
+        "scaleY": 1,
+        "seamAllowanceCm": 1,
+        "start": {
+          "x": 0,
+          "y": 0
+        },
+        "boundary": [
+          {
+            "id": "edge-0",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 44.52678353594
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          },
+          {
+            "id": "edge-1",
+            "kind": "cubic",
+            "end": {
+              "x": 7.103430399999996,
+              "y": 48.329132617701305
+            },
+            "control1": {
+              "x": 2.8546343370364626,
+              "y": 44.52678353593999
+            },
+            "control2": {
+              "x": 5.520332492136707,
+              "y": 45.9536877725604
+            },
+            "label": "left_collar"
+          },
+          {
+            "id": "edge-2",
+            "kind": "line",
+            "end": {
+              "x": 18.491244725174187,
+              "y": 45.960463389515496
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          },
+          {
+            "id": "edge-3",
+            "kind": "cubic",
+            "end": {
+              "x": 22.850325676755315,
+              "y": 27.77417058951549
+            },
+            "control1": {
+              "x": 17.033526640964748,
+              "y": 35.99550079919927
+            },
+            "control2": {
+              "x": 15.613307006439088,
+              "y": 29.885750816462096
+            },
+            "label": "left_armhole"
+          },
+          {
+            "id": "edge-4",
+            "kind": "line",
+            "end": {
+              "x": 23.129683200000002,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          },
+          {
+            "id": "edge-5",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          }
+        ],
+        "layout": {
+          "left": 20,
+          "top": 460,
+          "labelX": 22,
+          "labelY": 462,
+          "showGrainline": true
+        }
+      },
+      {
+        "id": "left-ftorso",
+        "name": "Left Ftorso",
+        "cutQuantity": 1,
+        "mirrored": false,
+        "cutOnFold": false,
+        "scaleX": 1,
+        "scaleY": 1,
+        "seamAllowanceCm": 1,
+        "start": {
+          "x": 0,
+          "y": 0
+        },
+        "boundary": [
+          {
+            "id": "edge-0",
+            "kind": "line",
+            "end": {
+              "x": 25.667116800000002,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          },
+          {
+            "id": "edge-1",
+            "kind": "line",
+            "end": {
+              "x": 25.353412739013685,
+              "y": 27.79551296964996
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          },
+          {
+            "id": "edge-2",
+            "kind": "cubic",
+            "end": {
+              "x": 18.473011605565137,
+              "y": 45.42228431269114
+            },
+            "control1": {
+              "x": 17.753239743900046,
+              "y": 29.006465975268767
+            },
+            "control2": {
+              "x": 18.26037209356448,
+              "y": 35.2837881321232
+            },
+            "label": null
+          },
+          {
+            "id": "edge-3",
+            "kind": "cubic",
+            "end": {
+              "x": 18.484319685692604,
+              "y": 45.98180576964997
+            },
+            "control1": {
+              "x": 18.476896331781116,
+              "y": 45.60750521323166
+            },
+            "control2": {
+              "x": 18.480682768381666,
+              "y": 45.79401481509649
+            },
+            "label": null
+          },
+          {
+            "id": "edge-4",
+            "kind": "line",
+            "end": {
+              "x": 7.103430399999992,
+              "y": 48.349033744445634
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          },
+          {
+            "id": "edge-5",
+            "kind": "cubic",
+            "end": {
+              "x": 0,
+              "y": 40.98787647854081
+            },
+            "control1": {
+              "x": 7.24681390898598,
+              "y": 44.326703953825934
+            },
+            "control2": {
+              "x": 4.024884566687079,
+              "y": 40.98787647854082
+            },
+            "label": "left_collar"
+          },
+          {
+            "id": "edge-6",
+            "kind": "line",
+            "end": {
+              "x": 0,
+              "y": 0
+            },
+            "control1": null,
+            "control2": null,
+            "label": null
+          }
+        ],
+        "layout": {
+          "left": 200,
+          "top": 460,
+          "labelX": 202,
+          "labelY": 462,
+          "showGrainline": true
+        }
+      }
+    ],
+    "panels": [
+      {
+        "id": "right-sleeve-f-panel",
+        "pieceId": "right-sleeve-f",
+        "name": "Right Sleeve F",
+        "placement": "sleeveRight",
+        "reverseWinding": false,
+        "pinnedEdges": [],
+        "sourcePlacement": {
+          "x": -34.88181270973631,
+          "y": 124.20021404211185,
+          "z": 17.5,
+          "rotationXDegrees": -0,
+          "rotationYDegrees": 0,
+          "rotationZDegrees": 45.75,
+          "coordinateSystem": "GarmentCode intrinsic XYZ, centimeters"
+        }
+      },
+      {
+        "id": "right-sleeve-b-panel",
+        "pieceId": "right-sleeve-b",
+        "name": "Right Sleeve B",
+        "placement": "sleeveRight",
+        "reverseWinding": false,
+        "pinnedEdges": [],
+        "sourcePlacement": {
+          "x": -34.88181270973631,
+          "y": 124.20021404211185,
+          "z": -12.5,
+          "rotationXDegrees": -0,
+          "rotationYDegrees": 0,
+          "rotationZDegrees": 45.75,
+          "coordinateSystem": "GarmentCode intrinsic XYZ, centimeters"
+        }
+      },
+      {
+        "id": "right-ftorso-panel",
+        "pieceId": "right-ftorso",
+        "name": "Right Ftorso",
+        "placement": "torsoFront",
+        "reverseWinding": false,
+        "pinnedEdges": [],
+        "sourcePlacement": {
+          "x": 0,
+          "y": 93.96045046822434,
+          "z": 30,
+          "rotationXDegrees": -0,
+          "rotationYDegrees": 0,
+          "rotationZDegrees": 0,
+          "coordinateSystem": "GarmentCode intrinsic XYZ, centimeters"
+        }
+      },
+      {
+        "id": "right-btorso-panel",
+        "pieceId": "right-btorso",
+        "name": "Right Btorso",
+        "placement": "torsoBack",
+        "reverseWinding": false,
+        "pinnedEdges": [],
+        "sourcePlacement": {
+          "x": 0,
+          "y": 93.98035193684524,
+          "z": -25,
+          "rotationXDegrees": -0,
+          "rotationYDegrees": 0,
+          "rotationZDegrees": 0,
+          "coordinateSystem": "GarmentCode intrinsic XYZ, centimeters"
+        }
+      },
+      {
+        "id": "left-sleeve-b-panel",
+        "pieceId": "left-sleeve-b",
+        "name": "Left Sleeve B",
+        "placement": "sleeveLeft",
+        "reverseWinding": false,
+        "pinnedEdges": [],
+        "sourcePlacement": {
+          "x": 34.88181270973631,
+          "y": 124.20021404211185,
+          "z": -12.5,
+          "rotationXDegrees": -0,
+          "rotationYDegrees": 0,
+          "rotationZDegrees": -45.75,
+          "coordinateSystem": "GarmentCode intrinsic XYZ, centimeters"
+        }
+      },
+      {
+        "id": "left-sleeve-f-panel",
+        "pieceId": "left-sleeve-f",
+        "name": "Left Sleeve F",
+        "placement": "sleeveLeft",
+        "reverseWinding": false,
+        "pinnedEdges": [],
+        "sourcePlacement": {
+          "x": 34.88181270973631,
+          "y": 124.20021404211185,
+          "z": 17.5,
+          "rotationXDegrees": -0,
+          "rotationYDegrees": 0,
+          "rotationZDegrees": -45.75,
+          "coordinateSystem": "GarmentCode intrinsic XYZ, centimeters"
+        }
+      },
+      {
+        "id": "left-btorso-panel",
+        "pieceId": "left-btorso",
+        "name": "Left Btorso",
+        "placement": "torsoBack",
+        "reverseWinding": false,
+        "pinnedEdges": [],
+        "sourcePlacement": {
+          "x": 0,
+          "y": 93.98035193684524,
+          "z": -25,
+          "rotationXDegrees": -0,
+          "rotationYDegrees": 0,
+          "rotationZDegrees": 0,
+          "coordinateSystem": "GarmentCode intrinsic XYZ, centimeters"
+        }
+      },
+      {
+        "id": "left-ftorso-panel",
+        "pieceId": "left-ftorso",
+        "name": "Left Ftorso",
+        "placement": "torsoFront",
+        "reverseWinding": false,
+        "pinnedEdges": [],
+        "sourcePlacement": {
+          "x": 0,
+          "y": 93.96045046822434,
+          "z": 30,
+          "rotationXDegrees": -0,
+          "rotationYDegrees": 0,
+          "rotationZDegrees": 0,
+          "coordinateSystem": "GarmentCode intrinsic XYZ, centimeters"
+        }
+      }
+    ],
+    "seams": [
+      {
+        "id": "stitch-0",
+        "name": "Stitch 1",
+        "sideA": {
+          "panelId": "right-sleeve-f-panel",
+          "edgeIds": [
+            "edge-3"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "right-sleeve-b-panel",
+          "edgeIds": [
+            "edge-0"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-1",
+        "name": "Stitch 2",
+        "sideA": {
+          "panelId": "right-sleeve-f-panel",
+          "edgeIds": [
+            "edge-1"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "right-sleeve-b-panel",
+          "edgeIds": [
+            "edge-3"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-2",
+        "name": "Stitch 3",
+        "sideA": {
+          "panelId": "right-sleeve-f-panel",
+          "edgeIds": [
+            "edge-2"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "right-ftorso-panel",
+          "edgeIds": [
+            "edge-4"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-3",
+        "name": "Stitch 4",
+        "sideA": {
+          "panelId": "right-sleeve-b-panel",
+          "edgeIds": [
+            "edge-1"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "right-ftorso-panel",
+          "edgeIds": [
+            "edge-3"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-4",
+        "name": "Stitch 5",
+        "sideA": {
+          "panelId": "right-sleeve-b-panel",
+          "edgeIds": [
+            "edge-2"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "right-btorso-panel",
+          "edgeIds": [
+            "edge-2"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-5",
+        "name": "Stitch 6",
+        "sideA": {
+          "panelId": "right-ftorso-panel",
+          "edgeIds": [
+            "edge-2"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "right-btorso-panel",
+          "edgeIds": [
+            "edge-3"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-6",
+        "name": "Stitch 7",
+        "sideA": {
+          "panelId": "right-ftorso-panel",
+          "edgeIds": [
+            "edge-5"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "right-btorso-panel",
+          "edgeIds": [
+            "edge-1"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-7",
+        "name": "Stitch 8",
+        "sideA": {
+          "panelId": "left-sleeve-f-panel",
+          "edgeIds": [
+            "edge-0"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "left-sleeve-b-panel",
+          "edgeIds": [
+            "edge-4"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-8",
+        "name": "Stitch 9",
+        "sideA": {
+          "panelId": "left-sleeve-f-panel",
+          "edgeIds": [
+            "edge-2"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "left-sleeve-b-panel",
+          "edgeIds": [
+            "edge-1"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-9",
+        "name": "Stitch 10",
+        "sideA": {
+          "panelId": "left-sleeve-f-panel",
+          "edgeIds": [
+            "edge-1"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "left-ftorso-panel",
+          "edgeIds": [
+            "edge-2"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-10",
+        "name": "Stitch 11",
+        "sideA": {
+          "panelId": "left-sleeve-b-panel",
+          "edgeIds": [
+            "edge-3"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "left-ftorso-panel",
+          "edgeIds": [
+            "edge-3"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-11",
+        "name": "Stitch 12",
+        "sideA": {
+          "panelId": "left-sleeve-b-panel",
+          "edgeIds": [
+            "edge-2"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "left-btorso-panel",
+          "edgeIds": [
+            "edge-3"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-12",
+        "name": "Stitch 13",
+        "sideA": {
+          "panelId": "left-ftorso-panel",
+          "edgeIds": [
+            "edge-4"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "left-btorso-panel",
+          "edgeIds": [
+            "edge-2"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-13",
+        "name": "Stitch 14",
+        "sideA": {
+          "panelId": "left-ftorso-panel",
+          "edgeIds": [
+            "edge-1"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "left-btorso-panel",
+          "edgeIds": [
+            "edge-4"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-14",
+        "name": "Stitch 15",
+        "sideA": {
+          "panelId": "right-ftorso-panel",
+          "edgeIds": [
+            "edge-0"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "left-ftorso-panel",
+          "edgeIds": [
+            "edge-6"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      },
+      {
+        "id": "stitch-15",
+        "name": "Stitch 16",
+        "sideA": {
+          "panelId": "right-btorso-panel",
+          "edgeIds": [
+            "edge-5"
+          ],
+          "reverse": false
+        },
+        "sideB": {
+          "panelId": "left-btorso-panel",
+          "edgeIds": [
+            "edge-0"
+          ],
+          "reverse": false
+        },
+        "allowanceCm": 1,
+        "strength": 1
+      }
+    ],
+    "fabric": {
+      "id": "cotton",
+      "name": "Cotton poplin",
+      "massGramsPerSquareMeter": 120,
+      "thicknessMillimeters": 0.34,
+      "warpStretchPercent": 4.95,
+      "weftStretchPercent": 9,
+      "biasStretchPercent": 12.6,
+      "bendResistance": 38,
+      "shearResistance": 79.1,
+      "staticFriction": 0.5175,
+      "dynamicFriction": 0.45,
+      "calibration": "prototype-unvalidated"
+    },
+    "closures": [],
+    "source": {
+      "format": "GarmentCode JSON",
+      "schemaVersion": "garmentcode.pattern/2",
+      "sourcePath": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\PatternaUnreal\\SourceAssets\\GarmentCode\\PatternaFemaleCrewNeck.specification.json",
+      "revision": "d449629979028123a5c4dc9e732a2ec19b7fce31"
+    }
+  },
+  "unrealGeneration": {
+    "profile": "garmentcode-v1",
+    "garmentId": "PatternaFemaleCrewNeck.specification",
+    "bodyWaistCircumferenceCm": 71,
+    "bodyHipCircumferenceCm": 99,
+    "waistEaseCm": 2,
+    "hipEaseCm": 5,
+    "hemCircumferenceCm": 190,
+    "skirtLengthCm": 62,
+    "waistHeightCm": 103,
+    "dressingClearanceCm": 0,
+    "renderThicknessCm": 0.034,
+    "panelColumns": 72,
+    "verticalRows": 48,
+    "fabric": {
+      "id": "cotton",
+      "name": "Cotton poplin",
+      "massGramsPerSquareMeter": 120,
+      "thicknessMillimeters": 0.34,
+      "warpStretchPercent": 4.95,
+      "weftStretchPercent": 9,
+      "biasStretchPercent": 12.6,
+      "bendResistance": 38,
+      "shearResistance": 79.1,
+      "staticFriction": 0.5175,
+      "dynamicFriction": 0.45,
+      "calibration": "prototype-unvalidated"
+    }
+  },
+  "patternTopology": {
+    "schemaVersion": "patterna.topology/1.1",
+    "isValid": true,
+    "panelCount": 8,
+    "vertexCount": 0,
+    "triangleCount": 0,
+    "seamCount": 11,
+    "warningCount": 0,
+    "diagnostics": []
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "patterna.garmentcode-avatar-body/1.0",
+  "sourceBody": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\third_party\\GarmentCode\\assets\\bodies\\mean_female.obj",
+  "sourceProfile": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\PatternaUnreal\\Saved\\Patterna\\LiveBodyProfile.json",
+  "vertexCount": 23752,
+  "faceCount": 47500,
+  "morphedTorsoVertexCount": 5109,
+  "minimumProfileHeightCm": 95.0,
+  "maximumProfileHeightCm": 139.0,
+  "preservesGarmentCodeSegmentationIndices": true
+}

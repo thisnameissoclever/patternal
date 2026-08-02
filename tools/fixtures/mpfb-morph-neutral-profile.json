@@ -1,0 +1,30 @@
+{
+  "body": {
+    "height": 167,
+    "bust": 92,
+    "underbust": 79.8,
+    "waist": 71,
+    "hips": 99,
+    "shoulder_w": 39,
+    "waist_over_bust_line": 43.5,
+    "hips_line": 20.4,
+    "neck_w": 17.25,
+    "arm_length": 57.3,
+    "wrist": 15.8,
+    "leg_circ": 57.4
+  },
+  "measurements": {
+    "headCirc": 56.2,
+    "headHeight": 23.1,
+    "crownChin": 22.4,
+    "faceDepth": 18.1,
+    "bicepDepthL": 9.2,
+    "bicepDepthR": 9.2,
+    "footLengthL": 24.1,
+    "footLengthR": 24.1,
+    "muscleDefinition": 35,
+    "softTissue": 45,
+    "bustProjectionL": 4.8,
+    "bustProjectionR": 4.7
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "body": {
+    "height": 167,
+    "bust": 92,
+    "underbust": 79.8,
+    "waist": 71,
+    "hips": 99,
+    "shoulder_w": 39,
+    "waist_over_bust_line": 43.5,
+    "hips_line": 20.4,
+    "neck_w": 17.25,
+    "arm_length": 57.3,
+    "wrist": 15.8,
+    "leg_circ": 57.4
+  },
+  "measurements": {
+    "height": 167,
+    "chest": 92,
+    "waist": 71,
+    "hip": 99,
+    "shoulder": 39,
+    "torso": 45,
+    "frontWaistLength": 43.5,
+    "waistHipLengthL": 20.4,
+    "waistHipLengthR": 20.3,
+    "armLengthL": 61,
+    "armLengthR": 57.3,
+    "waistDepth": 22,
+    "frontHipArc": 50,
+    "backHipArc": 52,
+    "hipDipL": 2.0,
+    "hipDipR": 0.6,
+    "pelvicTilt": 12,
+    "torsoLean": 6,
+    "torsoTwist": 5,
+    "shoulderSlopeL": 16,
+    "shoulderSlopeR": 11.5,
+    "scapulaProjectionL": 1.8,
+    "scapulaProjectionR": 0.6,
+    "footAngleL": 4,
+    "footAngleR": 12
+  }
+}

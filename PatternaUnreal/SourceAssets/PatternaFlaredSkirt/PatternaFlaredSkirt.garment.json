@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "garmentId": "PatternaFlaredSkirt",
+  "units": "centimeters",
+  "generator": "tools/Generate-PatternaUnrealGarment.ps1",
+  "bridgeInput": {
+    "schemaVersion": "patterna.unreal-bridge/1.0",
+    "sha256": "0b8b2e1181469d26d6ac69f3721fbfb42a964ede2ba1d443d9d3b6c19aac0629"
+  },
+  "bodyReference": {
+    "waistCircumference": 71.0,
+    "hipCircumference": 99.0,
+    "waistHeight": 103.0
+  },
+  "garmentMeasurements": {
+    "waistEase": 2.0,
+    "hipEase": 5.0,
+    "waistCircumference": 73.0,
+    "hipCircumference": 104.0,
+    "hemCircumference": 190.0,
+    "length": 62.0,
+    "renderThickness": 0.034
+  },
+  "dressing": {
+    "requestedMaximumRadialClearance": 8.0,
+    "waistRadialClearance": 0.0,
+    "hipAndBelowRadialClearance": 0.0,
+    "hemRadialClearance": 0.0,
+    "waistDepthToWidthRatio": 0.82,
+    "hipAndHemDepthToWidthRatio": 0.78,
+    "preservesTwoDimensionalRestMeasurements": true,
+    "coordinateAxes": {
+      "forwardDepth": "Y",
+      "bodyWidth": "X",
+      "vertical": "Z"
+    }
+  },
+  "panels": [
+    {
+      "id": "FrontPanel",
+      "columns": 48,
+      "rows": 32,
+      "faceCount": 3072
+    },
+    {
+      "id": "BackPanel",
+      "columns": 48,
+      "rows": 32,
+      "faceCount": 3072
+    }
+  ],
+  "namedSeams": [
+    {
+      "id": "LeftSideSeam",
+      "panelA": "FrontPanel",
+      "edgeA": "left",
+      "panelB": "BackPanel",
+      "edgeB": "right",
+      "stitchCount": 33
+    },
+    {
+      "id": "RightSideSeam",
+      "panelA": "FrontPanel",
+      "edgeA": "right",
+      "panelB": "BackPanel",
+      "edgeB": "left",
+      "stitchCount": 33
+    }
+  ],
+  "fabric": {
+    "source": {
+      "massGsm": 120.0,
+      "thicknessMm": 0.34,
+      "warpStretchPercent": 4.95,
+      "weftStretchPercent": 9.0,
+      "biasStretchPercent": 12.6,
+      "bendResistance": 38.0,
+      "shearResistance": 79.1,
+      "staticFriction": 0.5175,
+      "dynamicFriction": 0.45
+    },
+    "chaos": {
+      "densityKgPerSquareCm": 1.2E-05,
+      "stretchWarp": 80267.55852842808,
+      "stretchWeft": 63157.89473684211,
+      "shearLeft": 94100.0,
+      "shearRight": 94100.0,
+      "bendWarp": 1.9500000000000002,
+      "bendWeft": 1.19,
+      "bendBias": 1.57,
+      "damping": 0.14,
+      "friction": 0.45
+    }
+  }
+}

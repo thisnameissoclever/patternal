@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "patterna.mpfb-garmentcode-body/1.0",
+  "sourceBody": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\PatternaUnreal\\Saved\\Patterna\\MPFB\\PatternaDefaultFemale.obj",
+  "sourceBodySha256": "450033d115b84a27e252e116100b9c8b43a4951eb37e27ceecf24527e214364e",
+  "sourceFitReport": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\PatternaUnreal\\Saved\\Patterna\\MPFB\\PatternaDefaultFemale.fit-report.json",
+  "sourceFitReportSha256": "9efe03930092ac18d3d890b73b31dcd489cb297b9d7052841e42a7383c2eb483",
+  "sourceProfile": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\PatternaUnreal\\SourceAssets\\GarmentCode\\PatternaDefaultFemale.body.json",
+  "sourceProfileSha256": "9c096a5c50a5ca0482e6bdd4e583328c5d14546446cf814cb8cf995268d7de0c",
+  "sourceRigWeights": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\third_party\\MPFB2\\src\\mpfb\\data\\rigs\\standard\\weights.default.json",
+  "sourceRigWeightsSha256": "e2623c088b05eb0677d04ff4ae701c98264634ade7b8a6393f437d50f84e04c2",
+  "outputBody": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\third_party\\GarmentCode\\assets\\bodies\\patterna_mpfb_female.obj",
+  "outputBodySha256": "c4abd1812014a1551beecb2dbbad81277e96f97b61bc0442ce1c564b7dedc452",
+  "coordinateTransform": "x,y,z -> x,z,y; feet translated to y=0",
+  "sourceVertexCount": 13380,
+  "sourceFaceCount": 26756,
+  "vertexCount": 13380,
+  "faceCount": 26756,
+  "watertight": true,
+  "connectedComponents": 1,
+  "boundsMeters": [
+    [
+      -0.539753437,
+      0.0,
+      -0.371802449
+    ],
+    [
+      0.539753437,
+      1.669999974,
+      0.096903294
+    ]
+  ],
+  "heightCm": 166.9999974,
+  "requestedHeightCm": 167.0,
+  "heightResidualCm": -2.599999987751289e-06,
+  "segmentationCounts": {
+    "left_arm": 2187,
+    "right_arm": 2186,
+    "left_leg": 1694,
+    "right_leg": 1695,
+    "face_internal": 0,
+    "body": 5618
+  },
+  "segmentationSource": "MPFB default rig skin weights at stable hm08 indices",
+  "measurementProfileCopiedFromSource": true,
+  "accepted": true
+}

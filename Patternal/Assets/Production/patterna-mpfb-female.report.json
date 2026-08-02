@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "patterna.mpfb-garmentcode-body/1.0",
+  "sourceBody": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\artifacts\\full-bust-v12-upstream-tee-proof\\SimulationJobs\\0eaa4ca2109efd3540a96b516756186dbe9d5fe0eb9d021be3e5f7e66c7c7e98\\avatar-mpfb.obj",
+  "sourceBodySha256": "d7d2d68be17fd3efcbd4fc98294c7c140eff16a67e8a6fb6834596cc9154e1e5",
+  "sourceFitReport": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\artifacts\\full-bust-v12-upstream-tee-proof\\SimulationJobs\\0eaa4ca2109efd3540a96b516756186dbe9d5fe0eb9d021be3e5f7e66c7c7e98\\avatar-mpfb.fit-report.json",
+  "sourceFitReportSha256": "5da5bad4ee20b6a10b90356be2306119812d385162321c25b3d2277f75338bf7",
+  "sourcePoseReport": null,
+  "sourcePoseReportSha256": null,
+  "pose": "source-rest-pose",
+  "sourceProfile": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\artifacts\\full-bust-v12-upstream-tee-proof\\SimulationJobs\\0eaa4ca2109efd3540a96b516756186dbe9d5fe0eb9d021be3e5f7e66c7c7e98\\avatar-garmentcode-profile.json",
+  "sourceProfileSha256": "5e1be34dbd4b3aca9b9c69ab4ec36536726b3334c41513125d26c977fd10d379",
+  "sourceRigWeights": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\third_party\\MPFB2\\src\\mpfb\\data\\rigs\\standard\\weights.default.json",
+  "sourceRigWeightsSha256": "e2623c088b05eb0677d04ff4ae701c98264634ade7b8a6393f437d50f84e04c2",
+  "outputBody": "C:\\Users\\myema\\Documents\\Codex\\2026-07-17\\build-a-clothing-pattern-making-windows\\artifacts\\full-bust-v12-upstream-tee-proof\\SimulationJobs\\0eaa4ca2109efd3540a96b516756186dbe9d5fe0eb9d021be3e5f7e66c7c7e98\\simulation-body.obj",
+  "outputBodySha256": "10cc51ef05960722774c3a6c2644addf3a07913eb8fa205a52dc6bd1755bafcf",
+  "coordinateTransform": "x,y,z -> x,z,y; feet translated to y=0",
+  "sourceVertexCount": 13380,
+  "sourceFaceCount": 26756,
+  "vertexCount": 13380,
+  "faceCount": 26756,
+  "watertight": true,
+  "connectedComponents": 1,
+  "boundsMeters": [
+    [
+      -0.541640759,
+      0.0,
+      -0.323794216
+    ],
+    [
+      0.541640759,
+      1.6700000369999999,
+      0.121535666
+    ]
+  ],
+  "heightCm": 167.00000369999998,
+  "requestedHeightCm": 167.0,
+  "heightResidualCm": 3.6999999792897142e-06,
+  "segmentationCounts": {
+    "left_arm": 2187,
+    "right_arm": 2186,
+    "left_leg": 1694,
+    "right_leg": 1695,
+    "face_internal": 0,
+    "body": 5618
+  },
+  "segmentationSource": "MPFB default rig skin weights at stable hm08 indices",
+  "measurementProfileCopiedFromSource": true,
+  "accepted": true,
+  "bundledSourceBody": "patterna-mpfb-female.source.obj",
+  "bundledSourceBodySha256": "d7d2d68be17fd3efcbd4fc98294c7c140eff16a67e8a6fb6834596cc9154e1e5",
+  "bundledSourceFitReport": "patterna-full-bust-default-fit-report.json",
+  "bundledSourceFitReportSha256": "ffb21c369c679a7514a600d6adc7c21db7dc92f2ce2a99b395e434e89911dac2",
+  "bundledOutputBody": "patterna-mpfb-female.obj",
+  "bundledOutputBodySha256": "10cc51ef05960722774c3a6c2644addf3a07913eb8fa205a52dc6bd1755bafcf",
+  "bundledSourceReportSha256": "6a17a57748ab5410a4233fa7c2a5575d4b2d9a21e64fd88f0b2d95c71a890efb"
+}

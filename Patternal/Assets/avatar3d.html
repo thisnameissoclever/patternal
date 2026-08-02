@@ -1,0 +1,1644 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Patterna anatomical drape viewport</title>
+  <style>
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #090b10; font-family: "Segoe UI Variable", "Segoe UI", sans-serif; }
+    canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+    canvas:active { cursor: grabbing; }
+    #hud { position: fixed; left: 22px; top: 74px; width: 270px; padding: 10px 12px; color: #f6f2fa; background: rgba(15, 17, 25, .72); border: 1px solid rgba(255,255,255,.10); border-radius: 7px; pointer-events: none; backdrop-filter: blur(10px); }
+    #hud .eyebrow { color: #a9f0d0; font-size: 10px; font-weight: 750; letter-spacing: 1.4px; }
+    #hud .value { margin-top: 5px; font-size: 17px; font-weight: 650; }
+    #hud .meta { margin-top: 7px; color: #c1bccb; font-size: 12px; line-height: 1.45; }
+    #hud .build { margin-top: 7px; color: #918b9e; font-size: 10px; line-height: 1.35; }
+    #legend { position: fixed; right: 22px; bottom: 22px; width: 168px; color: #d7d2e3; font-size: 11px; pointer-events: none; }
+    #legend .bar { height: 5px; margin: 6px 0 4px; border-radius: 3px; background: linear-gradient(90deg, #55d6a0, #f0d66a, #ff6f7d); }
+    #error { display: none; position: fixed; inset: 0; padding: 40px; color: white; background: #171820; }
+  </style>
+</head>
+<body>
+  <canvas id="viewport" aria-label="Interactive detailed anatomical avatar drape preview"></canvas>
+  <div id="hud">
+    <div class="eyebrow">ANATOMICAL AVATAR</div>
+    <div class="value" id="bodyLabel">167 cm · editable profile</div>
+    <div class="meta" id="fabricLabel">Lightweight cotton jersey<br>120 g/m² · 9% stretch</div>
+    <div class="build" id="buildLabel">Building continuous body surface...</div>
+  </div>
+  <div id="legend">
+    GARMENT PRESSURE
+    <div class="bar"></div>
+    <div style="display:flex;justify-content:space-between"><span>ease</span><span>tension</span></div>
+  </div>
+  <div id="error">The 3D graphics device is unavailable.</div>
+
+  <script>
+    window.addEventListener('error', event => {
+      const panel = document.getElementById('error');
+      panel.style.display = 'block';
+      panel.textContent = `3D engine error: ${event.message}`;
+    });
+
+    (() => {
+      'use strict';
+
+      const canvas = document.getElementById('viewport');
+      const gl = canvas.getContext('webgl2', { antialias: true, alpha: false, premultipliedAlpha: false });
+      if (!gl) {
+        document.getElementById('error').style.display = 'block';
+        return;
+      }
+
+      const vertexSource = `#version 300 es
+        precision highp float;
+        in vec3 aPosition;
+        in vec3 aNormal;
+        in float aStress;
+        in vec2 aUv;
+        uniform mat4 uMvp;
+        uniform mat4 uModel;
+        uniform float uGarment;
+        out vec3 vNormal;
+        out vec3 vWorld;
+        out float vStress;
+        out vec2 vUv;
+        void main() {
+          vec3 p = aPosition;
+          vec4 world = uModel * vec4(p, 1.0);
+          vWorld = world.xyz;
+          vec3 transformedNormal = mat3(uModel) * aNormal;
+          float normalLength = length(transformedNormal);
+          vNormal = normalLength > 0.0001 ? transformedNormal / normalLength : vec3(0.0, 0.0, 1.0);
+          vStress = aStress;
+          vUv = aUv;
+          gl_Position = uMvp * vec4(p, 1.0);
+        }`;
+
+      const fragmentSource = `#version 300 es
+        precision highp float;
+        in vec3 vNormal;
+        in vec3 vWorld;
+        in float vStress;
+        in vec2 vUv;
+        uniform vec3 uColor;
+        uniform vec3 uLight;
+        uniform float uAlpha;
+        uniform float uStressEnabled;
+        uniform float uGarment;
+        uniform float uPhotoDetail;
+        uniform float uRoughness;
+        uniform sampler2D uTexture;
+        uniform float uTextureEnabled;
+        uniform float uAlphaCutoff;
+        uniform float uTextureScale;
+        uniform float uSurfaceRelief;
+        uniform vec3 uCameraPosition;
+        out vec4 outColor;
+        vec3 stressColor(float v) {
+          vec3 low = vec3(0.20, 0.78, 0.56);
+          vec3 mid = vec3(0.96, 0.77, 0.25);
+          vec3 high = vec3(1.0, 0.24, 0.36);
+          return v < 0.5 ? mix(low, mid, v * 2.0) : mix(mid, high, (v - 0.5) * 2.0);
+        }
+        void main() {
+          float interpolatedNormalLength = length(vNormal);
+          vec3 n = interpolatedNormalLength > 0.0001 ? vNormal / interpolatedNormalLength : vec3(0.0, 0.0, 1.0);
+          if (!gl_FrontFacing) n = -n;
+          vec3 keyLight = normalize(uLight);
+          vec3 fillLight = normalize(vec3(0.58, 0.18, 0.62));
+          vec3 viewDirection = normalize(uCameraPosition - vWorld);
+          vec2 sampledUv = uGarment > 0.5 ? vUv * uTextureScale : vUv;
+          if (uGarment > 0.5 && uTextureEnabled > 0.5 && uSurfaceRelief > 0.0) {
+            vec2 textureStep = 1.0 / vec2(textureSize(uTexture, 0));
+            float heightLeft = dot(texture(uTexture, sampledUv - vec2(textureStep.x, 0.0)).rgb, vec3(0.2126, 0.7152, 0.0722));
+            float heightRight = dot(texture(uTexture, sampledUv + vec2(textureStep.x, 0.0)).rgb, vec3(0.2126, 0.7152, 0.0722));
+            float heightDown = dot(texture(uTexture, sampledUv - vec2(0.0, textureStep.y)).rgb, vec3(0.2126, 0.7152, 0.0722));
+            float heightUp = dot(texture(uTexture, sampledUv + vec2(0.0, textureStep.y)).rgb, vec3(0.2126, 0.7152, 0.0722));
+            vec3 positionDx = dFdx(vWorld);
+            vec3 positionDy = dFdy(vWorld);
+            vec2 uvDx = dFdx(sampledUv);
+            vec2 uvDy = dFdy(sampledUv);
+            float determinant = uvDx.x * uvDy.y - uvDx.y * uvDy.x;
+            if (abs(determinant) > 0.000001) {
+              vec3 tangent = normalize((positionDx * uvDy.y - positionDy * uvDx.y) / determinant);
+              tangent = normalize(tangent - n * dot(n, tangent));
+              vec3 bitangent = normalize(cross(n, tangent));
+              vec2 heightGradient = vec2(heightRight - heightLeft, heightUp - heightDown);
+              n = normalize(n - tangent * heightGradient.x * uSurfaceRelief - bitangent * heightGradient.y * uSurfaceRelief);
+            }
+          }
+          float keyDiffuse = max(dot(n, keyLight), 0.0);
+          float fillDiffuse = max(dot(n, fillLight), 0.0);
+          float skyDiffuse = n.y * 0.5 + 0.5;
+          float rim = pow(1.0 - max(dot(n, viewDirection), 0.0), 3.0);
+          vec4 textureSample = uTextureEnabled > 0.5 ? texture(uTexture, sampledUv) : vec4(1.0);
+          if (textureSample.a < uAlphaCutoff) discard;
+          float fabricFiber = dot(textureSample.rgb, vec3(0.2126, 0.7152, 0.0722));
+          vec3 base = uGarment > 0.5 && uTextureEnabled > 0.5
+            ? uColor * mix(0.70, 1.12, fabricFiber)
+            : uColor * textureSample.rgb;
+          if (uGarment > 0.5 && uStressEnabled > 0.5) base = mix(base, stressColor(vStress), 0.68);
+          if (uGarment < 0.5 && uTextureEnabled < 0.5) {
+            float skinVariation = sin(vWorld.y * 17.0 + vWorld.x * 11.0) * sin(vWorld.z * 23.0) * 0.008;
+            float pores = sin(vWorld.y * 73.0 + vWorld.x * 43.0) * sin(vWorld.z * 61.0) * 0.004;
+            base += vec3(skinVariation + pores * (0.40 + uPhotoDetail * 0.60), skinVariation * 0.48, skinVariation * 0.30);
+          }
+          vec3 halfVector = keyLight + viewDirection;
+          float halfLength = length(halfVector);
+          halfVector = halfLength > 0.0001 ? halfVector / halfLength : vec3(0.0, 0.0, 1.0);
+          float specularPower = mix(92.0, 7.0, uRoughness);
+          float fresnel = 0.04 + 0.96 * pow(1.0 - max(dot(n, viewDirection), 0.0), 5.0);
+          float fiberSpecular = uGarment > 0.5 && uTextureEnabled > 0.5
+            ? mix(0.78, 1.08, fabricFiber)
+            : 1.0;
+          float specular = pow(max(dot(n, halfVector), 0.0), specularPower) * mix(0.22, 0.025, uRoughness) * fresnel * fiberSpecular;
+          float diffuseLight = 0.30 + keyDiffuse * 0.48 + fillDiffuse * 0.12 + skyDiffuse * 0.10;
+          vec3 lit = base * diffuseLight;
+          if (uGarment < 0.5) {
+            float wrappedKey = clamp((dot(n, keyLight) + 0.35) / 1.35, 0.0, 1.0);
+            lit += base * vec3(0.16, 0.055, 0.035) * (1.0 - wrappedKey) * 0.55;
+          }
+          lit += rim * (uGarment > 0.5 ? vec3(0.025, 0.035, 0.055) : vec3(0.075, 0.035, 0.025));
+          lit += vec3(specular);
+          outColor = vec4(clamp(lit, vec3(0.0), vec3(1.0)), uAlpha * textureSample.a);
+        }`;
+
+      function compile(type, source) {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(shader));
+        return shader;
+      }
+
+      const program = gl.createProgram();
+      gl.attachShader(program, compile(gl.VERTEX_SHADER, vertexSource));
+      gl.attachShader(program, compile(gl.FRAGMENT_SHADER, fragmentSource));
+      gl.linkProgram(program);
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program));
+
+      const locations = {
+        position: gl.getAttribLocation(program, 'aPosition'),
+        normal: gl.getAttribLocation(program, 'aNormal'),
+        stress: gl.getAttribLocation(program, 'aStress'),
+        uv: gl.getAttribLocation(program, 'aUv'),
+        mvp: gl.getUniformLocation(program, 'uMvp'),
+        model: gl.getUniformLocation(program, 'uModel'),
+        color: gl.getUniformLocation(program, 'uColor'),
+        light: gl.getUniformLocation(program, 'uLight'),
+        alpha: gl.getUniformLocation(program, 'uAlpha'),
+        stressEnabled: gl.getUniformLocation(program, 'uStressEnabled'),
+        garment: gl.getUniformLocation(program, 'uGarment'),
+        photoDetail: gl.getUniformLocation(program, 'uPhotoDetail'),
+        roughness: gl.getUniformLocation(program, 'uRoughness'),
+        texture: gl.getUniformLocation(program, 'uTexture'),
+        textureEnabled: gl.getUniformLocation(program, 'uTextureEnabled'),
+        alphaCutoff: gl.getUniformLocation(program, 'uAlphaCutoff'),
+        textureScale: gl.getUniformLocation(program, 'uTextureScale'),
+        surfaceRelief: gl.getUniformLocation(program, 'uSurfaceRelief'),
+        cameraPosition: gl.getUniformLocation(program, 'uCameraPosition')
+      };
+
+      const state = {
+        avatar: {
+          height: 167, chest: 112, waist: 82, hip: 108, shoulder: 37, torso: 44,
+          posture: 'balanced', template: 'feminine', photos: 0,
+          headCirc: 56.2, headHeight: 23.1, neckCirc: 34.5, neckLengthFront: 8.4,
+          chestDepth: 31, waistDepth: 21, hipDepth: 28, underBust: 84,
+          highHipCirc: 98, abdomenProjection: 2.4, bustSeparation: 19,
+          bustHeightL: 24.8, bustHeightR: 24.6, bustSupport: 100, upperBustFullness: 85,
+          bustProjectionL: 9.6, bustProjectionR: 9.4, gluteProjectionL: 5.6, gluteProjectionR: 5.5,
+          upperArmCircL: 26, upperArmCircR: 26, elbowCircL: 24.5, elbowCircR: 24.5,
+          wristCircL: 15.8, wristCircR: 15.8, armLengthL: 57.3, armLengthR: 57.3,
+          thighUpperCircL: 62, thighUpperCircR: 62, kneeCircL: 38, kneeCircR: 38,
+          calfCircL: 36.4, calfCircR: 36.4, ankleCircL: 22.5, ankleCircR: 22.5,
+          inseamL: 77, inseamR: 77, footLengthL: 24.1, footLengthR: 24.1,
+          footWidthL: 9.2, footWidthR: 9.2, pelvicTilt: 8, torsoLean: 0,
+          shoulderSlopeL: 22, shoulderSlopeR: 21.5, softTissue: 58, showBra: false
+        },
+        fabric: { key: 'cotton', weight: 180, stretch: 35, bend: 8, friction: 0.4 },
+        autoRotate: false,
+        stressMap: false,
+        showGarment: true,
+        yaw: 145 * Math.PI / 180,
+        pitch: 0.01,
+        distance: 5.65,
+        targetYaw: 145 * Math.PI / 180,
+        targetPitch: 0.01,
+        targetDistance: 5.65,
+        dragging: false,
+        lastX: 0,
+        lastY: 0,
+        body: null,
+        garment: null,
+        garmentSeams: null,
+        garmentEdges: null,
+        cloth: null,
+        garmentDocument: null,
+        productionBodyData: null,
+        productionGarmentData: null,
+        productionGarmentSeamData: null,
+        productionGarmentEdgeData: null,
+        productionDisplayBody: null,
+        productionDisplayAssets: [],
+        displayBodyTexture: null,
+        displayBodyColor: [1,1,1],
+        garmentTexture: null,
+        displayMeshes: [],
+        assetRequestSequence: 0,
+        productionAssetsReady: false,
+        acceptedBuildLabel: 'Newton Style3D equilibrium · exact seams · zero intersections · cotton jersey',
+        simulationActive: false,
+        simulationTime: 0,
+        simulationEnergy: 1,
+        face: [],
+        baseHuman: null,
+        rebuildTimer: 0
+      };
+
+      const fabricColors = {
+        silk: [0.52, 0.27, 0.48], cotton: [0.23, 0.38, 0.55],
+        linen: [0.55, 0.43, 0.29], wool: [0.24, 0.40, 0.42]
+      };
+
+      const fabricRoughness = { silk: 0.34, cotton: 0.84, linen: 0.91, wool: 0.95 };
+      const fabricTextureScale = { silk: 12.0, cotton: 8.0, linen: 5.5, wool: 10.0 };
+      const fabricSurfaceRelief = { silk: .10, cotton: .48, linen: .68, wool: .30 };
+
+      const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
+      const mix = (a, b, t) => a + (b - a) * t;
+      const v3 = (x, y, z) => [x, y, z];
+      const sub = (a, b) => [a[0]-b[0], a[1]-b[1], a[2]-b[2]];
+      const dot = (a, b) => a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+      const length3 = p => Math.hypot(p[0], p[1], p[2]);
+
+      function sdEllipsoid(p, center, radius) {
+        const q = [(p[0]-center[0])/radius[0], (p[1]-center[1])/radius[1], (p[2]-center[2])/radius[2]];
+        return (length3(q) - 1) * Math.min(radius[0], radius[1], radius[2]);
+      }
+
+      function sdTaperedCapsule(p, a, b, ra, rb) {
+        const pa = sub(p, a), ba = sub(b, a);
+        const h = clamp(dot(pa, ba) / dot(ba, ba), 0, 1);
+        const center = [a[0] + ba[0]*h, a[1] + ba[1]*h, a[2] + ba[2]*h];
+        return length3(sub(p, center)) - mix(ra, rb, h);
+      }
+
+      function smoothMin(a, b, k) {
+        const h = clamp(0.5 + 0.5 * (b - a) / k, 0, 1);
+        return mix(b, a, h) - k * h * (1 - h);
+      }
+
+      function rotateXz(p, angle, centerY) {
+        const c = Math.cos(angle), s = Math.sin(angle), y = p[1] - centerY, z = p[2];
+        return [p[0], centerY + y*c - z*s, y*s + z*c];
+      }
+
+      function createBodyField(a) {
+        const heightScale = a.height / 167;
+        const torsoScale = a.torso / 42;
+        const templateShoulder = a.template === 'masculine' ? 1.08 : a.template === 'feminine' ? 0.96 : 1;
+        const templateHip = a.template === 'feminine' ? 1.045 : a.template === 'masculine' ? 0.96 : 1;
+        const soft = 0.92 + clamp(a.softTissue || 45, 0, 100) * 0.0018;
+        const shoulderHalf = 0.49 * (a.shoulder / 39) * templateShoulder;
+        const chestX = 0.405 * (a.chest / 92) * soft;
+        const chestZ = 0.292 * ((a.chestDepth || 23.2) / 23.2);
+        const waistX = 0.305 * (a.waist / 71) * soft;
+        const waistZ = 0.225 * ((a.waistDepth || 18.5) / 18.5);
+        const hipX = 0.445 * (a.hip / 99) * templateHip * soft;
+        const hipZ = 0.315 * ((a.hipDepth || 24.8) / 24.8);
+        const highHipX = 0.38 * ((a.highHipCirc || 87.4) / 87.4) * templateHip;
+        const lean = (a.torsoLean || 0) * Math.PI / 180;
+        const pelvic = (a.pelvicTilt || 8) * Math.PI / 180;
+        const postureZ = a.posture === 'forward' ? 0.045 : a.posture === 'erect' ? -0.02 : 0;
+        const bustSep = 0.18 * ((a.bustSeparation || 18.6) / 18.6);
+        const bustL = clamp((a.bustProjectionL || 0) / 4.8, 0, 2.4);
+        const bustR = clamp((a.bustProjectionR || 0) / 4.8, 0, 2.4);
+        const bustHeight = ((a.bustHeightL || 25.7) + (a.bustHeightR || 25.7)) * 0.5;
+        const bustSupport = clamp((a.bustSupport || 50) / 100, 0, 1);
+        const upperBustFullness = clamp((a.upperBustFullness || 50) / 100, 0, 1);
+        const yScale = heightScale;
+        const supportedBustY = (0.67 + (25.7-bustHeight)*0.01 + (bustSupport-0.5)*0.07 + (upperBustFullness-0.5)*0.035) * yScale;
+        const supportedBustVerticalScale = 1.04 - bustSupport*0.12;
+        const abdomen = (a.abdomenProjection || 0) * 0.012;
+        const gluteL = (a.gluteProjectionL || 0) * 0.015;
+        const gluteR = (a.gluteProjectionR || 0) * 0.015;
+
+        function arm(side) {
+          const suffix = side < 0 ? 'L' : 'R';
+          const slope = (a[`shoulderSlope${suffix}`] || 12) * Math.PI / 180;
+          const roll = (a[`shoulderRoll${suffix}`] || 0) * 0.002;
+          const total = 1.13 * ((a[`armLength${suffix}`] || 57.3) / 57.3) * heightScale;
+          const upperRatio = clamp((a[`shoulderElbow${suffix}`] || 31.8) / (a[`armLength${suffix}`] || 57.3), 0.45, 0.64);
+          const shoulder = [side * shoulderHalf, 0.76*yScale - Math.sin(slope)*0.06, postureZ + roll];
+          const elbow = [side * (shoulderHalf + 0.25), shoulder[1] - total*upperRatio*0.72, shoulder[2] + 0.015];
+          const wrist = [side * (shoulderHalf + 0.32), elbow[1] - total*(1-upperRatio)*0.94, shoulder[2] + 0.01];
+          const upperR = 0.105 * ((a[`upperArmCirc${suffix}`] || 29.4) / 29.4);
+          const elbowR = 0.078 * ((a[`elbowCirc${suffix}`] || 25.1) / 25.1);
+          const wristR = 0.057 * ((a[`wristCirc${suffix}`] || 15.8) / 15.8);
+          return { suffix, shoulder, elbow, wrist, upperR, elbowR, wristR };
+        }
+
+        function leg(side) {
+          const suffix = side < 0 ? 'L' : 'R';
+          const socketOffset = (a[`legOffset${suffix}`] || 0) * 0.01;
+          const total = 1.31 * ((a[`inseam${suffix}`] || 77) / 77) * heightScale;
+          const kneeRatio = clamp((a[`crotchKnee${suffix}`] || 34.8) / (a[`inseam${suffix}`] || 77), 0.38, 0.55);
+          const kneeAngle = (a[`kneeAngle${suffix}`] || 0) * 0.0025;
+          const hip = [side * (0.205 + socketOffset), -0.47*yScale, 0];
+          const knee = [side * (0.185 + kneeAngle), hip[1] - total*kneeRatio, 0.012];
+          const ankle = [side * 0.165, hip[1] - total, 0.01];
+          const thighR = 0.19 * ((a[`thighUpperCirc${suffix}`] || 57.4) / 57.4);
+          const kneeR = 0.105 * ((a[`kneeCirc${suffix}`] || 36.8) / 36.8);
+          const calfR = 0.115 * ((a[`calfCirc${suffix}`] || 36.4) / 36.4);
+          const ankleR = 0.067 * ((a[`ankleCirc${suffix}`] || 22.5) / 22.5);
+          return { suffix, hip, knee, ankle, thighR, kneeR, calfR, ankleR };
+        }
+
+        const leftArm = arm(-1), rightArm = arm(1), leftLeg = leg(-1), rightLeg = leg(1);
+        const bodyBottom = Math.min(leftLeg.ankle[1], rightLeg.ankle[1]);
+        const headScale = (a.headCirc || 56.2) / 56.2;
+        const headHeightScale = (a.headHeight || 23.1) / 23.1;
+        const faceWidthScale = (a.bizygomaticWidth || 13.8) / 13.8;
+        const jawScale = (a.jawWidth || 11.2) / 11.2;
+        const neckR = 0.125 * ((a.neckCirc || 34.5) / 34.5);
+        const neckLength = 0.23 * ((a.neckLengthFront || 8.4) / 8.4) * torsoScale;
+        const headForward = (a.neckForward || 0) * 0.012 + postureZ;
+        const headCenter = [0, 1.44*yScale + neckLength*0.25, headForward];
+
+        function field(input) {
+          const p = rotateXz(input, lean, 0.28);
+          let d = 99;
+          const add = (shape, blend = 0.075) => { d = d > 90 ? shape : smoothMin(d, shape, blend); };
+
+          add(sdEllipsoid(p, [0, 0.62*yScale, postureZ], [chestX, 0.48*torsoScale, chestZ]), 0.11);
+          add(sdEllipsoid(p, [0, 0.13*yScale, postureZ + abdomen*0.35], [waistX, 0.33*torsoScale, waistZ + abdomen*0.25]), 0.12);
+          add(sdEllipsoid(rotateXz(p, pelvic, -0.28), [0, -0.31*yScale, -0.015], [highHipX, 0.31*torsoScale, hipZ*0.92]), 0.13);
+          add(sdEllipsoid(rotateXz(p, pelvic, -0.42), [0, -0.48*yScale, -0.025], [hipX, 0.35*torsoScale, hipZ]), 0.12);
+
+          if (bustL > 0.05) add(sdEllipsoid(p, [-bustSep, supportedBustY, chestZ*0.70], [0.18*bustL, 0.17*bustL*supportedBustVerticalScale, 0.14 + 0.075*bustL]), 0.09);
+          if (bustR > 0.05) add(sdEllipsoid(p, [bustSep, supportedBustY, chestZ*0.70], [0.18*bustR, 0.17*bustR*supportedBustVerticalScale, 0.14 + 0.075*bustR]), 0.09);
+          if (abdomen > -0.03) add(sdEllipsoid(p, [0, 0.02*yScale, waistZ*0.75 + abdomen], [waistX*0.82, 0.27, waistZ*0.62 + Math.max(0, abdomen)]), 0.07);
+          add(sdEllipsoid(p, [-0.17, -0.45*yScale, -hipZ*0.70 - gluteL], [hipX*0.53, 0.26, hipZ*0.56 + gluteL]), 0.08);
+          add(sdEllipsoid(p, [0.17, -0.45*yScale, -hipZ*0.70 - gluteR], [hipX*0.53, 0.26, hipZ*0.56 + gluteR]), 0.08);
+
+          add(sdTaperedCapsule(p, [0, 1.02*yScale, postureZ], [0, 1.18*yScale + neckLength, headForward], neckR*1.08, neckR), 0.08);
+          add(sdEllipsoid(p, headCenter, [0.205*headScale*faceWidthScale, 0.285*headHeightScale, 0.225*headScale]), 0.065);
+          add(sdEllipsoid(p, [0, headCenter[1]-0.13, headForward+0.035], [0.155*headScale*jawScale, 0.16*headHeightScale, 0.19*headScale]), 0.055);
+          add(sdEllipsoid(p, [0, headCenter[1]-0.015, headForward+0.215*headScale], [0.045, 0.085, 0.075]), 0.035);
+          add(sdEllipsoid(p, [-0.215*headScale, headCenter[1], headForward], [0.035, 0.078, 0.025]), 0.03);
+          add(sdEllipsoid(p, [0.215*headScale, headCenter[1], headForward], [0.035, 0.078, 0.025]), 0.03);
+
+          for (const limb of [leftArm, rightArm]) {
+            const side = limb.shoulder[0] < 0 ? -1 : 1;
+            add(sdTaperedCapsule(p, [side*0.09, 1.02*yScale, postureZ], limb.shoulder, neckR*0.92, limb.upperR*1.12), 0.10);
+            add(sdTaperedCapsule(p, limb.shoulder, limb.elbow, limb.upperR, limb.elbowR), 0.095);
+            add(sdTaperedCapsule(p, limb.elbow, limb.wrist, limb.elbowR, limb.wristR), 0.06);
+            const handLength = 0.18 * ((a[`handLength${limb.suffix}`] || 17.9) / 17.9);
+            const palmWidth = 0.075 * ((a[`palmWidth${limb.suffix}`] || 7.7) / 7.7);
+            add(sdEllipsoid(p, [limb.wrist[0] + side*0.015, limb.wrist[1]-handLength*0.55, limb.wrist[2]], [palmWidth, handLength*0.62, 0.037]), 0.045);
+          }
+
+          for (const limb of [leftLeg, rightLeg]) {
+            add(sdTaperedCapsule(p, limb.hip, limb.knee, limb.thighR, limb.kneeR), 0.09);
+            const calfCenter = [mix(limb.knee[0], limb.ankle[0], 0.48), mix(limb.knee[1], limb.ankle[1], 0.48), 0];
+            add(sdTaperedCapsule(p, limb.knee, calfCenter, limb.kneeR, limb.calfR), 0.055);
+            add(sdTaperedCapsule(p, calfCenter, limb.ankle, limb.calfR, limb.ankleR), 0.055);
+            const footLength = 0.29 * ((a[`footLength${limb.suffix}`] || 24.1) / 24.1);
+            const footWidth = 0.085 * ((a[`footWidth${limb.suffix}`] || 9.2) / 9.2);
+            const footAngle = (a[`footAngle${limb.suffix}`] || 4) * Math.PI / 180;
+            const side = limb.ankle[0] < 0 ? -1 : 1;
+            add(sdEllipsoid(p, [limb.ankle[0] + side*Math.sin(footAngle)*0.04, bodyBottom-0.06, 0.12], [footWidth, 0.075, footLength]), 0.045);
+          }
+          return d;
+        }
+
+        return { field, headCenter, headScale, headForward, bodyBottom };
+      }
+
+      function gradient(field, p) {
+        const e = 0.004;
+        const nx = field([p[0]+e,p[1],p[2]]) - field([p[0]-e,p[1],p[2]]);
+        const ny = field([p[0],p[1]+e,p[2]]) - field([p[0],p[1]-e,p[2]]);
+        const nz = field([p[0],p[1],p[2]+e]) - field([p[0],p[1],p[2]-e]);
+        const n = Math.hypot(nx,ny,nz) || 1;
+        return [nx/n, ny/n, nz/n];
+      }
+
+      function meshField(field) {
+        const nx = 50, ny = 96, nz = 44;
+        const min = [-1.15, -2.05, -0.68], max = [1.15, 2.05, 0.78];
+        const sx = (max[0]-min[0])/nx, sy = (max[1]-min[1])/ny, sz = (max[2]-min[2])/nz;
+        const gx = nx+1, gy = ny+1, gz = nz+1;
+        const values = new Float32Array(gx*gy*gz);
+        const index = (x,y,z) => x + gx*(y + gy*z);
+        for (let z=0; z<gz; z++) for (let y=0; y<gy; y++) for (let x=0; x<gx; x++) {
+          values[index(x,y,z)] = field([min[0]+x*sx, min[1]+y*sy, min[2]+z*sz]);
+        }
+
+        const positions = [], normals = [], stress = [], indices = [];
+        const corners = [[0,0,0],[1,0,0],[1,1,0],[0,1,0],[0,0,1],[1,0,1],[1,1,1],[0,1,1]];
+        const edges = [[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+        const cellVertices = new Int32Array(nx*ny*nz); cellVertices.fill(-1);
+        const cellIndex = (x,y,z) => x + nx*(y + ny*z);
+
+        for (let z=0; z<nz; z++) for (let y=0; y<ny; y++) for (let x=0; x<nx; x++) {
+          const points = corners.map(c => [min[0]+(x+c[0])*sx, min[1]+(y+c[1])*sy, min[2]+(z+c[2])*sz]);
+          const scalar = corners.map(c => values[index(x+c[0],y+c[1],z+c[2])]);
+          const insideCount = scalar.reduce((count,value) => count + (value < 0 ? 1 : 0), 0);
+          if (insideCount === 0 || insideCount === 8) continue;
+
+          const center = [0,0,0]; let crossings = 0;
+          for (const edge of edges) {
+            const va=scalar[edge[0]],vb=scalar[edge[1]];
+            if ((va<0)===(vb<0)) continue;
+            const pa=points[edge[0]],pb=points[edge[1]],t=clamp(va/(va-vb),0,1);
+            center[0]+=mix(pa[0],pb[0],t);center[1]+=mix(pa[1],pb[1],t);center[2]+=mix(pa[2],pb[2],t);crossings++;
+          }
+          if (!crossings) continue;
+          center[0]/=crossings;center[1]/=crossings;center[2]/=crossings;
+          const vertex=positions.length/3,n=gradient(field,center);
+          positions.push(...center);normals.push(...n);stress.push(0);cellVertices[cellIndex(x,y,z)]=vertex;
+        }
+
+        const positionAt = vertex => [positions[vertex*3],positions[vertex*3+1],positions[vertex*3+2]];
+        const normalAt = vertex => [normals[vertex*3],normals[vertex*3+1],normals[vertex*3+2]];
+        const emitQuad = (a,b,c,d) => {
+          if (a<0||b<0||c<0||d<0) return;
+          const pa=positionAt(a),pb=positionAt(b),pc=positionAt(c),e1=sub(pb,pa),e2=sub(pc,pa);
+          const cross=[e1[1]*e2[2]-e1[2]*e2[1],e1[2]*e2[0]-e1[0]*e2[2],e1[0]*e2[1]-e1[1]*e2[0]];
+          if(dot(cross,normalAt(a))>=0)indices.push(a,b,c,a,c,d);else indices.push(a,c,b,a,d,c);
+        };
+
+        for(let z=1;z<nz;z++)for(let y=1;y<ny;y++)for(let x=0;x<nx;x++) {
+          if((values[index(x,y,z)]<0)===(values[index(x+1,y,z)]<0))continue;
+          emitQuad(cellVertices[cellIndex(x,y-1,z-1)],cellVertices[cellIndex(x,y,z-1)],cellVertices[cellIndex(x,y,z)],cellVertices[cellIndex(x,y-1,z)]);
+        }
+        for(let z=1;z<nz;z++)for(let y=0;y<ny;y++)for(let x=1;x<nx;x++) {
+          if((values[index(x,y,z)]<0)===(values[index(x,y+1,z)]<0))continue;
+          emitQuad(cellVertices[cellIndex(x-1,y,z-1)],cellVertices[cellIndex(x-1,y,z)],cellVertices[cellIndex(x,y,z)],cellVertices[cellIndex(x,y,z-1)]);
+        }
+        for(let z=0;z<nz;z++)for(let y=1;y<ny;y++)for(let x=1;x<nx;x++) {
+          if((values[index(x,y,z)]<0)===(values[index(x,y,z+1)]<0))continue;
+          emitQuad(cellVertices[cellIndex(x-1,y-1,z)],cellVertices[cellIndex(x,y-1,z)],cellVertices[cellIndex(x,y,z)],cellVertices[cellIndex(x-1,y,z)]);
+        }
+        return { positions, normals, stress, indices };
+      }
+
+      function parseMakeHumanObj(source) {
+        const vertices = [], indices = [];
+        for (const line of source.split(/\r?\n/)) {
+          if (line.startsWith('v ') && vertices.length < 13380) {
+            const parts=line.trim().split(/\s+/);vertices.push([Number(parts[1]),Number(parts[2]),Number(parts[3])]);
+          } else if (line.startsWith('f ')) {
+            const face=line.trim().split(/\s+/).slice(1).map(token=>Number(token.split('/')[0])-1);
+            if(face.length<3||face.some(vertex=>vertex<0||vertex>=13380))continue;
+            for(let i=1;i<face.length-1;i++)indices.push(face[0],face[i],face[i+1]);
+          }
+        }
+        if(vertices.length!==13380||indices.length<30000)throw new Error('The detailed human base mesh is incomplete.');
+        return {vertices,indices};
+      }
+
+      function parseProductionObj(source,sourceUnits) {
+        const sourceVertices=[], indices=[];
+        for (const line of source.split(/\r?\n/)) {
+          if (line.startsWith('v ')) {
+            const parts=line.trim().split(/\s+/);
+            sourceVertices.push([Number(parts[1]),Number(parts[2]),Number(parts[3])]);
+          } else if (line.startsWith('f ')) {
+            const face=line.trim().split(/\s+/).slice(1).map(token=>Number(token.split('/')[0])-1);
+            if(face.length<3||face.some(vertex=>vertex<0||vertex>=sourceVertices.length))continue;
+            for(let i=1;i<face.length-1;i++)indices.push(face[0],face[i],face[i+1]);
+          }
+        }
+        if(sourceVertices.length<1000||indices.length<3000)throw new Error('The production mesh is incomplete.');
+
+        const sourceToSceneScale=sourceUnits==='centimeters'?0.02:2;
+        const positions=new Float32Array(sourceVertices.length*3);
+        const normals=new Float32Array(sourceVertices.length*3);
+        const stress=new Float32Array(sourceVertices.length);
+        for(let vertex=0;vertex<sourceVertices.length;vertex++) {
+          const [x,y,z]=sourceVertices[vertex];
+          positions[vertex*3]=x*sourceToSceneScale;
+          positions[vertex*3+1]=y*sourceToSceneScale-1.67;
+          positions[vertex*3+2]=z*sourceToSceneScale;
+        }
+        for(let i=0;i<indices.length;i+=3) {
+          const ia=indices[i],ib=indices[i+1],ic=indices[i+2];
+          const ax=positions[ia*3],ay=positions[ia*3+1],az=positions[ia*3+2];
+          const bx=positions[ib*3],by=positions[ib*3+1],bz=positions[ib*3+2];
+          const cx=positions[ic*3],cy=positions[ic*3+1],cz=positions[ic*3+2];
+          const abx=bx-ax,aby=by-ay,abz=bz-az,acx=cx-ax,acy=cy-ay,acz=cz-az;
+          const nx=aby*acz-abz*acy,ny=abz*acx-abx*acz,nz=abx*acy-aby*acx;
+          for(const index of [ia,ib,ic]){normals[index*3]+=nx;normals[index*3+1]+=ny;normals[index*3+2]+=nz;}
+        }
+        for(let i=0;i<normals.length;i+=3){const n=Math.hypot(normals[i],normals[i+1],normals[i+2])||1;normals[i]/=n;normals[i+1]/=n;normals[i+2]/=n;}
+        return {positions,normals,stress,indices};
+      }
+
+      function parseTexturedObj(source,sourceUnits='blender-meters',blenderFloorOffset=0) {
+        const sourceVertices=[],sourceUvs=[],faces=[],lineGroups=new Map();
+        let activeGroup='default';
+        for(const line of source.split(/\r?\n/)) {
+          if(line.startsWith('v ')) {
+            const parts=line.trim().split(/\s+/);sourceVertices.push([Number(parts[1]),Number(parts[2]),Number(parts[3])]);
+          } else if(line.startsWith('vt ')) {
+            const parts=line.trim().split(/\s+/);sourceUvs.push([Number(parts[1]),Number(parts[2])]);
+          } else if(line.startsWith('g ')) {
+            activeGroup=line.trim().split(/\s+/)[1]||'default';
+          } else if(line.startsWith('l ')) {
+            const lineVertices=line.trim().split(/\s+/).slice(1).map(token=>Number(token.split('/')[0])-1);
+            if(lineVertices.length>=2&&lineVertices.every(vertex=>vertex>=0&&vertex<sourceVertices.length)) {
+              if(!lineGroups.has(activeGroup))lineGroups.set(activeGroup,[]);
+              const segments=lineGroups.get(activeGroup);
+              for(let index=1;index<lineVertices.length;index++)segments.push([lineVertices[index-1],lineVertices[index]]);
+            }
+          } else if(line.startsWith('f ')) {
+            const corners=line.trim().split(/\s+/).slice(1).map(token=>{
+              const parts=token.split('/');return {vertex:Number(parts[0])-1,uv:parts[1]?Number(parts[1])-1:-1};
+            });
+            if(corners.length>=3&&corners.every(corner=>corner.vertex>=0&&corner.vertex<sourceVertices.length))faces.push(corners);
+          }
+        }
+        if(sourceVertices.length<10||faces.length<8)throw new Error('The textured display mesh is incomplete.');
+
+        const transform=vertex=>{
+          const [x,y,z]=vertex;
+          if(sourceUnits==='blender-meters')return [x*2,(z-blenderFloorOffset)*2-1.67,y*2];
+          const scale=sourceUnits==='centimeters'?.02:2;return [x*scale,y*scale-1.67,z*scale];
+        };
+        const transformed=sourceVertices.map(transform),sourceNormals=sourceVertices.map(()=>[0,0,0]);
+        for(const face of faces)for(let corner=1;corner<face.length-1;corner++) {
+          const triangle=[face[0].vertex,face[corner].vertex,face[corner+1].vertex];
+          const a=transformed[triangle[0]],b=transformed[triangle[1]],c=transformed[triangle[2]];
+          const abx=b[0]-a[0],aby=b[1]-a[1],abz=b[2]-a[2],acx=c[0]-a[0],acy=c[1]-a[1],acz=c[2]-a[2];
+          const normal=[aby*acz-abz*acy,abz*acx-abx*acz,abx*acy-aby*acx];
+          for(const index of triangle){sourceNormals[index][0]+=normal[0];sourceNormals[index][1]+=normal[1];sourceNormals[index][2]+=normal[2];}
+        }
+        for(const normal of sourceNormals){const magnitude=Math.hypot(...normal)||1;normal[0]/=magnitude;normal[1]/=magnitude;normal[2]/=magnitude;}
+
+        const positions=[],normals=[],texcoords=[],stress=[],indices=[],sourceVertexIndices=[],vertexMap=new Map();
+        function outputVertex(corner) {
+          const key=`${corner.vertex}/${corner.uv}`;
+          if(vertexMap.has(key))return vertexMap.get(key);
+          const outputIndex=positions.length/3,position=transformed[corner.vertex],normal=sourceNormals[corner.vertex];
+          const uv=corner.uv>=0&&corner.uv<sourceUvs.length?sourceUvs[corner.uv]:[0,0];
+          positions.push(...position);normals.push(...normal);texcoords.push(uv[0],uv[1]);stress.push(0);sourceVertexIndices.push(corner.vertex);vertexMap.set(key,outputIndex);return outputIndex;
+        }
+        for(const face of faces)for(let corner=1;corner<face.length-1;corner++)indices.push(outputVertex(face[0]),outputVertex(face[corner]),outputVertex(face[corner+1]));
+        const sourceSurfaceVertexCount=new Set(faces.flatMap(face=>face.map(corner=>corner.vertex))).size;
+        function lineGeometry(group) {
+          const linePositions=[],lineNormals=[],lineTexcoords=[],lineStress=[],lineIndices=[];
+          for(const segment of lineGroups.get(group)||[]) {
+            const offset=linePositions.length/3;
+            linePositions.push(...transformed[segment[0]],...transformed[segment[1]]);
+            lineNormals.push(0,1,0,0,1,0);lineTexcoords.push(0,0,0,0);lineStress.push(0,0);lineIndices.push(offset,offset+1);
+          }
+          return lineIndices.length?{positions:linePositions,normals:lineNormals,texcoords:lineTexcoords,stress:lineStress,indices:lineIndices}:null;
+        }
+        return {
+          positions,normals,texcoords,stress,indices,sourceVertexIndices,sourceSurfaceVertexCount,
+          seamLines:lineGeometry('patterna_seams'),
+          edgeLines:lineGeometry('patterna_edges')
+        };
+      }
+
+      function loadTexture(url,{repeat=false}={}) {
+        return new Promise((resolve,reject)=>{
+          const image=new Image();
+          image.onload=()=>{
+            const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+            gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
+            const wrap=repeat?gl.REPEAT:gl.CLAMP_TO_EDGE;
+            gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,wrap);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,wrap);
+            gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
+            gl.generateMipmap(gl.TEXTURE_2D);gl.bindTexture(gl.TEXTURE_2D,null);resolve(texture);
+          };
+          image.onerror=()=>reject(new Error(`Texture unavailable: ${url}`));image.src=url;
+        });
+      }
+
+      let fabricTexturePromise=null;
+      function loadFabricTexture() {
+        if(!fabricTexturePromise)fabricTexturePromise=loadTexture('Production/fabric-texture.png',{repeat:true});
+        return fabricTexturePromise;
+      }
+
+      async function loadDisplayAvatar(baseUrl='Production/Avatar/') {
+        const manifestResponse=await fetch(`${baseUrl}manifest.json`);
+        if(!manifestResponse.ok)throw new Error(`Display avatar manifest HTTP ${manifestResponse.status}`);
+        const manifest=await manifestResponse.json(),entries=Object.entries(manifest.assets||{});
+        if(!entries.some(([key])=>key==='body'))throw new Error('Display avatar manifest has no body.');
+        const sources=await Promise.all(entries.map(async([key,asset])=>{
+          const [geometryResponse,texture]=await Promise.all([fetch(`${baseUrl}${asset.geometry}`),loadTexture(`${baseUrl}${asset.texture}`)]);
+          if(!geometryResponse.ok)throw new Error(`${key} geometry HTTP ${geometryResponse.status}`);
+          const color=Array.isArray(asset.color)&&asset.color.length===3&&asset.color.every(value=>Number.isFinite(Number(value)))
+            ?asset.color.map(value=>clamp(Number(value),0,1)):[1,1,1];
+          return {key,source:await geometryResponse.text(),texture,color};
+        }));
+        let floorOffset=Number(manifest.floor_offset_m);
+        if(!Number.isFinite(floorOffset)) {
+          const bodySource=sources.find(asset=>asset.key==='body').source;
+          const bodyZ=bodySource.split(/\r?\n/).filter(line=>line.startsWith('v ')).map(line=>Number(line.trim().split(/\s+/)[3]));
+          floorOffset=Math.min(...bodyZ);
+        }
+        if(!Number.isFinite(floorOffset)||floorOffset<-.5||floorOffset>.5)throw new Error(`Display avatar floor offset is invalid: ${floorOffset}`);
+        const loaded=sources.map(asset=>({
+          key:asset.key,data:parseTexturedObj(asset.source,'blender-meters',floorOffset),texture:asset.texture,color:asset.color
+        }));
+        const body=loaded.find(asset=>asset.key==='body');
+        const materialSettings={
+          eyes:{roughness:.18,alphaCutoff:.02},teeth:{roughness:.34,alphaCutoff:.02},
+          eyebrows:{roughness:.82,alphaCutoff:.18},eyelashes:{roughness:.88,alphaCutoff:.24},hair:{roughness:.76,alphaCutoff:.12}
+        };
+        const assets=loaded.filter(asset=>asset.key!=='body').map(asset=>({
+          ...asset,...(materialSettings[asset.key]||{roughness:.72,alphaCutoff:.08})
+        }));
+        return {bodyData:body.data,bodyTexture:body.texture,bodyColor:body.color,assets};
+      }
+
+      function discardDisplayAvatar(displayAvatar) {
+        if(!displayAvatar)return;
+        if(displayAvatar.bodyTexture)gl.deleteTexture(displayAvatar.bodyTexture);
+        for(const asset of displayAvatar.assets||[])if(asset.texture)gl.deleteTexture(asset.texture);
+      }
+
+      function applyDisplayAvatar(displayAvatar) {
+        if(state.displayBodyTexture)gl.deleteTexture(state.displayBodyTexture);
+        for(const asset of state.productionDisplayAssets)if(asset.texture)gl.deleteTexture(asset.texture);
+        state.productionDisplayBody=displayAvatar.bodyData;
+        state.displayBodyTexture=displayAvatar.bodyTexture;
+        state.displayBodyColor=displayAvatar.bodyColor;
+        state.productionDisplayAssets=displayAvatar.assets;
+      }
+
+      function clearDisplayAvatar() {
+        if(state.displayBodyTexture)gl.deleteTexture(state.displayBodyTexture);
+        for(const asset of state.productionDisplayAssets)if(asset.texture)gl.deleteTexture(asset.texture);
+        state.productionDisplayBody=null;
+        state.displayBodyTexture=null;
+        state.displayBodyColor=[1,1,1];
+        state.productionDisplayAssets=[];
+      }
+
+      function matchesEditableDefaultAvatar() {
+        const avatar=state.avatar;
+        const expected={height:167,chest:112,waist:82,hip:108,shoulder:37,torso:44,underBust:84,chestDepth:31,bustSeparation:19,bustHeightL:24.8,bustHeightR:24.6,bustProjectionL:9.6,bustProjectionR:9.4,bustSupport:100,upperBustFullness:85,upperArmCircL:26,upperArmCircR:26,thighUpperCircL:62,thighUpperCircR:62};
+        return avatar.template==='feminine'&&Object.entries(expected).every(([key,value])=>Math.abs(Number(avatar[key])-value)<.001);
+      }
+
+      async function refreshEditableDefaultAvatar() {
+        if(state.productionAssetsReady)return;
+        if(!matchesEditableDefaultAvatar()) {
+          if(state.productionDisplayBody)clearDisplayAvatar();
+          scheduleRebuild();
+          return;
+        }
+        if(state.productionDisplayBody)return;
+        const requestSequence=++state.assetRequestSequence;
+        try {
+          const displayAvatar=await loadDisplayAvatar();
+          if(requestSequence!==state.assetRequestSequence){discardDisplayAvatar(displayAvatar);return;}
+          applyDisplayAvatar(displayAvatar);
+          state.acceptedBuildLabel='Editable full-bust measurement avatar · cloth pending';
+          scheduleRebuild();
+        } catch(error) {
+          if(requestSequence!==state.assetRequestSequence)return;
+          document.getElementById('buildLabel').textContent=`Editable avatar unavailable · ${error.message}`;
+        }
+      }
+
+      function reportAssetLoad(revision,success,error) {
+        if(globalThis.chrome?.webview) {
+          globalThis.chrome.webview.postMessage({type:'asset-load',revision,success,error:error||null});
+        }
+      }
+
+      async function loadProductionAssets(revision='bundled') {
+        const requestSequence=++state.assetRequestSequence;
+        try {
+          const [bodyResponse,garmentResponse,displayAvatar,fabricTexture]=await Promise.all([
+            fetch('Production/patterna-mpfb-female.obj'),
+            fetch('Production/patterna-production-crew-neck.obj'),
+            loadDisplayAvatar(),
+            loadFabricTexture()
+          ]);
+          if(!bodyResponse.ok||!garmentResponse.ok)throw new Error(`HTTP ${bodyResponse.status}/${garmentResponse.status}`);
+          const [bodySource,garmentSource]=await Promise.all([bodyResponse.text(),garmentResponse.text()]);
+          if(requestSequence!==state.assetRequestSequence){discardDisplayAvatar(displayAvatar);return;}
+          state.productionBodyData=parseProductionObj(bodySource,'meters');
+          state.productionGarmentData=parseTexturedObj(garmentSource,'centimeters');
+          state.productionGarmentSeamData=state.productionGarmentData.seamLines;
+          state.productionGarmentEdgeData=state.productionGarmentData.edgeLines;
+          state.garmentTexture=fabricTexture;
+          applyDisplayAvatar(displayAvatar);
+          state.productionAssetsReady=true;
+          document.getElementById('error').style.display='none';
+          const surfaceVertexCount=state.productionGarmentData.sourceSurfaceVertexCount||state.productionGarmentData.positions.length/3;
+          const uvCornerCount=state.productionGarmentData.positions.length/3;
+          const triangleCount=state.productionGarmentData.indices.length/3;
+          state.acceptedBuildLabel=`Newton Style3D equilibrium · ${surfaceVertexCount.toLocaleString()} render vertices · ${triangleCount.toLocaleString()} triangles · zero intersections`;
+          document.getElementById('legend').style.display='none';
+          scheduleRebuild();
+          reportAssetLoad(revision,true,null);
+        } catch(error) {
+          if(requestSequence!==state.assetRequestSequence)return;
+          document.getElementById('buildLabel').textContent=`Production assets unavailable · ${error.message}`;
+          loadDetailedHuman();
+          reportAssetLoad(revision,false,error.message);
+        }
+      }
+
+      async function loadAcceptedRevision(bodyUrl,garmentUrl,buildLabel,revision,displayAvatarBaseUrl=null) {
+        const requestSequence=++state.assetRequestSequence;
+        try {
+          const [bodyResponse,garmentResponse,displayAvatar,fabricTexture]=await Promise.all([
+            fetch(bodyUrl),fetch(garmentUrl),displayAvatarBaseUrl?loadDisplayAvatar(displayAvatarBaseUrl):Promise.resolve(null),loadFabricTexture()
+          ]);
+          if(!bodyResponse.ok||!garmentResponse.ok)throw new Error(`Accepted revision HTTP ${bodyResponse.status}/${garmentResponse.status}`);
+          const [bodySource,garmentSource]=await Promise.all([bodyResponse.text(),garmentResponse.text()]);
+          if(requestSequence!==state.assetRequestSequence){discardDisplayAvatar(displayAvatar);return;}
+          state.productionBodyData=parseProductionObj(bodySource,'meters');
+          state.productionGarmentData=parseTexturedObj(garmentSource,'centimeters');
+          state.productionGarmentSeamData=state.productionGarmentData.seamLines;
+          state.productionGarmentEdgeData=state.productionGarmentData.edgeLines;
+          state.garmentTexture=fabricTexture;
+          if(displayAvatar)applyDisplayAvatar(displayAvatar);
+          else clearDisplayAvatar();
+          state.productionAssetsReady=true;
+          document.getElementById('error').style.display='none';
+          const surfaceVertexCount=state.productionGarmentData.sourceSurfaceVertexCount||state.productionGarmentData.positions.length/3;
+          const uvCornerCount=state.productionGarmentData.positions.length/3;
+          state.acceptedBuildLabel=`${buildLabel||'Accepted revision-specific cloth equilibrium'} · ${surfaceVertexCount.toLocaleString()} surface vertices · ${uvCornerCount.toLocaleString()} UV corners`;
+          document.getElementById('legend').style.display='none';
+          scheduleRebuild();
+          reportAssetLoad(revision,true,null);
+        } catch(error) {
+          if(requestSequence!==state.assetRequestSequence)return;
+          document.getElementById('buildLabel').textContent=`Accepted revision unavailable · ${error.message}`;
+          reportAssetLoad(revision,false,error.message);
+        }
+      }
+
+      function clearAcceptedRevision() {
+        state.assetRequestSequence++;
+        state.productionAssetsReady=false;
+        state.productionBodyData=null;
+        state.productionGarmentData=null;
+        state.productionGarmentSeamData=null;
+        state.productionGarmentEdgeData=null;
+        clearDisplayAvatar();
+        state.acceptedBuildLabel='Measurements or pattern changed · run Simulate for a matching body and cloth';
+        document.getElementById('legend').style.display='none';
+        scheduleRebuild();
+        refreshEditableDefaultAvatar();
+      }
+
+      const smoothStep = (edge0,edge1,value) => {
+        const t=clamp((value-edge0)/(edge1-edge0),0,1);return t*t*(3-2*t);
+      };
+
+      function deformMakeHuman(base,a) {
+        const positions=new Float32Array(base.vertices.length*3),normals=new Float32Array(base.vertices.length*3),stress=new Float32Array(base.vertices.length);
+        const heightScale=a.height/167,templateShoulder=a.template==='masculine'?1.07:a.template==='feminine'?0.97:1;
+        const templateHip=a.template==='feminine'?1.045:a.template==='masculine'?0.965:1;
+        const chestScale=a.chest/92,waistScale=a.waist/71,hipScale=a.hip/99;
+        const chestDepth=(a.chestDepth||23.2)/23.2,waistDepth=(a.waistDepth||18.5)/18.5,hipDepth=(a.hipDepth||24.8)/24.8;
+        const headScale=(a.headCirc||56.2)/56.2,neckScale=(a.neckCirc||34.5)/34.5;
+        const lean=(a.torsoLean||0)*Math.PI/180,posture=a.posture==='forward'?.035:a.posture==='erect'?-.018:0;
+
+        for(let vertex=0;vertex<base.vertices.length;vertex++) {
+          let [x,y,z]=base.vertices[vertex];
+          const side=x<0?'L':'R',absX=Math.abs(x);
+          const outerArmWeight=smoothStep(1.72,2.18,absX),shoulderArmWeight=y>2.0?smoothStep(1.18,1.78,absX):0;
+          const armWeight=Math.max(outerArmWeight,shoulderArmWeight);
+          const chestWeight=smoothStep(1.6,3.1,y)*(1-smoothStep(4.9,5.8,y));
+          const waistWeight=smoothStep(.45,1.55,y)*(1-smoothStep(2.7,3.7,y));
+          const hipWeight=smoothStep(-1.8,-.4,y)*(1-smoothStep(1.15,2.0,y));
+          const headWeight=smoothStep(5.7,6.55,y),neckWeight=smoothStep(4.55,5.0,y)*(1-smoothStep(5.65,6.1,y));
+          let widthScale=1+(chestScale*templateShoulder-1)*chestWeight+(waistScale-1)*waistWeight+(hipScale*templateHip-1)*hipWeight;
+          let depthScale=1+(chestDepth-1)*chestWeight+(waistDepth-1)*waistWeight+(hipDepth-1)*hipWeight;
+          widthScale=mix(widthScale,headScale,headWeight);depthScale=mix(depthScale,headScale,headWeight);
+          widthScale=mix(widthScale,neckScale,neckWeight);depthScale=mix(depthScale,neckScale,neckWeight);
+          x*=mix(widthScale,1,armWeight);z=.62+(z-.62)*mix(depthScale,1,armWeight);
+
+          if(y<-.7) {
+            const upper=smoothStep(-4.0,-1.0,y),lower=1-upper;
+            const legScale=mix((a[`ankleCirc${side}`]||22.5)/22.5,(a[`thighUpperCirc${side}`]||57.4)/57.4,upper);
+            const legCenter=side==='L'?-.68:.68;x=legCenter+(x-legCenter)*legScale;z=.36+(z-.36)*legScale;
+          }
+
+          if(armWeight>.001) {
+            const shoulderX=x<0?-1.35:1.35,shoulderY=4.15,shoulderZ=.62;
+            const along=clamp((absX-1.3)/3.7,0,1),armLength=(a[`armLength${side}`]||57.3)/57.3;
+            const armRadius=mix((a[`upperArmCirc${side}`]||29.4)/29.4,(a[`wristCirc${side}`]||15.8)/15.8,along);
+            let dx=(x-shoulderX)*armLength,dy=(y-shoulderY)*armRadius,dz=(z-shoulderZ)*armRadius;
+            const posed=[shoulderX+dx,shoulderY+dy,shoulderZ+dz];x=mix(x,posed[0],armWeight);y=mix(y,posed[1],armWeight);z=mix(z,posed[2],armWeight);
+          }
+
+          const bustSide=x<0?'L':'R',bust=(a[`bustProjection${bustSide}`]||4.8)-4.8;
+          const bustWeight=smoothStep(2.35,3.0,y)*(1-smoothStep(4.15,4.8,y))*smoothStep(.15,.55,Math.abs(x))*(1-smoothStep(1.05,1.5,Math.abs(x)))*smoothStep(.9,1.65,z);
+          z+=bust*.055*bustWeight;
+          const abdomenWeight=smoothStep(.35,1.1,y)*(1-smoothStep(2.25,3.1,y))*smoothStep(.75,1.4,z);
+          z+=(a.abdomenProjection||1.7)*.018*abdomenWeight;
+          const seatSide=x<0?'L':'R',seat=(a[`gluteProjection${seatSide}`]||4.2)-4.2;
+          const seatWeight=smoothStep(-1.6,-.8,y)*(1-smoothStep(.45,1.15,y))*(1-smoothStep(-.7,.2,z));
+          z-=seat*.05*seatWeight;
+
+          const scale=.216*heightScale,worldX=x*scale,worldY=y*scale,worldZ=(z-.72)*scale;
+          const torsoWeight=smoothStep(-1.2,.4,y)*(1-smoothStep(5.0,5.8,y)),cy=Math.cos(lean),sy=Math.sin(lean);
+          const leanedY=worldY*cy-worldZ*sy,leanedZ=worldY*sy+worldZ*cy+posture*torsoWeight;
+          positions[vertex*3]=worldX;positions[vertex*3+1]=mix(worldY,leanedY,torsoWeight);positions[vertex*3+2]=mix(worldZ,leanedZ,torsoWeight);
+        }
+
+        for(let i=0;i<base.indices.length;i+=3) {
+          const ia=base.indices[i],ib=base.indices[i+1],ic=base.indices[i+2];
+          const ax=positions[ia*3],ay=positions[ia*3+1],az=positions[ia*3+2],bx=positions[ib*3],by=positions[ib*3+1],bz=positions[ib*3+2],cx=positions[ic*3],cy=positions[ic*3+1],cz=positions[ic*3+2];
+          const abx=bx-ax,aby=by-ay,abz=bz-az,acx=cx-ax,acy=cy-ay,acz=cz-az,nx=aby*acz-abz*acy,ny=abz*acx-abx*acz,nz=abx*acy-aby*acx;
+          for(const index of [ia,ib,ic]){normals[index*3]+=nx;normals[index*3+1]+=ny;normals[index*3+2]+=nz;}
+        }
+        for(let i=0;i<normals.length;i+=3){const n=Math.hypot(normals[i],normals[i+1],normals[i+2])||1;normals[i]/=n;normals[i+1]/=n;normals[i+2]/=n;}
+        return {positions,normals,stress,indices:base.indices};
+      }
+
+      async function loadDetailedHuman() {
+        try {
+          const response=await fetch('makehuman-base.obj');
+          if(!response.ok)throw new Error(`HTTP ${response.status}`);
+          state.baseHuman=parseMakeHumanObj(await response.text());
+          scheduleRebuild();
+        } catch(error) {
+          document.getElementById('buildLabel').textContent=`Detailed base unavailable · procedural fallback · ${error.message}`;
+        }
+      }
+
+      function emptyGeometry() { return { positions: [], normals: [], stress: [], indices: [] }; }
+
+      function ellipsoid(cx,cy,cz,rx,ry,rz,segments=20,rings=12) {
+        const data=emptyGeometry();
+        for(let r=0;r<=rings;r++) {
+          const phi=r/rings*Math.PI-Math.PI/2;
+          for(let s=0;s<=segments;s++) {
+            const theta=s/segments*Math.PI*2, cp=Math.cos(phi), sp=Math.sin(phi), ct=Math.cos(theta), st=Math.sin(theta);
+            const x=rx*cp*ct, y=ry*sp, z=rz*cp*st;
+            data.positions.push(cx+x,cy+y,cz+z);
+            const nx=x/(rx*rx), ny=y/(ry*ry), nz=z/(rz*rz), nl=Math.hypot(nx,ny,nz)||1;
+            data.normals.push(nx/nl,ny/nl,nz/nl); data.stress.push(0);
+          }
+        }
+        for(let r=0;r<rings;r++) for(let s=0;s<segments;s++) {
+          const a=r*(segments+1)+s,b=a+segments+1; data.indices.push(a,b,a+1,b,b+1,a+1);
+        }
+        return data;
+      }
+
+      function createLegacyClothGeometry(avatar,fabric) {
+        const positions=[],inverseMass=[],pinPositions=[],indices=[],particlePanel=[];
+        const constraintA=[],constraintB=[],constraintRest=[],constraintStiffness=[],constraintStress=[];
+        const panelNames=[];
+        let seamCount=0;
+        const stretchResistance=clamp(.9994-fabric.stretch*.000035,.995,.9992);
+        const shearResistance=clamp(.955+fabric.bend*.00065,.95,.985);
+        const bendResistance=clamp(.44+fabric.bend*.0035,.46,.76);
+
+        const positionAt=vertex=>[positions[vertex*3],positions[vertex*3+1],positions[vertex*3+2]];
+        const addVertex=(point,pinned,panel) => {
+          const vertex=positions.length/3;
+          positions.push(point[0],point[1],point[2]);pinPositions.push(point[0],point[1],point[2]);
+          inverseMass.push(pinned?0:1);particlePanel.push(panel);return vertex;
+        };
+        const addConstraint=(a,b,stiffness,tracksStress,restLength) => {
+          const first=positionAt(a),second=positionAt(b);
+          constraintA.push(a);constraintB.push(b);
+          constraintRest.push(restLength??Math.hypot(second[0]-first[0],second[1]-first[1],second[2]-first[2]));
+          constraintStiffness.push(stiffness);constraintStress.push(tracksStress?1:0);
+        };
+        const addSeam=(a,b,restLength=.0008) => {addConstraint(a,b,.9994,true,restLength);seamCount++;};
+
+        const addGridPanel=(name,rows,columns,sample,pinned,reverse=false) => {
+          const panel=panelNames.length;panelNames.push(name);const grid=[];
+          for(let row=0;row<rows;row++) {
+            const line=[];
+            for(let column=0;column<columns;column++)line.push(addVertex(sample(row,column,rows,columns),pinned(row,column,rows,columns),panel));
+            grid.push(line);
+          }
+          for(let row=0;row<rows-1;row++) for(let column=0;column<columns-1;column++) {
+            const a=grid[row][column],b=grid[row+1][column],c=grid[row][column+1],d=grid[row+1][column+1];
+            if(reverse)indices.push(a,c,b,b,c,d);else indices.push(a,b,c,b,d,c);
+          }
+          for(let row=0;row<rows;row++) for(let column=0;column<columns;column++) {
+            const vertex=grid[row][column];
+            if(column<columns-1)addConstraint(vertex,grid[row][column+1],stretchResistance,true);
+            if(row<rows-1)addConstraint(vertex,grid[row+1][column],stretchResistance,true);
+            if(row<rows-1&&column<columns-1) {
+              addConstraint(vertex,grid[row+1][column+1],shearResistance,false);
+              addConstraint(grid[row][column+1],grid[row+1][column],shearResistance,false);
+            }
+            if(column<columns-2)addConstraint(vertex,grid[row][column+2],bendResistance,false);
+            if(row<rows-2)addConstraint(vertex,grid[row+2][column],bendResistance,false);
+          }
+          return grid;
+        };
+
+        const addTubePanel=(name,rows,segments,sample,pinned) => {
+          const panel=panelNames.length;panelNames.push(name);const grid=[];
+          for(let row=0;row<rows;row++) {
+            const line=[];
+            for(let segment=0;segment<segments;segment++)line.push(addVertex(sample(row,segment,rows,segments),pinned(row,segment,rows,segments),panel));
+            grid.push(line);
+          }
+          for(let row=0;row<rows-1;row++) for(let segment=0;segment<segments;segment++) {
+            const next=(segment+1)%segments,a=grid[row][segment],b=grid[row+1][segment],c=grid[row][next],d=grid[row+1][next];
+            indices.push(a,b,c,b,d,c);
+          }
+          for(let row=0;row<rows;row++) for(let segment=0;segment<segments;segment++) {
+            const next=(segment+1)%segments,next2=(segment+2)%segments,vertex=grid[row][segment];
+            addConstraint(vertex,grid[row][next],stretchResistance,true);
+            addConstraint(vertex,grid[row][next2],bendResistance,false);
+            if(row<rows-1) {
+              addConstraint(vertex,grid[row+1][segment],stretchResistance,true);
+              addConstraint(vertex,grid[row+1][next],shearResistance,false);
+              addConstraint(grid[row][next],grid[row+1][segment],shearResistance,false);
+            }
+            if(row<rows-2)addConstraint(vertex,grid[row+2][segment],bendResistance,false);
+          }
+          return grid;
+        };
+
+        const heightScale=avatar.height/167,ease=.024+fabric.stretch*.0010;
+        const shoulderWidth=.55*(avatar.shoulder/39),chestWidth=.48*(avatar.chest/92),waistWidth=.41*(avatar.waist/71),hipWidth=.55*(avatar.hip/99);
+        const chestDepth=.205*((avatar.chestDepth||23.2)/23.2),waistDepth=.155*((avatar.waistDepth||18.5)/18.5),hipDepth=.235*((avatar.hipDepth||24.8)/24.8);
+
+        const bodiceSample=front=>(row,column,rows,columns) => {
+          const t=row/(rows-1),side=column/(columns-1)*2-1,centerWeight=1-Math.abs(side);
+          const topY=(front?1.02-.125*Math.pow(centerWeight,1.65):1.02-.065*Math.pow(centerWeight,1.6))*heightScale;
+          const y=mix(topY,.11*heightScale,t);
+          const width=t<.34?mix(shoulderWidth*.96,chestWidth+ease+.018,t/.34):mix(chestWidth+ease+.018,waistWidth+ease+.025,(t-.34)/.66);
+          const x=side*width,torsoT=smoothStep(.14,.72,y),depth=mix(waistDepth,chestDepth,torsoT);
+          const ellipse=Math.sqrt(Math.max(0,1-Math.pow(x/Math.max(width,.01),2)));
+          const shaping=.010*Math.sin(side*Math.PI*2.5)*smoothStep(.3,1,t);
+          const surfaceDepth=((depth+ease+.016+shaping)*ellipse+.052)*(front?1:1.12);
+          return [x,y,(front?1:-1)*surfaceDepth];
+        };
+        const shoulderPin=(row,column,rows,columns) => row===0&&(column<3||column>columns-4);
+        const bodiceFront=addGridPanel('Bodice front',19,31,bodiceSample(true),shoulderPin,false);
+        const bodiceBack=addGridPanel('Bodice back',19,31,bodiceSample(false),shoulderPin,true);
+
+        const skirtSample=front=>(row,column,rows,columns) => {
+          const t=row/(rows-1),side=column/(columns-1)*2-1,y=mix(.145,-1.12,t)*heightScale;
+          const width=t<.38?mix(waistWidth+ease+.025,hipWidth+ease+.030,t/.38):mix(hipWidth+ease+.030,hipWidth+.15,(t-.38)/.62);
+          const x=side*width;
+          let depth;
+          if(t<.34) {
+            const bodyDepth=mix(waistDepth,hipDepth,smoothStep(0,.34,t));
+            const ellipse=Math.sqrt(Math.max(0,1-Math.pow(x/Math.max(width,.01),2)));
+            depth=(bodyDepth+ease+.014)*ellipse+.052;
+          } else {
+            const edgeFalloff=1-.82*Math.pow(Math.abs(side),3),verticalFold=.032*Math.sin(side*Math.PI*7)*smoothStep(.28,1,t)*(1-.30*Math.abs(side));
+            depth=Math.max(.045,mix(hipDepth*.72,.065,(t-.34)/.66)*edgeFalloff+verticalFold);
+          }
+          const backScale=front?1:mix(1.28,1.10,smoothStep(.32,1,t));
+          return [x,y,(front?1:-1)*depth*backScale];
+        };
+        const neverPin=()=>false;
+        const skirtFront=addGridPanel('Skirt front',30,31,skirtSample(true),neverPin,false);
+        const skirtBack=addGridPanel('Skirt back',30,31,skirtSample(false),neverPin,true);
+
+        const addSideSeams=(front,back) => {
+          const rows=Math.min(front.length,back.length);
+          for(let row=0;row<rows;row++) {
+            addSeam(front[row][0],back[row][0],null);
+            addSeam(front[row][front[row].length-1],back[row][back[row].length-1],null);
+          }
+          for(let row=0;row<rows-1;row++) {
+            const frontLeft=front[row][0],frontLeftNext=front[row+1][0],backLeft=back[row][0],backLeftNext=back[row+1][0];
+            const last=front[row].length-1,frontRight=front[row][last],frontRightNext=front[row+1][last],backRight=back[row][last],backRightNext=back[row+1][last];
+            indices.push(frontLeft,backLeft,frontLeftNext,backLeft,backLeftNext,frontLeftNext);
+            indices.push(frontRight,frontRightNext,backRight,backRight,frontRightNext,backRightNext);
+          }
+        };
+        addSideSeams(bodiceFront,bodiceBack);addSideSeams(skirtFront,skirtBack);
+        for(let column=0;column<skirtFront[0].length;column++) {
+          addSeam(bodiceFront[bodiceFront.length-1][column],skirtFront[0][column],.0006);
+          addSeam(bodiceBack[bodiceBack.length-1][column],skirtBack[0][column],.0006);
+          if(column<skirtFront[0].length-1) {
+            const frontTop=bodiceFront[bodiceFront.length-1],backTop=bodiceBack[bodiceBack.length-1];
+            indices.push(frontTop[column],skirtFront[0][column],frontTop[column+1],skirtFront[0][column],skirtFront[0][column+1],frontTop[column+1]);
+            indices.push(backTop[column],backTop[column+1],skirtBack[0][column],skirtBack[0][column],backTop[column+1],skirtBack[0][column+1]);
+          }
+        }
+
+        const sleeveGrids=[];
+        for(const sign of [-1,1]) {
+          const side=sign<0?'L':'R',shoulder=[sign*.34,.92*heightScale,0],end=[sign*.67,.60*heightScale,0];
+          const axis=[end[0]-shoulder[0],end[1]-shoulder[1],0],axisLength=Math.hypot(axis[0],axis[1]);
+          axis[0]/=axisLength;axis[1]/=axisLength;
+          const around=[-axis[1],axis[0],0],upperScale=(avatar[`upperArmCirc${side}`]||29.4)/29.4,elbowScale=(avatar[`elbowCirc${side}`]||25.1)/25.1;
+          const sleeve=addTubePanel(`Sleeve ${side}`,13,20,(row,segment,rows,segments)=>{
+            const t=row/(rows-1),angle=segment/segments*Math.PI*2,center=[mix(shoulder[0],end[0],t),mix(shoulder[1],end[1],t),0];
+            const radius=mix(.145*upperScale,.108*elbowScale,t),depthRadius=radius*.82;
+            return [center[0]+around[0]*Math.sin(angle)*radius,center[1]+around[1]*Math.sin(angle)*radius,Math.cos(angle)*depthRadius];
+          },row=>row===0);
+          sleeveGrids.push(sleeve);
+          const bodiceColumn=sign<0?0:bodiceFront[0].length-1;
+          addSeam(sleeve[0][0],bodiceFront[0][bodiceColumn],.012);
+          addSeam(sleeve[0][10],bodiceBack[0][bodiceColumn],.012);
+        }
+
+        const typedPositions=new Float32Array(positions),cloth={
+          positions:typedPositions,previous:new Float32Array(typedPositions),normals:new Float32Array(typedPositions.length),
+          stress:new Float32Array(typedPositions.length/3),indices:new Uint32Array(indices),inverseMass:new Float32Array(inverseMass),
+          pinPositions:new Float32Array(pinPositions),particlePanel:new Uint16Array(particlePanel),
+          constraintA:new Uint32Array(constraintA),constraintB:new Uint32Array(constraintB),constraintRest:new Float32Array(constraintRest),
+          constraintStiffness:new Float32Array(constraintStiffness),constraintStress:new Uint8Array(constraintStress),
+          particleCount:typedPositions.length/3,panelCount:panelNames.length,panelNames,seamCount
+        };
+        updateClothSurfaceData(cloth);return cloth;
+      }
+
+      function samplePatternPiece(piece) {
+        const scalePoint=point=>[point.x*piece.scaleX,point.y*piece.scaleY];
+        const vertices=[scalePoint(piece.start)],edges={};
+        let current=vertices[0];
+        for(const curve of piece.boundary) {
+          const end=scalePoint(curve.end),sequence=[vertices.length-1];
+          let sampleCount=1,control1=null,control2=null;
+          if(curve.kind==='cubic'&&curve.control1&&curve.control2) {
+            control1=scalePoint(curve.control1);control2=scalePoint(curve.control2);
+            const controlLength=Math.hypot(control1[0]-current[0],control1[1]-current[1])+
+              Math.hypot(control2[0]-control1[0],control2[1]-control1[1])+
+              Math.hypot(end[0]-control2[0],end[1]-control2[1]);
+            sampleCount=clamp(Math.ceil(controlLength/3.5),6,18);
+          }
+          for(let sample=1;sample<=sampleCount;sample++) {
+            const t=sample/sampleCount,oneMinus=1-t;
+            const point=curve.kind==='cubic'&&control1&&control2?
+              [oneMinus*oneMinus*oneMinus*current[0]+3*oneMinus*oneMinus*t*control1[0]+3*oneMinus*t*t*control2[0]+t*t*t*end[0],
+               oneMinus*oneMinus*oneMinus*current[1]+3*oneMinus*oneMinus*t*control1[1]+3*oneMinus*t*t*control2[1]+t*t*t*end[1]]:end;
+            const closes=sample===sampleCount&&Math.hypot(point[0]-vertices[0][0],point[1]-vertices[0][1])<.00001;
+            const vertex=closes?0:vertices.length;
+            if(!closes)vertices.push(point);
+            sequence.push(vertex);
+          }
+          edges[curve.id]=sequence;
+          current=end;
+        }
+        return {vertices,edges};
+      }
+
+      function triangulatePatternPolygon(vertices) {
+        const signedArea=vertices.reduce((area,point,index)=>{
+          const next=vertices[(index+1)%vertices.length];return area+point[0]*next[1]-next[0]*point[1];
+        },0)*.5;
+        const orientation=signedArea>=0?1:-1,remaining=vertices.map((_,index)=>index),triangles=[];
+        const cross=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
+        const inside=(point,a,b,c)=>{
+          const c1=cross(a,b,point)*orientation,c2=cross(b,c,point)*orientation,c3=cross(c,a,point)*orientation;
+          return c1>=-.000001&&c2>=-.000001&&c3>=-.000001;
+        };
+        let guard=0;
+        while(remaining.length>3&&guard++<vertices.length*vertices.length) {
+          let clipped=false;
+          for(let cursor=0;cursor<remaining.length;cursor++) {
+            const previous=remaining[(cursor+remaining.length-1)%remaining.length],current=remaining[cursor],next=remaining[(cursor+1)%remaining.length];
+            const a=vertices[previous],b=vertices[current],c=vertices[next];
+            if(cross(a,b,c)*orientation<=.000001)continue;
+            let contains=false;
+            for(const candidate of remaining) {
+              if(candidate===previous||candidate===current||candidate===next)continue;
+              if(inside(vertices[candidate],a,b,c)){contains=true;break;}
+            }
+            if(contains)continue;
+            triangles.push(orientation>0?[previous,current,next]:[previous,next,current]);
+            remaining.splice(cursor,1);clipped=true;break;
+          }
+          if(!clipped) {
+            let removed=false;
+            for(let cursor=0;cursor<remaining.length;cursor++) {
+              const previous=remaining[(cursor+remaining.length-1)%remaining.length],current=remaining[cursor],next=remaining[(cursor+1)%remaining.length];
+              if(Math.abs(cross(vertices[previous],vertices[current],vertices[next]))<.00001){remaining.splice(cursor,1);removed=true;break;}
+            }
+            if(!removed)throw new Error('Pattern boundary could not be triangulated without crossing an edge.');
+          }
+        }
+        if(remaining.length===3)triangles.push(orientation>0?[remaining[0],remaining[1],remaining[2]]:[remaining[0],remaining[2],remaining[1]]);
+        return triangles;
+      }
+
+      function refinePatternMesh(sampled,levels) {
+        const vertices=sampled.vertices.map(point=>[point[0],point[1]]),edges={...sampled.edges};
+        let triangles=triangulatePatternPolygon(vertices);
+        for(let level=0;level<levels;level++) {
+          const midpointCache=new Map();
+          const midpoint=(a,b)=>{
+            const key=a<b?`${a}:${b}`:`${b}:${a}`;
+            if(midpointCache.has(key))return midpointCache.get(key);
+            const vertex=vertices.length,first=vertices[a],second=vertices[b];
+            vertices.push([(first[0]+second[0])*.5,(first[1]+second[1])*.5]);midpointCache.set(key,vertex);return vertex;
+          };
+          const refined=[];
+          for(const [a,b,c] of triangles) {
+            const ab=midpoint(a,b),bc=midpoint(b,c),ca=midpoint(c,a);
+            refined.push([a,ab,ca],[ab,b,bc],[ca,bc,c],[ab,bc,ca]);
+          }
+          for(const [edgeId,sequence] of Object.entries(edges)) {
+            const expanded=[sequence[0]];
+            for(let index=0;index<sequence.length-1;index++)expanded.push(midpoint(sequence[index],sequence[index+1]),sequence[index+1]);
+            edges[edgeId]=expanded;
+          }
+          triangles=refined;
+        }
+        return {vertices,edges,triangles};
+      }
+
+      function patternBounds(vertices) {
+        let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+        for(const point of vertices){minX=Math.min(minX,point[0]);maxX=Math.max(maxX,point[0]);minY=Math.min(minY,point[1]);maxY=Math.max(maxY,point[1]);}
+        return {minX,maxX,minY,maxY,width:Math.max(maxX-minX,.001),height:Math.max(maxY-minY,.001)};
+      }
+
+      function placePatternVertex(point,bounds,placement,avatar,fabric) {
+        const u=clamp((point[0]-bounds.minX)/bounds.width,0,1),v=clamp((point[1]-bounds.minY)/bounds.height,0,1),side=u*2-1;
+        const heightScale=avatar.height/167,ease=.024+fabric.stretch*.0010;
+        const shoulderWidth=.55*(avatar.shoulder/39),chestWidth=.48*(avatar.chest/92),waistWidth=.41*(avatar.waist/71),hipWidth=.55*(avatar.hip/99);
+        const chestDepth=.205*((avatar.chestDepth||23.2)/23.2),waistDepth=.155*((avatar.waistDepth||18.5)/18.5),hipDepth=.235*((avatar.hipDepth||24.8)/24.8);
+        if(placement==='torsoFront'||placement==='torsoBack') {
+          const front=placement==='torsoFront',x=(point[0]-(bounds.minX+bounds.maxX)*.5)*.024,y=1.02-(point[1]-bounds.minY)*.0129;
+          const width=Math.max(bounds.width*.012,.01),torsoT=smoothStep(.14,.72,y),depth=mix(waistDepth,chestDepth,torsoT),ellipse=Math.sqrt(Math.max(0,1-Math.pow(x/width,2))),shoulderBlend=smoothStep(.02,.26,v);
+          return [x,y,(front?1:-1)*((depth+ease+.016)*ellipse+.052)*shoulderBlend*(front?1:1.12)];
+        }
+        if(placement==='skirtFront'||placement==='skirtBack') {
+          const front=placement==='skirtFront',x=(point[0]-(bounds.minX+bounds.maxX)*.5)*.0156,y=.145-(point[1]-bounds.minY)*.022;
+          const width=Math.max(bounds.width*.0078,.01);
+          let depth;
+          if(v<.34){const bodyDepth=mix(waistDepth,hipDepth,smoothStep(0,.34,v)),ellipse=Math.sqrt(Math.max(0,1-Math.pow(x/Math.max(width,.01),2)));depth=(bodyDepth+ease+.014)*ellipse+.052;}
+          else {const edgeFalloff=1-.82*Math.pow(Math.abs(side),3),verticalFold=.032*Math.sin(side*Math.PI*7)*smoothStep(.28,1,v)*(1-.30*Math.abs(side));depth=Math.max(.045,mix(hipDepth*.72,.065,(v-.34)/.66)*edgeFalloff+verticalFold);}
+          return [x,y,(front?1:-1)*depth*(front?1:mix(1.28,1.10,smoothStep(.32,1,v)))];
+        }
+        if(placement==='sleeveLeft'||placement==='sleeveRight') {
+          const sign=placement==='sleeveLeft'?-1:1,sideName=sign<0?'L':'R',shoulder=[sign*.34,.92*heightScale,0],end=[sign*.67,.60*heightScale,0];
+          const axis=[end[0]-shoulder[0],end[1]-shoulder[1]],axisLength=Math.hypot(axis[0],axis[1]);axis[0]/=axisLength;axis[1]/=axisLength;
+          const around=[-axis[1],axis[0]],angle=u*Math.PI*2-Math.PI/2,center=[mix(shoulder[0],end[0],v),mix(shoulder[1],end[1],v)];
+          const radius=mix(.145*((avatar[`upperArmCirc${sideName}`]||29.4)/29.4),.108*((avatar[`elbowCirc${sideName}`]||25.1)/25.1),v);
+          return [center[0]+around[0]*Math.sin(angle)*radius,center[1]+around[1]*Math.sin(angle)*radius,Math.cos(angle)*radius*.82];
+        }
+        const sign=placement==='tieLeft'?-1:1,cross=(v-.5),anchor=sign*(waistWidth+.025),tieLength=bounds.width*.0126;
+        return [anchor+sign*u*tieLength,.13-u*.58+cross*.055,.055+Math.sin(u*Math.PI)*.075+cross*.035];
+      }
+
+      function createClothGeometry(avatar,fabric,garmentDocument) {
+        if(!garmentDocument||garmentDocument.schemaVersion!=='patterna.garment/1.0')throw new Error('A valid Patterna garment document is required for cloth generation.');
+        const positions=[],inverseMass=[],pinPositions=[],indices=[],particlePanel=[];
+        const constraintA=[],constraintB=[],constraintRest=[],constraintStiffness=[],constraintStress=[];
+        const panelNames=[],panelMeshes=new Map(),pieceMeshes=new Map();let seamCount=0;
+        const physical=garmentDocument.fabric||{},meanStretch=((physical.warpStretchPercent||fabric.stretch)+(physical.weftStretchPercent||fabric.stretch))*.5;
+        const stretchResistance=clamp(.9995-meanStretch*.000035,.995,.9993),shearResistance=clamp(.955+(physical.shearResistance||fabric.bend)*.00055,.95,.988),bendResistance=clamp(.44+(physical.bendResistance||fabric.bend)*.0035,.46,.78);
+        const positionAt=vertex=>[positions[vertex*3],positions[vertex*3+1],positions[vertex*3+2]];
+        const addVertex=(point,pinned,panel)=>{const vertex=positions.length/3;positions.push(point[0],point[1],point[2]);pinPositions.push(point[0],point[1],point[2]);inverseMass.push(pinned?0:1);particlePanel.push(panel);return vertex;};
+        const addConstraint=(a,b,stiffness,tracksStress,restLength)=>{if(a===b)return;const first=positionAt(a),second=positionAt(b);constraintA.push(a);constraintB.push(b);constraintRest.push(restLength??Math.hypot(second[0]-first[0],second[1]-first[1],second[2]-first[2]));constraintStiffness.push(stiffness);constraintStress.push(tracksStress?1:0);};
+
+        for(const piece of garmentDocument.pieces)pieceMeshes.set(piece.id,refinePatternMesh(samplePatternPiece(piece),piece.id==='waist-tie'?4:3));
+        for(const panelDocument of garmentDocument.panels) {
+          const mesh=pieceMeshes.get(panelDocument.pieceId);if(!mesh)throw new Error(`Panel ${panelDocument.id} references an unknown pattern piece.`);
+          const panel=panelNames.length;panelNames.push(panelDocument.name);const bounds=patternBounds(mesh.vertices),pinnedLocal=new Set();
+          for(const edgeId of panelDocument.pinnedEdges||[]) {
+            const edge=mesh.edges[edgeId]||[];
+            if(edgeId==='shoulder-left'&&edge.length)pinnedLocal.add(edge[0]);
+            else if(edgeId==='shoulder-right'&&edge.length)pinnedLocal.add(edge[edge.length-1]);
+            else for(const vertex of edge)pinnedLocal.add(vertex);
+          }
+          const localToGlobal=mesh.vertices.map((point,index)=>addVertex(placePatternVertex(point,bounds,panelDocument.placement,avatar,fabric),pinnedLocal.has(index),panel));
+          const globalEdges={};for(const [edgeId,sequence] of Object.entries(mesh.edges))globalEdges[edgeId]=sequence.map(vertex=>localToGlobal[vertex]);
+          const structural=new Set(),adjacent=new Map();
+          const addTriangleEdge=(a,b,opposite)=>{
+            const key=a<b?`${a}:${b}`:`${b}:${a}`;
+            if(!structural.has(key)){structural.add(key);addConstraint(a,b,stretchResistance,true);}
+            if(adjacent.has(key))addConstraint(adjacent.get(key),opposite,bendResistance,false);else adjacent.set(key,opposite);
+          };
+          for(const localTriangle of mesh.triangles) {
+            const triangle=localTriangle.map(vertex=>localToGlobal[vertex]);if(panelDocument.reverseWinding)triangle.reverse();
+            const [a,b,c]=triangle;indices.push(a,b,c);addTriangleEdge(a,b,c);addTriangleEdge(b,c,a);addTriangleEdge(c,a,b);
+          }
+          panelMeshes.set(panelDocument.id,{edges:globalEdges,panel});
+        }
+
+        const seamSequence=side=>{
+          const panel=panelMeshes.get(side.panelId);if(!panel)throw new Error(`Unknown seam panel ${side.panelId}.`);const sequence=[];
+          for(const edgeId of side.edgeIds){const edge=panel.edges[edgeId];if(!edge)throw new Error(`Unknown seam edge ${edgeId} on ${side.panelId}.`);for(const vertex of edge)if(sequence.length===0||sequence[sequence.length-1]!==vertex)sequence.push(vertex);}
+          if(side.reverse)sequence.reverse();return sequence;
+        };
+        const seamPairs=new Set();
+        for(const seam of garmentDocument.seams) {
+          const first=seamSequence(seam.sideA),second=seamSequence(seam.sideB),pairCount=Math.max(first.length,second.length),restLength=Math.max(.0005,(seam.allowanceCm||.1)/100*.08);
+          for(let pair=0;pair<pairCount;pair++) {
+            const a=first[Math.round(pair/Math.max(pairCount-1,1)*(first.length-1))],b=second[Math.round(pair/Math.max(pairCount-1,1)*(second.length-1))],key=a<b?`${a}:${b}`:`${b}:${a}`;
+            if(a!==b&&!seamPairs.has(key)){seamPairs.add(key);addConstraint(a,b,clamp(.9994*(seam.strength||1),.9,.9998),true,restLength);seamCount++;}
+          }
+          let i=0,j=0;
+          while(i<first.length-1||j<second.length-1) {
+            const nextFirst=i<first.length-1?(i+1)/(first.length-1):Infinity,nextSecond=j<second.length-1?(j+1)/(second.length-1):Infinity;
+            if(nextFirst<=nextSecond){indices.push(first[i],second[j],first[i+1]);i++;}
+            else {indices.push(first[i],second[j],second[j+1]);j++;}
+          }
+        }
+
+        const typedPositions=new Float32Array(positions),cloth={positions:typedPositions,previous:new Float32Array(typedPositions),normals:new Float32Array(typedPositions.length),stress:new Float32Array(typedPositions.length/3),indices:new Uint32Array(indices),inverseMass:new Float32Array(inverseMass),pinPositions:new Float32Array(pinPositions),particlePanel:new Uint16Array(particlePanel),constraintA:new Uint32Array(constraintA),constraintB:new Uint32Array(constraintB),constraintRest:new Float32Array(constraintRest),constraintStiffness:new Float32Array(constraintStiffness),constraintStress:new Uint8Array(constraintStress),particleCount:typedPositions.length/3,panelCount:panelNames.length,panelNames,seamCount,sourceSchema:garmentDocument.schemaVersion};
+        updateClothSurfaceData(cloth);return cloth;
+      }
+
+      function bodyCollisionProfile(y,avatar) {
+        if(y>1.10||y<-.66)return null;
+        const chestRx=.47*(avatar.chest/92),chestRz=.255*((avatar.chestDepth||23.2)/23.2);
+        const waistRx=.39*(avatar.waist/71),waistRz=.205*((avatar.waistDepth||18.5)/18.5);
+        const hipRx=.54*(avatar.hip/99),hipRz=.315*((avatar.hipDepth||24.8)/24.8);
+        if(y>.16) {
+          const t=smoothStep(.16,.72,y);
+          return [mix(waistRx,chestRx,t),mix(waistRz,chestRz,t),mix(-.018,.008,t)];
+        }
+        const t=smoothStep(-.50,.16,y);
+        const gluteScale=((avatar.gluteProjectionL||4.2)+(avatar.gluteProjectionR||4.1))/8.3;
+        return [mix(hipRx,waistRx,t),mix(hipRz,waistRz,t),mix(-.080*gluteScale,-.018,t)];
+      }
+
+      function projectParticleOutsideCapsule(positions,offset,start,end,startRadius,endRadius,clearance,strength=.72) {
+        const x=positions[offset],y=positions[offset+1],z=positions[offset+2];
+        const axisX=end[0]-start[0],axisY=end[1]-start[1],axisZ=end[2]-start[2];
+        const relativeX=x-start[0],relativeY=y-start[1],relativeZ=z-start[2];
+        const axisLengthSquared=axisX*axisX+axisY*axisY+axisZ*axisZ;
+        const t=clamp((relativeX*axisX+relativeY*axisY+relativeZ*axisZ)/axisLengthSquared,0,1);
+        const centerX=start[0]+axisX*t,centerY=start[1]+axisY*t,centerZ=start[2]+axisZ*t;
+        const deltaX=x-centerX,deltaY=y-centerY,deltaZ=z-centerZ,distance=Math.hypot(deltaX,deltaY,deltaZ);
+        const target=mix(startRadius,endRadius,t)+clearance;
+        if(distance>=target)return false;
+        const inverseDistance=1/Math.max(distance,.0001),correction=(target-distance)*strength;
+        positions[offset]+=deltaX*inverseDistance*correction;
+        positions[offset+1]+=deltaY*inverseDistance*correction;
+        positions[offset+2]+=deltaZ*inverseDistance*correction;
+        return true;
+      }
+
+      function projectClothOutsideAvatar(cloth,avatar) {
+        const positions=cloth.positions,clearance=.012,heightScale=avatar.height/167;
+        for(let vertex=0;vertex<cloth.particleCount;vertex++) {
+          if(cloth.inverseMass[vertex]===0)continue;
+          const offset=vertex*3,x=positions[offset],y=positions[offset+1],z=positions[offset+2];
+          const profile=bodyCollisionProfile(y,avatar);
+          if(profile) {
+            const [rx,rz,centerZ]=profile,localX=x,localZ=z-centerZ,normalized=Math.hypot(localX/rx,localZ/rz),target=1+clearance/Math.max(rx,rz);
+            if(normalized<target) {
+              const scale=1+(target/Math.max(normalized,.0001)-1)*.68;
+              positions[offset]=localX*scale;positions[offset+2]=centerZ+localZ*scale;
+            }
+          }
+
+          if(y<-.48&&y>-1.72) {
+            const legT=smoothStep(-1.58,-.48,y),side=x<0?-1:1,centerX=side*mix(.105,.215,legT);
+            const legRx=mix(.105,.235,legT)*((avatar.thighCircL||57.8)/57.8);
+            const legRz=mix(.110,.225,legT)*((avatar.thighDepthL||18.4)/18.4);
+            const localX=x-centerX,localZ=z+.020,normalized=Math.hypot(localX/legRx,localZ/legRz),target=1+clearance/Math.max(legRx,legRz);
+            if(normalized<target) {
+              const scale=1+(target/Math.max(normalized,.0001)-1)*.68;
+              positions[offset]=centerX+localX*scale;positions[offset+2]=-.020+localZ*scale;
+            }
+          }
+
+          if(Math.abs(positions[offset])>.24&&positions[offset+1]>.20&&positions[offset+1]<1.04) {
+            const sign=positions[offset]<0?-1:1,side=sign<0?'L':'R';
+            const shoulder=[sign*.34,.92*heightScale,0],elbow=[sign*.67,.60*heightScale,0],wrist=[sign*.90,.31*heightScale,0];
+            const upperRadius=.082*((avatar[`upperArmCirc${side}`]||29.4)/29.4),elbowRadius=.066*((avatar[`elbowCirc${side}`]||25.1)/25.1);
+            const wristRadius=.047*((avatar[`wristCirc${side}`]||15.8)/15.8);
+            projectParticleOutsideCapsule(positions,offset,shoulder,elbow,upperRadius,elbowRadius,clearance);
+            projectParticleOutsideCapsule(positions,offset,elbow,wrist,elbowRadius,wristRadius,clearance);
+          }
+
+          if(positions[offset+1]<-1.72)positions[offset+1]=-1.72;
+        }
+      }
+
+      function projectClothSelfCollision(cloth,thickness=.018) {
+        const positions=cloth.positions,weights=cloth.inverseMass,panels=cloth.particlePanel,cellSize=thickness*1.5,cells=new Map();
+        const cellCoordinate=value=>Math.floor(value/cellSize);
+        for(let vertex=0;vertex<cloth.particleCount;vertex++) {
+          const offset=vertex*3,key=`${cellCoordinate(positions[offset])},${cellCoordinate(positions[offset+1])},${cellCoordinate(positions[offset+2])}`;
+          if(!cells.has(key))cells.set(key,[]);cells.get(key).push(vertex);
+        }
+        for(let vertex=0;vertex<cloth.particleCount;vertex++) {
+          const offset=vertex*3,cx=cellCoordinate(positions[offset]),cy=cellCoordinate(positions[offset+1]),cz=cellCoordinate(positions[offset+2]);
+          for(let dx=-1;dx<=1;dx++) for(let dy=-1;dy<=1;dy++) for(let dz=-1;dz<=1;dz++) {
+            const nearby=cells.get(`${cx+dx},${cy+dy},${cz+dz}`);if(!nearby)continue;
+            for(const other of nearby) {
+              if(other<=vertex||(panels[vertex]===panels[other]&&Math.abs(other-vertex)<3))continue;
+              const otherOffset=other*3,deltaX=positions[otherOffset]-positions[offset],deltaY=positions[otherOffset+1]-positions[offset+1],deltaZ=positions[otherOffset+2]-positions[offset+2];
+              const distance=Math.hypot(deltaX,deltaY,deltaZ);if(distance>=thickness||distance<.00001)continue;
+              const firstWeight=weights[vertex],secondWeight=weights[other],totalWeight=firstWeight+secondWeight;if(totalWeight===0)continue;
+              const correction=(thickness-distance)/distance*.42;
+              const firstShare=firstWeight/totalWeight,secondShare=secondWeight/totalWeight;
+              positions[offset]-=deltaX*correction*firstShare;positions[offset+1]-=deltaY*correction*firstShare;positions[offset+2]-=deltaZ*correction*firstShare;
+              positions[otherOffset]+=deltaX*correction*secondShare;positions[otherOffset+1]+=deltaY*correction*secondShare;positions[otherOffset+2]+=deltaZ*correction*secondShare;
+            }
+          }
+        }
+      }
+
+      function solveClothConstraints(cloth,avatar,iterations=5) {
+        const p=cloth.positions,w=cloth.inverseMass;
+        for(let iteration=0;iteration<iterations;iteration++) {
+          for(let constraint=0;constraint<cloth.constraintA.length;constraint++) {
+            const a=cloth.constraintA[constraint],b=cloth.constraintB[constraint],wa=w[a],wb=w[b],weight=wa+wb;
+            if(weight===0)continue;
+            const ao=a*3,bo=b*3,dx=p[bo]-p[ao],dy=p[bo+1]-p[ao+1],dz=p[bo+2]-p[ao+2],distance=Math.hypot(dx,dy,dz);
+            if(distance<.00001)continue;
+            const stiffness=1-Math.pow(1-cloth.constraintStiffness[constraint],1/iterations);
+            const correction=(distance-cloth.constraintRest[constraint])/distance*stiffness;
+            const ax=dx*correction*wa/weight,ay=dy*correction*wa/weight,az=dz*correction*wa/weight;
+            const bx=dx*correction*wb/weight,by=dy*correction*wb/weight,bz=dz*correction*wb/weight;
+            p[ao]+=ax;p[ao+1]+=ay;p[ao+2]+=az;p[bo]-=bx;p[bo+1]-=by;p[bo+2]-=bz;
+          }
+          projectClothOutsideAvatar(cloth,avatar);
+          for(let vertex=0;vertex<cloth.particleCount;vertex++) if(w[vertex]===0) {
+            const offset=vertex*3;p[offset]=cloth.pinPositions[offset];p[offset+1]=cloth.pinPositions[offset+1];p[offset+2]=cloth.pinPositions[offset+2];
+          }
+        }
+      }
+
+      function updateClothSurfaceData(cloth) {
+        const normals=cloth.normals,stress=cloth.stress,positions=cloth.positions,indices=cloth.indices;
+        let invalidPositions=0,invalidNormals=0,collapsedTriangles=0,maxCoordinate=0;
+        for(let index=0;index<positions.length;index++) {
+          if(!Number.isFinite(positions[index]))invalidPositions++;
+          else maxCoordinate=Math.max(maxCoordinate,Math.abs(positions[index]));
+        }
+        normals.fill(0);stress.fill(0);const stressSamples=new Uint16Array(cloth.particleCount);
+        for(let index=0;index<indices.length;index+=3) {
+          const ia=indices[index],ib=indices[index+1],ic=indices[index+2],ao=ia*3,bo=ib*3,co=ic*3;
+          const abx=positions[bo]-positions[ao],aby=positions[bo+1]-positions[ao+1],abz=positions[bo+2]-positions[ao+2];
+          const acx=positions[co]-positions[ao],acy=positions[co+1]-positions[ao+1],acz=positions[co+2]-positions[ao+2];
+          const nx=aby*acz-abz*acy,ny=abz*acx-abx*acz,nz=abx*acy-aby*acx;
+          if(Math.hypot(nx,ny,nz)<.000001)collapsedTriangles++;
+          for(const vertex of [ia,ib,ic]){const offset=vertex*3;normals[offset]+=nx;normals[offset+1]+=ny;normals[offset+2]+=nz;}
+        }
+        for(let vertex=0;vertex<cloth.particleCount;vertex++) {
+          const offset=vertex*3,length=Math.hypot(normals[offset],normals[offset+1],normals[offset+2])||1;
+          normals[offset]/=length;normals[offset+1]/=length;normals[offset+2]/=length;
+          if(!Number.isFinite(normals[offset])||!Number.isFinite(normals[offset+1])||!Number.isFinite(normals[offset+2]))invalidNormals++;
+        }
+        for(let constraint=0;constraint<cloth.constraintA.length;constraint++) if(cloth.constraintStress[constraint]) {
+          const a=cloth.constraintA[constraint],b=cloth.constraintB[constraint],ao=a*3,bo=b*3;
+          const distance=Math.hypot(positions[bo]-positions[ao],positions[bo+1]-positions[ao+1],positions[bo+2]-positions[ao+2]);
+          const strain=Math.abs(distance/cloth.constraintRest[constraint]-1);
+          stress[a]+=strain;stress[b]+=strain;stressSamples[a]++;stressSamples[b]++;
+        }
+        for(let vertex=0;vertex<cloth.particleCount;vertex++)stress[vertex]=clamp((stress[vertex]/Math.max(stressSamples[vertex],1))/.08,0,1);
+        cloth.diagnostics={invalidPositions,invalidNormals,collapsedTriangles,maxCoordinate};
+      }
+
+      function clothStatusLabel(cloth) {
+        const diagnostics=cloth.diagnostics;
+        const integrityProblem=diagnostics.invalidPositions>0||diagnostics.invalidNormals>0||diagnostics.collapsedTriangles>0;
+        const status=integrityProblem?'mesh integrity warning':'gravity + avatar collision';
+        return `${cloth.panelCount} sewn solver panels · ${cloth.particleCount.toLocaleString()} particles · ${cloth.seamCount.toLocaleString()} seam constraints · ${status}`;
+      }
+
+      function stepCloth(cloth,avatar,fabric,delta) {
+        const substeps=3,dt=Math.min(delta,1/30)/substeps,damping=clamp(.994-fabric.friction*.014,.982,.993);
+        for(let substep=0;substep<substeps;substep++) {
+          for(let vertex=0;vertex<cloth.particleCount;vertex++) {
+            if(cloth.inverseMass[vertex]===0)continue;
+            const offset=vertex*3,x=cloth.positions[offset],y=cloth.positions[offset+1],z=cloth.positions[offset+2];
+            const vx=(x-cloth.previous[offset])*damping,vy=(y-cloth.previous[offset+1])*damping,vz=(z-cloth.previous[offset+2])*damping;
+            cloth.previous[offset]=x;cloth.previous[offset+1]=y;cloth.previous[offset+2]=z;
+            const flutter=Math.sin(state.simulationTime*5+vertex*.071)*.00012*state.simulationEnergy;
+            cloth.positions[offset]=x+vx+flutter;cloth.positions[offset+1]=y+vy-9.81*dt*dt;cloth.positions[offset+2]=z+vz+flutter*.45;
+          }
+          solveClothConstraints(cloth,avatar,10);
+          projectClothSelfCollision(cloth);
+          projectClothOutsideAvatar(cloth,avatar);
+        }
+        updateClothSurfaceData(cloth);
+      }
+
+      function exciteCloth(cloth) {
+        if(!cloth)return;
+        for(let vertex=0;vertex<cloth.particleCount;vertex++) if(cloth.inverseMass[vertex]>0) {
+          const offset=vertex*3,hem=clamp((.90-cloth.positions[offset+1])/2.15,0,1);
+          cloth.previous[offset]-=.014*Math.sin(vertex*.31)*hem;
+          cloth.previous[offset+2]-=.018*Math.cos(vertex*.19)*hem;
+        }
+        state.simulationActive=true;state.simulationTime=0;state.simulationEnergy=1;
+      }
+
+      function floorGrid(size=3.2,divisions=24) {
+        const data=emptyGeometry(),y=-1.77;
+        for(let line=0;line<=divisions;line++) {
+          const position=mix(-size,size,line/divisions),offset=data.positions.length/3;
+          data.positions.push(-size,y,position,size,y,position,position,y,-size,position,y,size);
+          data.normals.push(0,1,0,0,1,0,0,1,0,0,1,0);data.stress.push(0,0,0,0);
+          data.indices.push(offset,offset+1,offset+2,offset+3);
+        }
+        return data;
+      }
+
+      function gpuMesh(data,mode=gl.TRIANGLES,dynamic=false) {
+        const vao=gl.createVertexArray(), buffers=[]; gl.bindVertexArray(vao);
+        function attribute(values,location,size) {
+          const buffer=gl.createBuffer(); buffers.push(buffer); gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+          gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(values),dynamic?gl.DYNAMIC_DRAW:gl.STATIC_DRAW);
+          gl.enableVertexAttribArray(location); gl.vertexAttribPointer(location,size,gl.FLOAT,false,0,0);
+          return buffer;
+        }
+        const positionBuffer=attribute(data.positions,locations.position,3);
+        const normalBuffer=attribute(data.normals,locations.normal,3);
+        const stressBuffer=attribute(data.stress,locations.stress,1);
+        const vertexCount=data.positions.length/3;
+        const uvBuffer=attribute(data.texcoords||new Float32Array(vertexCount*2),locations.uv,2);
+        const indexBuffer=gl.createBuffer(); buffers.push(indexBuffer); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indexBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint32Array(data.indices),gl.STATIC_DRAW); gl.bindVertexArray(null);
+        return { vao, buffers, count:data.indices.length, mode, positionBuffer, normalBuffer, stressBuffer, uvBuffer };
+      }
+
+      function updateDynamicMesh(mesh,data) {
+        gl.bindBuffer(gl.ARRAY_BUFFER,mesh.positionBuffer);gl.bufferSubData(gl.ARRAY_BUFFER,0,data.positions);
+        gl.bindBuffer(gl.ARRAY_BUFFER,mesh.normalBuffer);gl.bufferSubData(gl.ARRAY_BUFFER,0,data.normals);
+        gl.bindBuffer(gl.ARRAY_BUFFER,mesh.stressBuffer);gl.bufferSubData(gl.ARRAY_BUFFER,0,data.stress);
+      }
+
+      function destroyMesh(mesh) {
+        if (!mesh) return;
+        for (const buffer of mesh.buffers) gl.deleteBuffer(buffer);
+        gl.deleteVertexArray(mesh.vao);
+      }
+
+      function rebuild() {
+        const a=state.avatar, f=state.fabric;
+        const model=createBodyField(a);
+        const useProduction=state.productionAssetsReady&&state.productionBodyData&&state.productionGarmentData;
+        const useDisplayAvatar=Boolean(state.productionDisplayBody);
+        const bodyData=useDisplayAvatar?state.productionDisplayBody:(useProduction?state.productionBodyData:(state.baseHuman?deformMakeHuman(state.baseHuman,a):meshField(model.field)));
+        const cloth=null;
+        const garmentData=useProduction?state.productionGarmentData:null;
+
+        destroyMesh(state.body); destroyMesh(state.garment); destroyMesh(state.garmentSeams); destroyMesh(state.garmentEdges); for(const feature of state.face) destroyMesh(feature.mesh);for(const asset of state.displayMeshes)destroyMesh(asset.mesh);
+        state.body=gpuMesh(bodyData);state.cloth=cloth;state.garment=garmentData?gpuMesh(garmentData,gl.TRIANGLES,!useProduction):null;state.face=[];
+        state.garmentSeams=useProduction&&state.productionGarmentSeamData?gpuMesh(state.productionGarmentSeamData,gl.LINES):null;
+        state.garmentEdges=useProduction&&state.productionGarmentEdgeData?gpuMesh(state.productionGarmentEdgeData,gl.LINES):null;
+        state.displayMeshes=useDisplayAvatar?state.productionDisplayAssets.map(asset=>({...asset,mesh:gpuMesh(asset.data)})):[];
+        if(!useDisplayAvatar&&!useProduction) {
+          const hc=state.baseHuman?[0,1.59,0]:model.headCenter,hs=state.baseHuman?1:model.headScale,z=state.baseHuman?0.205:model.headForward+.224*hs;
+          state.face.push({mesh:gpuMesh(ellipsoid(-.074*hs,hc[1]+.025,z-.002,.019,.009,.004)),color:[.14,.08,.06]});
+          state.face.push({mesh:gpuMesh(ellipsoid(.074*hs,hc[1]+.025,z-.002,.019,.009,.004)),color:[.14,.08,.06]});
+          state.face.push({mesh:gpuMesh(ellipsoid(0,hc[1]-.105,z+.006,.041,.007,.004)),color:[.50,.18,.17]});
+        }
+
+        const numericCount=Object.entries(a).filter(([key,value])=>key!=='photos'&&typeof value==='number').length;
+        document.getElementById('bodyLabel').textContent=`${Math.round(a.height)} cm · ${numericCount} mapped values`;
+        const name={silk:'Silk charmeuse',cotton:'Lightweight cotton jersey',linen:'Linen twill',wool:'Wool crepe'}[f.key]||'Custom fabric';
+        document.getElementById('fabricLabel').innerHTML=`${name}<br>${Math.round(f.weight)} g/m² · ${Math.round(f.stretch)}% stretch`;
+        document.getElementById('buildLabel').textContent=useProduction
+          ? state.acceptedBuildLabel
+          : (useDisplayAvatar?state.acceptedBuildLabel:'Editable measurement avatar · cloth pending');
+      }
+
+      function scheduleRebuild() {
+        clearTimeout(state.rebuildTimer);
+        state.rebuildTimer=setTimeout(rebuild,90);
+      }
+
+      function identity() { return new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]); }
+      function multiply(a,b) {
+        const out=new Float32Array(16);
+        for(let col=0;col<4;col++) for(let row=0;row<4;row++) {
+          let sum=0; for(let i=0;i<4;i++) sum+=a[i*4+row]*b[col*4+i]; out[col*4+row]=sum;
+        }
+        return out;
+      }
+      function perspective(fov,aspect,near,far) {
+        const f=1/Math.tan(fov/2),nf=1/(near-far);
+        return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+near)*nf,-1,0,0,2*far*near*nf,0]);
+      }
+      function lookAt(eye,target,up) {
+        let zx=eye[0]-target[0],zy=eye[1]-target[1],zz=eye[2]-target[2],l=Math.hypot(zx,zy,zz); zx/=l;zy/=l;zz/=l;
+        let xx=up[1]*zz-up[2]*zy,xy=up[2]*zx-up[0]*zz,xz=up[0]*zy-up[1]*zx; l=Math.hypot(xx,xy,xz);xx/=l;xy/=l;xz/=l;
+        const yx=zy*xz-zz*xy,yy=zz*xx-zx*xz,yz=zx*xy-zy*xx;
+        return new Float32Array([xx,yx,zx,0,xy,yy,zy,0,xz,yz,zz,0,-(xx*eye[0]+xy*eye[1]+xz*eye[2]),-(yx*eye[0]+yy*eye[1]+yz*eye[2]),-(zx*eye[0]+zy*eye[1]+zz*eye[2]),1]);
+      }
+      function rotationY(angle) { const c=Math.cos(angle),s=Math.sin(angle); return new Float32Array([c,0,-s,0,0,1,0,0,s,0,c,0,0,0,0,1]); }
+      function drawMesh(mesh,color,garment,now,mvp,model,texture=null,roughness=null,alphaCutoff=0) {
+        if(!mesh)return; gl.bindVertexArray(mesh.vao);
+        gl.uniformMatrix4fv(locations.mvp,false,mvp); gl.uniformMatrix4fv(locations.model,false,model);
+        gl.uniform3fv(locations.color,new Float32Array(color)); gl.uniform3fv(locations.light,new Float32Array([-.36,.76,.63]));
+        gl.uniform1f(locations.alpha,1); gl.uniform1f(locations.stressEnabled,state.stressMap?1:0);
+        gl.uniform1f(locations.garment,garment?1:0);gl.uniform1f(locations.photoDetail,state.avatar.photos>0?Math.min(state.avatar.photos/4,1):0);
+        gl.uniform1f(locations.roughness,roughness??(garment?(fabricRoughness[state.fabric.key]??0.86):0.72));
+        gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,texture);gl.uniform1i(locations.texture,0);
+        gl.uniform1f(locations.textureEnabled,texture?1:0);gl.uniform1f(locations.alphaCutoff,alphaCutoff);
+        gl.uniform1f(locations.textureScale,garment?(fabricTextureScale[state.fabric.key]??8):1);
+        gl.uniform1f(locations.surfaceRelief,garment&&texture?(fabricSurfaceRelief[state.fabric.key]??.48):0);
+        gl.drawElements(mesh.mode,mesh.count,gl.UNSIGNED_INT,0);
+      }
+
+      function resize() {
+        const scale=Math.min(window.devicePixelRatio||1,2),width=Math.max(1,Math.floor(canvas.clientWidth*scale)),height=Math.max(1,Math.floor(canvas.clientHeight*scale));
+        if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height;} gl.viewport(0,0,width,height);
+      }
+
+      let previous=performance.now();
+      function render(now) {
+        resize(); const delta=Math.min((now-previous)/1000,.05);previous=now;
+        if(state.autoRotate&&!state.dragging) {
+          state.yaw+=delta*.12;
+          state.targetYaw=state.yaw;
+        } else if(!state.dragging) {
+          const cameraBlend=1-Math.exp(-delta*12);
+          const turn=Math.atan2(Math.sin(state.targetYaw-state.yaw),Math.cos(state.targetYaw-state.yaw));
+          state.yaw+=turn*cameraBlend;
+          state.pitch=mix(state.pitch,state.targetPitch,cameraBlend);
+          state.distance=mix(state.distance,state.targetDistance,cameraBlend);
+        }
+        if(state.simulationActive&&state.cloth) {
+          state.simulationTime+=delta;state.simulationEnergy=Math.max(0,1-state.simulationTime/4.5);
+          stepCloth(state.cloth,state.avatar,state.fabric,delta);updateDynamicMesh(state.garment,state.cloth);
+          document.getElementById('buildLabel').textContent=clothStatusLabel(state.cloth);
+          if(state.simulationTime>7.5)state.simulationActive=false;
+        }
+        gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+        gl.clearColor(.035,.039,.050,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(program);
+        const projection=perspective(Math.PI/4.3,canvas.width/canvas.height,.1,50),eye=[0,.04+state.pitch*1.8,state.distance];
+        const view=lookAt(eye,[0,-.12,0],[0,1,0]),model=rotationY(state.yaw),mvp=multiply(multiply(projection,view),model);
+        gl.uniform3fv(locations.cameraPosition,new Float32Array(eye));
+        drawMesh(state.grid,[.22,.23,.27],false,now,mvp,model);
+        drawMesh(state.body,state.displayBodyTexture?(state.displayBodyColor||[1,1,1]):[.72,.49,.39],false,now,mvp,model,state.displayBodyTexture,.66,.01);
+        for(const feature of state.face)drawMesh(feature.mesh,feature.color,false,now,mvp,model);
+        for(const asset of state.displayMeshes)if(asset.key!=='bra')drawMesh(asset.mesh,asset.color||[1,1,1],false,now,mvp,model,asset.texture,asset.roughness,asset.alphaCutoff);
+        const bra=state.avatar.showBra?state.displayMeshes.find(asset=>asset.key==='bra'):null;
+        if(bra){
+          gl.depthMask(false);
+          gl.enable(gl.POLYGON_OFFSET_FILL);gl.polygonOffset(-1,-1);
+          drawMesh(bra.mesh,bra.color||[1,1,1],false,now,mvp,model,bra.texture,bra.roughness,bra.alphaCutoff);
+          gl.disable(gl.POLYGON_OFFSET_FILL);
+          gl.depthMask(true);
+        }
+        if(state.showGarment){
+          const clothColor=fabricColors[state.fabric.key]||fabricColors.cotton;
+          const seamColor=clothColor.map(component=>component*.62);
+          const edgeColor=clothColor.map(component=>component*.72);
+          gl.enable(gl.POLYGON_OFFSET_FILL);gl.polygonOffset(1,1);
+          drawMesh(state.garment,clothColor,true,now,mvp,model,state.garmentTexture);
+          gl.disable(gl.POLYGON_OFFSET_FILL);
+          drawMesh(state.garmentSeams,seamColor,true,now,mvp,model,null,.9);
+          drawMesh(state.garmentEdges,edgeColor,true,now,mvp,model,null,.88);
+        }
+        gl.bindVertexArray(null);requestAnimationFrame(render);
+      }
+
+      canvas.addEventListener('pointerdown',event=>{state.dragging=true;state.lastX=event.clientX;state.lastY=event.clientY;canvas.setPointerCapture(event.pointerId);});
+      canvas.addEventListener('pointermove',event=>{if(!state.dragging)return;state.yaw+=(event.clientX-state.lastX)*.009;state.pitch=clamp(state.pitch+(event.clientY-state.lastY)*.004,-.7,.7);state.targetYaw=state.yaw;state.targetPitch=state.pitch;state.lastX=event.clientX;state.lastY=event.clientY;});
+      canvas.addEventListener('pointerup',event=>{state.dragging=false;canvas.releasePointerCapture(event.pointerId);});
+      canvas.addEventListener('wheel',event=>{event.preventDefault();state.distance=clamp(state.distance+event.deltaY*.004,3.4,7.6);state.targetDistance=state.distance;},{passive:false});
+
+      function setCameraView(viewName) {
+        const views={
+          front:{yaw:180,pitch:.01,distance:5.35},
+          right:{yaw:-90,pitch:.01,distance:5.35},
+          rear:{yaw:0,pitch:.01,distance:5.35},
+          left:{yaw:90,pitch:.01,distance:5.35},
+          oblique:{yaw:145,pitch:.01,distance:5.45},
+          fit:{yaw:145,pitch:.01,distance:5.65}
+        };
+        const view=views[String(viewName).toLowerCase()];
+        if(!view)return false;
+        state.autoRotate=false;
+        state.targetYaw=view.yaw*Math.PI/180;
+        state.targetPitch=view.pitch;
+        state.targetDistance=view.distance;
+        return true;
+      }
+
+      window.patterna={
+        updateAvatar(value){state.avatar={...state.avatar,...value};refreshEditableDefaultAvatar();scheduleRebuild();},
+        updateFabric(value){state.fabric={...state.fabric,...value};scheduleRebuild();},
+        updateGarment(value){state.garmentDocument=value;scheduleRebuild();},
+        loadAcceptedRevision(bodyUrl,garmentUrl,buildLabel,revision,displayAvatarBaseUrl){return loadAcceptedRevision(bodyUrl,garmentUrl,buildLabel,revision,displayAvatarBaseUrl);},
+        loadBundledProduction(){return loadProductionAssets('bundled');},
+        clearAcceptedRevision(){clearAcceptedRevision();},
+        setPhotoCalibration(count){state.avatar.photos=count;scheduleRebuild();},
+        setStressMap(enabled){state.stressMap=enabled;document.getElementById('legend').style.opacity=enabled?'1':'.35';},
+        setAutoRotate(enabled){state.autoRotate=enabled;},
+        setGarmentVisible(enabled){state.showGarment=enabled;},
+        setCameraView(viewName){return setCameraView(viewName);},
+        setCameraYaw(degrees){state.targetYaw=Number(degrees)*Math.PI/180;state.targetPitch=.01;},
+        resetCamera(){setCameraView('fit');},
+        runSimulation(){exciteCloth(state.cloth);}
+      };
+
+      rebuild();
+      state.grid=gpuMesh(floorGrid(),gl.LINES);
+      loadDetailedHuman();
+      refreshEditableDefaultAvatar();
+      requestAnimationFrame(render);
+    })();
+  </script>
+</body>
+</html>

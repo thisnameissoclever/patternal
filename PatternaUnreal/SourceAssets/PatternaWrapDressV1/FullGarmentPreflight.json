@@ -1,0 +1,310 @@
+{
+  "schemaVersion": "patterna.full-garment-preflight/1.1",
+  "garmentId": "wrap-dress",
+  "bridgeSha256": "bca9e64780deb4570d35fa4c62e32e7118f2ec286a46188c3a88f67f220405cc",
+  "bodyProfileSha256": "42c0249562eee5d1ecc0960bec0a75a09932aa272238c9d7a8b4a895a926dd28",
+  "isAccepted": true,
+  "issues": [
+    {
+      "severity": "warning",
+      "code": "upper-neck-collision-fallback",
+      "message": "The body mesh ends near 139 cm; neckline and neck collision still require the assembled MetaHuman physics surface.",
+      "sourceId": "/Game/PatternaMeasuredV2/MH_Patterna_Female_Default/Body/SKM_MH_Patterna_Female_Default_BodyMesh.SKM_MH_Patterna_Female_Default_BodyMesh"
+    }
+  ],
+  "panels": [
+    {
+      "id": "bodice-left-wrap-panel",
+      "pieceId": "bodice-front",
+      "placement": "torsoFrontWrapLeft",
+      "vertexCount": 833,
+      "triangleCount": 1536,
+      "widthCm": 37.159696134902745,
+      "heightCm": 46.204855119890524,
+      "areaCm2": 1450.4135927717468,
+      "minimumTriangleAreaCm2": 0.04968981621834132,
+      "maximumTriangleAspectRatio": 9.647343387758937,
+      "sewingRelationshipCount": 4,
+      "hasStructuredRemesh": true
+    },
+    {
+      "id": "bodice-right-wrap-panel",
+      "pieceId": "bodice-front",
+      "placement": "torsoFrontWrapRight",
+      "vertexCount": 833,
+      "triangleCount": 1536,
+      "widthCm": 37.159696134902745,
+      "heightCm": 46.204855119890524,
+      "areaCm2": 1450.4135927717468,
+      "minimumTriangleAreaCm2": 0.04968981621834132,
+      "maximumTriangleAspectRatio": 9.647343387758937,
+      "sewingRelationshipCount": 4,
+      "hasStructuredRemesh": true
+    },
+    {
+      "id": "bodice-back-panel",
+      "pieceId": "bodice-back",
+      "placement": "torsoBack",
+      "vertexCount": 2793,
+      "triangleCount": 5376,
+      "widthCm": 49.651853739036056,
+      "heightCm": 45,
+      "areaCm2": 1970.0675875800207,
+      "minimumTriangleAreaCm2": 0.14149591829176,
+      "maximumTriangleAspectRatio": 5.137035225048899,
+      "sewingRelationshipCount": 5,
+      "hasStructuredRemesh": true
+    },
+    {
+      "id": "skirt-left-wrap-panel",
+      "pieceId": "skirt",
+      "placement": "skirtFrontWrapLeft",
+      "vertexCount": 2401,
+      "triangleCount": 4608,
+      "widthCm": 62.5,
+      "heightCm": 64.9996876301541,
+      "areaCm2": 3115.784124781384,
+      "minimumTriangleAreaCm2": 0.48196674622257274,
+      "maximumTriangleAspectRatio": 2.8560618669014053,
+      "sewingRelationshipCount": 2,
+      "hasStructuredRemesh": true
+    },
+    {
+      "id": "skirt-right-wrap-panel",
+      "pieceId": "skirt",
+      "placement": "skirtFrontWrapRight",
+      "vertexCount": 2401,
+      "triangleCount": 4608,
+      "widthCm": 62.5,
+      "heightCm": 64.9996876301541,
+      "areaCm2": 3115.784124781384,
+      "minimumTriangleAreaCm2": 0.48196674622257274,
+      "maximumTriangleAspectRatio": 2.8560618669014053,
+      "sewingRelationshipCount": 2,
+      "hasStructuredRemesh": true
+    },
+    {
+      "id": "skirt-back-panel",
+      "pieceId": "skirt-back",
+      "placement": "skirtBack",
+      "vertexCount": 2401,
+      "triangleCount": 4608,
+      "widthCm": 56,
+      "heightCm": 64.9996876301541,
+      "areaCm2": 2978.471492872426,
+      "minimumTriangleAreaCm2": 0.4800691038664022,
+      "maximumTriangleAspectRatio": 2.9393667589354555,
+      "sewingRelationshipCount": 3,
+      "hasStructuredRemesh": true
+    },
+    {
+      "id": "tie-left-panel",
+      "pieceId": "waist-tie",
+      "placement": "tieLeft",
+      "vertexCount": 657,
+      "triangleCount": 1152,
+      "widthCm": 20,
+      "heightCm": 3,
+      "areaCm2": 60,
+      "minimumTriangleAreaCm2": 0.05208333333333148,
+      "maximumTriangleAspectRatio": 2.0907407407407983,
+      "sewingRelationshipCount": 1,
+      "hasStructuredRemesh": true
+    },
+    {
+      "id": "tie-right-panel",
+      "pieceId": "waist-tie",
+      "placement": "tieRight",
+      "vertexCount": 657,
+      "triangleCount": 1152,
+      "widthCm": 20,
+      "heightCm": 3,
+      "areaCm2": 60,
+      "minimumTriangleAreaCm2": 0.05208333333333148,
+      "maximumTriangleAspectRatio": 2.0907407407407983,
+      "sewingRelationshipCount": 1,
+      "hasStructuredRemesh": true
+    }
+  ],
+  "seams": [
+    {
+      "id": "bodice-side-left",
+      "panelA": "bodice-left-wrap-panel",
+      "panelB": "bodice-back-panel",
+      "lengthACm": 25.795921978341596,
+      "lengthBCm": 27.336035813054746,
+      "lengthMismatchCm": 1.54011383471315,
+      "lengthMismatchRatio": 0.056340057689624655,
+      "correspondenceCount": 33,
+      "accepted": true
+    },
+    {
+      "id": "bodice-side-right",
+      "panelA": "bodice-right-wrap-panel",
+      "panelB": "bodice-back-panel",
+      "lengthACm": 25.795921978341596,
+      "lengthBCm": 27.66718734369098,
+      "lengthMismatchCm": 1.8712653653493838,
+      "lengthMismatchRatio": 0.06763482467892036,
+      "correspondenceCount": 33,
+      "accepted": true
+    },
+    {
+      "id": "shoulder-left",
+      "panelA": "bodice-left-wrap-panel",
+      "panelB": "bodice-back-panel",
+      "lengthACm": 10.227015045197394,
+      "lengthBCm": 10.227015045197394,
+      "lengthMismatchCm": 0,
+      "lengthMismatchRatio": 0,
+      "correspondenceCount": 2,
+      "accepted": true
+    },
+    {
+      "id": "shoulder-right",
+      "panelA": "bodice-right-wrap-panel",
+      "panelB": "bodice-back-panel",
+      "lengthACm": 10.227015045197394,
+      "lengthBCm": 10.227015045197394,
+      "lengthMismatchCm": 0,
+      "lengthMismatchRatio": 0,
+      "correspondenceCount": 2,
+      "accepted": true
+    },
+    {
+      "id": "waist-left-wrap",
+      "panelA": "bodice-left-wrap-panel",
+      "panelB": "skirt-left-wrap-panel",
+      "lengthACm": 36.120185203977776,
+      "lengthBCm": 36.54464461642894,
+      "lengthMismatchCm": 0.4244594124511636,
+      "lengthMismatchRatio": 0.011614818447580263,
+      "correspondenceCount": 50,
+      "accepted": true
+    },
+    {
+      "id": "waist-right-wrap",
+      "panelA": "bodice-right-wrap-panel",
+      "panelB": "skirt-right-wrap-panel",
+      "lengthACm": 36.120185203977776,
+      "lengthBCm": 36.54464461642894,
+      "lengthMismatchCm": 0.4244594124511636,
+      "lengthMismatchRatio": 0.011614818447580263,
+      "correspondenceCount": 50,
+      "accepted": true
+    },
+    {
+      "id": "waist-back",
+      "panelA": "bodice-back-panel",
+      "panelB": "skirt-back-panel",
+      "lengthACm": 36.5,
+      "lengthBCm": 36.54560350430368,
+      "lengthMismatchCm": 0.045603504303677767,
+      "lengthMismatchRatio": 0.0012478519967061815,
+      "correspondenceCount": 50,
+      "accepted": true
+    },
+    {
+      "id": "skirt-side-left",
+      "panelA": "skirt-left-wrap-panel",
+      "panelB": "skirt-back-panel",
+      "lengthACm": 64.5486804718574,
+      "lengthBCm": 62.80127387243033,
+      "lengthMismatchCm": 1.747406599427066,
+      "lengthMismatchRatio": 0.027071143618325685,
+      "correspondenceCount": 88,
+      "accepted": true
+    },
+    {
+      "id": "skirt-side-right",
+      "panelA": "skirt-right-wrap-panel",
+      "panelB": "skirt-back-panel",
+      "lengthACm": 64.5486804718574,
+      "lengthBCm": 62.723833618178276,
+      "lengthMismatchCm": 1.8248468536791194,
+      "lengthMismatchRatio": 0.02827086224442241,
+      "correspondenceCount": 88,
+      "accepted": true
+    },
+    {
+      "id": "tie-left-attachment",
+      "panelA": "tie-left-panel",
+      "panelB": "bodice-left-wrap-panel",
+      "lengthACm": 3,
+      "lengthBCm": 3.2142857142857153,
+      "lengthMismatchCm": 0.2142857142857153,
+      "lengthMismatchRatio": 0.06666666666666696,
+      "correspondenceCount": 2,
+      "accepted": true
+    },
+    {
+      "id": "tie-right-attachment",
+      "panelA": "tie-right-panel",
+      "panelB": "bodice-right-wrap-panel",
+      "lengthACm": 3,
+      "lengthBCm": 3.2142857142857153,
+      "lengthMismatchCm": 0.2142857142857153,
+      "lengthMismatchRatio": 0.06666666666666696,
+      "correspondenceCount": 2,
+      "accepted": true
+    }
+  ],
+  "closures": [
+    {
+      "id": "wrap-bodice-tack",
+      "kind": "tack",
+      "state": "closed",
+      "panelA": "bodice-left-wrap-panel",
+      "panelB": "bodice-right-wrap-panel",
+      "constraintCount": 1,
+      "targetDistanceCm": 0,
+      "strength": 1,
+      "accepted": true
+    },
+    {
+      "id": "wrap-skirt-waist-pin",
+      "kind": "pin",
+      "state": "closed",
+      "panelA": "skirt-left-wrap-panel",
+      "panelB": "skirt-right-wrap-panel",
+      "constraintCount": 1,
+      "targetDistanceCm": 0,
+      "strength": 1,
+      "accepted": true
+    },
+    {
+      "id": "wrap-waist-buckle",
+      "kind": "buckle",
+      "state": "closed",
+      "panelA": "tie-left-panel",
+      "panelB": "tie-right-panel",
+      "constraintCount": 1,
+      "targetDistanceCm": 0,
+      "strength": 1,
+      "accepted": true
+    }
+  ],
+  "bodyProfile": {
+    "samplingMethod": "torso-skin-weight-filtered-triangle-plane-intersection-above-109cm",
+    "sectionCount": 23,
+    "minimumHeightCm": 95,
+    "maximumHeightCm": 139,
+    "minimumIntersectionCount": 76,
+    "minimumSurfacePointCount": 31,
+    "maximumAdjacentCircumferenceChangeRatio": 0.12017835588018187,
+    "accepted": true
+  },
+  "arrangement": {
+    "panelCount": 8,
+    "stitchCount": 272,
+    "closureCount": 3,
+    "closureConstraintCount": 3,
+    "minimumTriangleAreaCm2": 0.043640345591634766,
+    "maximumSeamGapCm": 35.1235949331003,
+    "maximumClosureGapCm": 26.87929574006384,
+    "maximumEdgeStrainRatio": 0.40672669477102114,
+    "ninetyFifthPercentileEdgeStrainRatio": 0.10086028004222046,
+    "minimumTorsoClearanceCm": 1.1783406484437862,
+    "accepted": true
+  }
+}
