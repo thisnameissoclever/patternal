@@ -1,6 +1,6 @@
 # Patternal product goal and v1.0 roadmap
 
-Last reviewed: 2026-08-01
+Last reviewed: 2026-08-06
 
 ## North star
 
@@ -40,6 +40,9 @@ The product is not complete because it looks like a garment-design application. 
 ### Working and verified in the WinUI application
 
 - [x] Native Windows drafting shell with responsive pieces, canvas, viewport, and inspector regions.
+- [ ] Complete the isolated packaged UI gate in the persistent Hyper-V guest. The 2026-08-06 host audit and repository implementation establish a no-host-input workflow with recipe-built AppX identity, PowerShell Direct transfer, guest-local UI Automation, toggle and slider restoration, assembly Undo verification, six 3D camera captures, UI trees, and JSON evidence. The current 88-file guest payload builds and hash-round-trips, but no guest has been provisioned because an official Windows ISO and an elevated one-time Hyper-V bootstrap are still required. This is infrastructure readiness, not a passing packaged UI claim. Follow `docs/isolated-windows-ui-testing.md`.
+- [ ] Recheck the repaired packaged camera presets and measured-garment readout with GUI control returned. The 2026-08-02 live audit proved that Front and Rear were reversed, front-oblique aimed behind the avatar, and the readout trusted stale legacy body metadata. Source fixes and headless regressions now bind anatomical camera yaw, regenerated body identity, and chest/waist/hem readout to current geometry, but the required post-fix packaged visual pass is intentionally deferred while the user controls the desktop.
+- [ ] Recheck assembly history and display-only avatar availability in the packaged app. The live audit found that Undo restored seam direction in the model before the selected ToggleSwitch visibly refreshed, and the fitted-bra toggle gave no feedback after revision-specific display assets became stale. Source now commits assembly state again after the current WinUI input event and disables the bra toggle with an explicit matching-simulation explanation whenever the renderer has no fitted asset. Headless contracts pass; post-fix packaged interaction remains required.
 - [x] Versioned garment document shared by 2D rendering, snapshots, SVG export, and the Unreal bridge.
 - [x] Replace the rejected cropped and waistband-extended shirt blocks with a measurement-shaped production block that joins GarmentCode's mirrored source halves into one uninterrupted front torso and one uninterrupted back torso before meshing. The accepted garment has 14 panels, 34 construction seams, four sleeve panels, four sewn collar panels, and four sewn cuff panels. Promotion requires a completed collision-driven pose, static equilibrium, 0 body intersections, 0 self intersections, and all three structural-strain gates.
 - [x] Prove the complete 151-value route through the avatar-profile bridge, MPFB, prepared watertight collider, GarmentCode, three-stage Newton Style3D CUDA solve, compiler-refined render OBJ, and hash-bound promotion. Revision `0eaa4ca2109efd3540a96b516756186dbe9d5fe0eb9d021be3e5f7e66c7c7e98` reaches equilibrium in 120 frames with 20 substeps, exact seam closure, 0 body collisions, 0 self collisions, 2.817 percent 95th-percentile strain, 11.060 percent 99.9th-percentile strain, and 14.069 percent 99.99th-percentile strain.

@@ -90,6 +90,16 @@ public static class AdaptiveShirtPatternGrader
         ShirtConstructionProfileDocument? constructionProfile,
         double? highHipCircumferenceCm = null)
     {
+        GarmentBodyReferenceDocument bodyReference = new(
+            chestCm,
+            waistCm,
+            hipCm,
+            shoulderCm,
+            torsoCm,
+            armLengthCm,
+            upperArmCircumferenceCm,
+            armholeDepthCm,
+            armscyeCircumferenceCm);
         (GarmentDocument graded, AdaptiveShirtGrade grade) = Adapt(
             source,
             chestCm,
@@ -113,7 +123,11 @@ public static class AdaptiveShirtPatternGrader
         }
         if (effectiveConstruction is null)
         {
-            return (graded with { ShirtConstructionProfile = null }, grade);
+            return (graded with
+            {
+                BodyReference = bodyReference,
+                ShirtConstructionProfile = null
+            }, grade);
         }
         (GarmentDocument constructed, _) = Adapt(
             source,
@@ -127,7 +141,7 @@ public static class AdaptiveShirtPatternGrader
             easeProfile,
             effectiveConstruction,
             highHipCircumferenceCm);
-        return (constructed, grade);
+        return (constructed with { BodyReference = bodyReference }, grade);
     }
 
     public static (GarmentDocument Document, AdaptiveShirtGrade Grade) Adapt(
@@ -169,6 +183,16 @@ public static class AdaptiveShirtPatternGrader
 
         AdaptiveShirtSourceGirths sourceGeometry = MeasureGeometryGirths(source);
         GarmentBodyReferenceDocument sourceBody = SourceBodyReference(source);
+        GarmentBodyReferenceDocument bodyReference = sourceBody with
+        {
+            ChestCm = chestCm,
+            WaistCm = waistCm,
+            HipCm = hipCm,
+            ShoulderCm = shoulderCm,
+            TorsoCm = torsoCm,
+            ArmLengthCm = armLengthCm,
+            UpperArmCircumferenceCm = upperArmCircumferenceCm
+        };
         double sourceChestGirth = sourceGeometry.ChestGirthCm;
         double sourceWaistGirth = sourceGeometry.WaistGirthCm;
         double sourceHipGirth = sourceGeometry.HipGirthCm;
@@ -221,6 +245,7 @@ public static class AdaptiveShirtPatternGrader
         {
             return (source with
             {
+                BodyReference = bodyReference,
                 EaseProfile = easeProfile,
                 ShirtConstructionProfile = constructionProfile
             }, grade);
@@ -386,6 +411,7 @@ public static class AdaptiveShirtPatternGrader
         }
         GarmentDocument graded = gradingSource with
         {
+            BodyReference = bodyReference,
             Pieces = pieces,
             EaseProfile = easeProfile,
             ShirtConstructionProfile = constructionProfile

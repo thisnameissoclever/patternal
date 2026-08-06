@@ -2434,7 +2434,7 @@ public sealed partial class MainPage : Page
         UpdatePatternHistoryButtons();
         RenderPattern();
         UpdatePatternPointInspector();
-        UpdateAssemblyInspector();
+        RefreshAssemblyInspectorAfterHistoryChange();
         _ = UpdateDrapeViewportAsync();
         ShowStatus("Pattern edit undone", "The previous pattern geometry state was restored.", InfoBarSeverity.Informational);
     }
@@ -2451,9 +2451,18 @@ public sealed partial class MainPage : Page
         UpdatePatternHistoryButtons();
         RenderPattern();
         UpdatePatternPointInspector();
-        UpdateAssemblyInspector();
+        RefreshAssemblyInspectorAfterHistoryChange();
         _ = UpdateDrapeViewportAsync();
         ShowStatus("Pattern edit redone", "The next pattern geometry state was restored.", InfoBarSeverity.Informational);
+    }
+
+    private void RefreshAssemblyInspectorAfterHistoryChange()
+    {
+        UpdateAssemblyInspector();
+        if (EditAssemblyButton.IsChecked == true)
+        {
+            DispatcherQueue.TryEnqueue(() => UpdateAssemblyInspector(false));
+        }
     }
 
     private void DrawDimension(double left, double top, double length, string text)
@@ -2819,12 +2828,12 @@ public sealed partial class MainPage : Page
         }
         try
         {
-            AdaptiveShirtSourceGirths girths = AdaptiveShirtPatternGrader.MeasureSourceGirths(_garmentDocument);
+            AdaptiveShirtSourceGirths girths = AdaptiveShirtPatternGrader.MeasureGeometryGirths(_garmentDocument);
             ShirtConstructionProfileDocument construction =
                 _garmentDocument.ShirtConstructionProfile ??
                 ShirtConstructionPatternDrafter.Measure(_garmentDocument);
             GarmentEaseResultText.Text =
-                $"Draft targets: chest {girths.ChestGirthCm:0.0} cm · waist {girths.WaistGirthCm:0.0} cm · hip {girths.HipGirthCm:0.0} cm";
+                $"Measured garment: chest {girths.ChestGirthCm:0.0} cm · waist {girths.WaistGirthCm:0.0} cm · hem {girths.HipGirthCm:0.0} cm";
             ShirtConstructionResultText.Text =
                 $"Neck {construction.NecklineWidthCm:0.0} × {construction.FrontNeckDepthCm:0.0} cm · shoulder {construction.ShoulderLengthCm:0.0}/{construction.ShoulderDropCm:0.0} cm · armscye {construction.ArmscyeDepthCm:0.0} cm depth, {construction.ArmscyeScoopCm:+0.0;-0.0;0.0} cm shape, {construction.UnderarmExtensionCm:0.00} cm junction extension";
             ShirtBustShapingProfileDocument bustShaping = CurrentShirtBustShapingProfile();
@@ -3358,8 +3367,20 @@ public sealed partial class MainPage : Page
         {
             using JsonDocument message = JsonDocument.Parse(e.WebMessageAsJson);
             JsonElement root = message.RootElement;
-            if (!root.TryGetProperty("type", out JsonElement type) ||
-                !string.Equals(type.GetString(), "asset-load", StringComparison.Ordinal) ||
+            if (!root.TryGetProperty("type", out JsonElement type))
+            {
+                return;
+            }
+
+            if (string.Equals(type.GetString(), "bra-availability", StringComparison.Ordinal))
+            {
+                bool available = root.TryGetProperty("available", out JsonElement availableElement) &&
+                    availableElement.ValueKind == JsonValueKind.True;
+                SetBraDisplayAvailability(available);
+                return;
+            }
+
+            if (!string.Equals(type.GetString(), "asset-load", StringComparison.Ordinal) ||
                 !root.TryGetProperty("revision", out JsonElement revisionElement) ||
                 !string.Equals(revisionElement.GetString(), _pendingViewportAssetRevision, StringComparison.Ordinal))
             {
@@ -3378,6 +3399,19 @@ public sealed partial class MainPage : Page
         {
             // Ignore unrelated or malformed renderer messages.
         }
+    }
+
+    private void SetBraDisplayAvailability(bool available)
+    {
+        ShowBraToggle.IsEnabled = available;
+        BraAvailabilityText.Text = available
+            ? "Display only. The supported bust shape and cloth collision body stay identical when this is off."
+            : "No fitted bra asset matches this edited avatar. Run Simulate to generate the matching presentation; body and collision shape remain unchanged.";
+        AutomationProperties.SetHelpText(
+            ShowBraToggle,
+            available
+                ? "Shows or hides the fitted bra without changing the supported body or collision shape"
+                : "Unavailable until Simulate generates a fitted presentation asset for the current avatar");
     }
 
     private async Task<bool> ExecuteDrapeScriptAsync(string script)

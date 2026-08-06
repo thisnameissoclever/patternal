@@ -2160,3 +2160,93 @@ Every default regression path must be self-contained in tracked source. Generate
 ### How to verify
 
 Clone the repository recursively into an empty directory, restore and build all projects, and run every regression without supplying local paths. Require the tests to pass while `git status --short` remains empty.
+
+## Regenerated geometry must carry regenerated body-reference metadata
+
+### What happened
+
+The adaptive shirt visibly changed when body sliders moved, but the garment-ease inspector continued reporting the legacy 98/77/107 cm targets. The generated geometry was correctly calibrated to the current body plus ease, while the document still described the legacy 92/71/99 cm source body.
+
+### Root cause
+
+The grader replaced pattern geometry and ease metadata but inherited `BodyReference` from its source document. Readout code correctly trusted the document contract, so stale metadata turned an otherwise correct grade into a misleading product result.
+
+### Prevention rule
+
+Any operation that regenerates measurement-dependent geometry must update the matching body-reference metadata in the same returned document. Use that metadata for source identity and future grading, but measure the finished pattern geometry for the user-visible garment readout. A shirt hem at the high hip is not the same station as the body's full hip.
+
+### How to verify
+
+Grade the production shirt for the 112/82/108 cm body with 6/6/8 cm ease. Require every stored body-reference field to equal the inputs used by the grader. Require the garment inspector to report measurements taken from the resulting chest, waist, and physical hem geometry, including when the hem ends at the high hip.
+
+## Camera labels must be proven against anatomical landmarks
+
+### What happened
+
+The packaged 3D viewport's Front button showed the avatar's back, Rear showed the face and chest, and the front-oblique preset aimed at the rear quarter.
+
+### Root cause
+
+The semantic labels were tested only as strings passed from XAML into JavaScript. No regression asserted the yaw convention against visible anatomy, so internally consistent but reversed angles survived.
+
+### Prevention rule
+
+Bind every named camera preset to one documented anatomical direction. A control label and a renderer method with the same string do not prove that the resulting view is correct.
+
+### How to verify
+
+Require Front to resolve to 0 degrees, Rear to 180 degrees, and front oblique to 35 degrees in the renderer's established coordinate system. In the packaged app, confirm that Front shows the face and chest, Rear shows the back, and Oblique shows the face-side front quarter.
+
+## A display toggle must expose whether its visual asset exists
+
+### What happened
+
+Changing body measurements correctly invalidated the accepted display-avatar stack. The renderer removed the fitted bra mesh with that stale stack, but WinUI left `Show fitted support bra` enabled. The switch changed preference state while producing no visible result or explanation.
+
+### Root cause
+
+Asset availability existed only inside the embedded renderer. The native inspector sent display preferences into WebView2 but received no capability state in return.
+
+### Prevention rule
+
+Treat optional presentation assets as explicit capabilities. When the renderer applies or clears an avatar stack, report whether each user-facing asset exists. Disable unavailable controls, preserve the user's stored preference, and explain the exact action that can make the capability available again.
+
+### How to verify
+
+Load an avatar manifest containing the fitted bra and require the native toggle to enable. Change a body measurement so the accepted display stack becomes stale and require the toggle to disable with a matching-simulation explanation. Restore or simulate a matching avatar and require the toggle to re-enable without changing body or collision identity.
+
+## History restoration must win after control event animations
+
+### What happened
+
+Undo restored a seam-direction override in the garment model, while the selected WinUI ToggleSwitch continued displaying its just-clicked state until assembly mode was refreshed.
+
+### Root cause
+
+The inspector synchronized during the Undo handler, inside the same input cycle in which ToggleSwitch was completing its visual state transition. The model was correct, but the control animation committed after the synchronous refresh.
+
+### Prevention rule
+
+Refresh model-backed controls synchronously for data correctness, then queue one non-recording inspector refresh after history operations when a WinUI control can still be completing the originating event. The deferred refresh must only read restored model state and must not create another undo entry.
+
+### How to verify
+
+In assembly mode, reverse a seam, press Undo, wait for the input event and animation to settle, and require the selected ToggleSwitch to show the restored direction. Press Redo and require the inverse. Confirm that the undo and redo stack depths do not change during either deferred inspector refresh.
+
+## A content staging target is not a complete AppX staging target
+
+### What happened
+
+The isolated guest packager initially invoked `_WinAppCopyContentToLooseLayout` after a clean build, then compared `Patternal.dll` in the normal output and the `AppX` directory. The command returned success while the AppX DLL remained stale.
+
+### Root cause
+
+`Microsoft.Windows.SDK.BuildTools.WinApp.targets` defines `_WinAppCopyContentToLooseLayout` to copy `ContentWithTargetPath` and selected `None` items. It does not copy the current executable, application DLL, framework binaries, manifest, or complete package payload. The WinApp launch flow performs additional staging through its generated package recipe, so invoking the content target alone cannot create a fresh standalone layout.
+
+### Prevention rule
+
+Treat `Patternal.build.appxrecipe` as the authoritative file-to-package mapping for isolated deployment. Materialize a new empty layout from every `AppXManifest` and `AppxPackagedFile` entry, refuse missing sources or conflicting package paths, and compute the payload identity from that clean layout. Do not weaken stale-binary checks because a narrowly named MSBuild target happened to exit zero.
+
+### How to verify
+
+Run `.\tools\isolated-ui\Sync-PatternalGuestPayload.ps1 -PrepareOnly`. It must build successfully, materialize every current recipe entry, prove that `Patternal.dll`, `resources.pri`, `avatar3d.html`, the accepted garment OBJ, and the fabric texture match current output byte-for-byte, then produce a ZIP whose recomputed entry identity equals `payload-manifest.json`.

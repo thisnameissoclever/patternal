@@ -1,0 +1,96 @@
+[CmdletBinding()]
+param(
+    [ValidatePattern('^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$')]
+    [string]$VmName = 'Patternal-UI',
+    [ValidateRange(60, 1800)]
+    [int]$TimeoutSeconds = 600,
+    [switch]$KeepAppOpen
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+Import-Module (Join-Path $PSScriptRoot 'Patternal.IsolatedUi.psm1') -Force
+$repositoryRoot = Get-PatternalRepositoryRoot
+$vm = Assert-PatternalHyperVAccess -VmName $VmName
+if ($vm.State -ne 'Running') {
+    Start-VM -Name $VmName | Out-Null
+}
+
+$runId = [DateTimeOffset]::UtcNow.ToString('yyyyMMdd-HHmmss') + '-' + [Guid]::NewGuid().ToString('N').Substring(0, 8)
+$guestRequestPath = 'C:\PatternalTest\run-request.json'
+$guestEvidenceRoot = 'C:\PatternalTest\Evidence'
+$localEvidenceParent = Join-Path $repositoryRoot 'artifacts\isolated-ui\runs'
+$localRequestPath = Join-Path $env:TEMP "Patternal-$runId-request.json"
+$localEvidencePath = Join-Path $localEvidenceParent $runId
+
+$request = [ordered]@{
+    schema = 'patternal.isolated-ui-request/1.0'
+    runId = $runId
+    aumid = 'C513E361-86E8-4FBD-9FF7-FABA0EAFA8FE_1z32rh13vfry6!App'
+    expectedWindowTitle = 'Patternal'
+    evidenceRoot = $guestEvidenceRoot
+    keepAppOpen = $KeepAppOpen.IsPresent
+    requestedAtUtc = [DateTimeOffset]::UtcNow.ToString('O')
+}
+$request | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $localRequestPath -Encoding utf8
+
+$credential = Get-PatternalGuestCredential -VmName $VmName
+$session = New-PatternalVmSession -VmName $VmName -Credential $credential
+try {
+    Copy-Item -ToSession $session -LiteralPath $localRequestPath -Destination $guestRequestPath
+    Invoke-Command -Session $session -ScriptBlock {
+        $task = Get-ScheduledTask -TaskName 'Patternal Guest UI Smoke' -ErrorAction Stop
+        if ($task.State -eq 'Running') {
+            throw 'The guest UI smoke task is already running.'
+        }
+        Start-ScheduledTask -TaskName 'Patternal Guest UI Smoke'
+    }
+
+    $deadline = [DateTimeOffset]::UtcNow.AddSeconds($TimeoutSeconds)
+    $guestResultPath = "$guestEvidenceRoot\$runId\result.json"
+    do {
+        $complete = Invoke-Command -Session $session -ScriptBlock {
+            param($Path)
+            Test-Path -LiteralPath $Path
+        } -ArgumentList $guestResultPath
+        if ($complete) {
+            break
+        }
+        Start-Sleep -Seconds 5
+    } while ([DateTimeOffset]::UtcNow -lt $deadline)
+
+    if (-not $complete) {
+        throw "Guest UI smoke test did not finish within $TimeoutSeconds seconds."
+    }
+
+    New-Item -ItemType Directory -Path $localEvidenceParent -Force | Out-Null
+    if (Test-Path -LiteralPath $localEvidencePath) {
+        throw "Refusing to overwrite evidence directory: $localEvidencePath"
+    }
+    Copy-Item -FromSession $session -Path "$guestEvidenceRoot\$runId" -Destination $localEvidenceParent -Recurse
+}
+finally {
+    Remove-PSSession -Session $session
+    if (Test-Path -LiteralPath $localRequestPath) {
+        Remove-Item -LiteralPath $localRequestPath -Force
+    }
+}
+
+$resultPath = Join-Path $localEvidencePath 'result.json'
+$result = Get-Content -LiteralPath $resultPath -Raw | ConvertFrom-Json
+if (-not $result.passed) {
+    throw "Guest UI smoke test failed. Evidence is preserved at $localEvidencePath"
+}
+
+[pscustomobject]@{
+    VmName = $VmName
+    RunId = $runId
+    Passed = $result.passed
+    ActionCount = @($result.actions).Count
+    ScreenshotCount = @($result.screenshots).Count
+    EvidencePath = $localEvidencePath
+    ResultPath = $resultPath
+    HostInputInjected = $false
+    VmConnectLaunched = $false
+}

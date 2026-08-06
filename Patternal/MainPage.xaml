@@ -1264,12 +1264,14 @@
                             AutomationProperties.HelpText="Shows or hides the fitted bra without changing the supported body or collision shape"
                             AutomationProperties.Name="Show fitted bra"
                             Header="Show fitted support bra"
+                            IsEnabled="False"
                             IsOn="False"
                             Toggled="OnAvatarDisplayOptionToggled" />
 
                         <TextBlock
+                            x:Name="BraAvailabilityText"
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                            Text="Display only. The supported bust shape and cloth collision body stay identical when this is off."
+                            Text="Loading the fitted presentation asset. The supported bust shape and cloth collision body stay identical."
                             TextWrapping="Wrap" />
 
                         <TextBlock

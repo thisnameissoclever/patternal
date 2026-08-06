@@ -937,6 +937,11 @@ Assert(
         mainPageXaml.Contains("x:Name=\"HipEaseNumberBox\"", StringComparison.Ordinal) &&
         mainPageXaml.Contains("Value=\"8\"", StringComparison.Ordinal),
     "The WinUI defaults no longer match the production source's authored hip ease.");
+Assert(
+    mainPageCode.Contains("AdaptiveShirtPatternGrader.MeasureGeometryGirths(_garmentDocument)", StringComparison.Ordinal) &&
+        mainPageCode.Contains("Measured garment: chest", StringComparison.Ordinal) &&
+        mainPageCode.Contains("cm · hem", StringComparison.Ordinal),
+    "The garment inspector no longer reports measurements from the current drafted geometry.");
 int bustModeControlIndex = mainPageXaml.IndexOf(
     "x:Name=\"BustShapingModeComboBox\"",
     StringComparison.Ordinal);
@@ -960,6 +965,11 @@ Assert(mainPageCode.Contains("Convert.ToString(button.Tag", StringComparison.Ord
 Assert(viewportSource.Contains("uniform float uRoughness", StringComparison.Ordinal), "The packaged renderer lost material roughness control.");
 Assert(viewportSource.Contains("fabricRoughness", StringComparison.Ordinal), "The packaged renderer lost fabric-specific surface response.");
 Assert(viewportSource.Contains("setCameraView(viewName)", StringComparison.Ordinal), "The renderer lost its semantic camera-view API.");
+Assert(
+    viewportSource.Contains("front:{yaw:0,pitch:.01,distance:5.35}", StringComparison.Ordinal) &&
+        viewportSource.Contains("rear:{yaw:180,pitch:.01,distance:5.35}", StringComparison.Ordinal) &&
+        viewportSource.Contains("oblique:{yaw:35,pitch:.01,distance:5.45}", StringComparison.Ordinal),
+    "The packaged camera presets no longer map front, rear, and front-oblique labels to anatomical views.");
 Assert(viewportSource.Contains("resetCamera(){setCameraView('fit');}", StringComparison.Ordinal), "Fit view no longer returns to the accepted full-body presentation.");
 Assert(viewportSource.Contains("uniform vec3 uCameraPosition", StringComparison.Ordinal), "Material lighting is no longer derived from the live inspection camera.");
 Assert(
@@ -979,6 +989,7 @@ Assert(
 Assert(viewportSource.Contains("loadDisplayAvatar", StringComparison.Ordinal) && viewportSource.Contains("Production/Avatar/", StringComparison.Ordinal), "The packaged renderer no longer loads the real display-avatar stack.");
 Assert(
     mainPageXaml.Contains("x:Name=\"ShowBraToggle\"", StringComparison.Ordinal) &&
+        mainPageXaml.Contains("x:Name=\"BraAvailabilityText\"", StringComparison.Ordinal) &&
         mainPageXaml.Contains("Header=\"Show fitted support bra\"", StringComparison.Ordinal) &&
         mainPageXaml.Contains("without changing the supported body or collision shape", StringComparison.Ordinal) &&
         mainPageXaml.Contains("The supported bust shape and cloth collision body stay identical", StringComparison.Ordinal) &&
@@ -986,11 +997,19 @@ Assert(
         mainPageCode.Contains("settings.Values[\"ShowFittedBra\"] = ShowBraToggle.IsOn", StringComparison.Ordinal) &&
         mainPageCode.Contains("settings.Values[\"ShowFittedBra\"] is not bool showFittedBra || showFittedBra", StringComparison.Ordinal) &&
         mainPageCode.Contains("window.patterna.updateAvatar({{showBra:", StringComparison.Ordinal) &&
+        mainPageCode.Contains("SetBraDisplayAvailability(available)", StringComparison.Ordinal) &&
+        mainPageCode.Contains("No fitted bra asset matches this edited avatar", StringComparison.Ordinal) &&
+        viewportSource.Contains("{type:'bra-availability',available}", StringComparison.Ordinal) &&
+        viewportSource.Contains("state.productionDisplayAssets.some(asset=>asset.key==='bra')", StringComparison.Ordinal) &&
         viewportSource.Contains("state.avatar.showBra?state.displayMeshes.find(asset=>asset.key==='bra')", StringComparison.Ordinal) &&
         viewportSource.Contains("gl.polygonOffset(-1,-1)", StringComparison.Ordinal) &&
         viewportSource.Contains("gl.depthMask(false)", StringComparison.Ordinal) &&
         viewportSource.Contains("gl.depthMask(true)", StringComparison.Ordinal),
     "The fitted bra is no longer a display-only user option over the unchanged supported body.");
+Assert(
+    mainPageCode.Contains("RefreshAssemblyInspectorAfterHistoryChange();", StringComparison.Ordinal) &&
+        mainPageCode.Contains("DispatcherQueue.TryEnqueue(() => UpdateAssemblyInspector(false));", StringComparison.Ordinal),
+    "Undo and redo no longer commit the restored assembly-toggle state after WinUI finishes the current input event.");
 Assert(
     mainPageCode.Contains("await LoadBundledSimulationFitEvidenceAsync();", StringComparison.Ordinal) &&
         mainPageCode.Contains("Assets/Production/patterna-production-crew-neck.fit.json", StringComparison.Ordinal),
@@ -1194,6 +1213,27 @@ Assert(
         Math.Abs(defaultFullBustGirths.HipGirthCm - 116) < 0.2,
     $"The default full-bust grade missed body-plus-ease targets: " +
     $"{defaultFullBustGirths.ChestGirthCm:F2}/{defaultFullBustGirths.WaistGirthCm:F2}/{defaultFullBustGirths.HipGirthCm:F2} cm.");
+Assert(
+    defaultFullBustShirt.BodyReference is
+    {
+        ChestCm: 112,
+        WaistCm: 82,
+        HipCm: 108,
+        ShoulderCm: 37,
+        TorsoCm: 44,
+        ArmLengthCm: 57.3,
+        UpperArmCircumferenceCm: 26,
+        ArmholeDepthCm: 21.8,
+        ArmscyeCircumferenceCm: 45.5
+    },
+    "The graded shirt retained stale source-body metadata instead of the measurements that generated its geometry.");
+AdaptiveShirtSourceGirths defaultFullBustReportedTargets =
+    AdaptiveShirtPatternGrader.MeasureSourceGirths(defaultFullBustShirt);
+Assert(
+    Math.Abs(defaultFullBustReportedTargets.ChestGirthCm - 118) < 0.001 &&
+        Math.Abs(defaultFullBustReportedTargets.WaistGirthCm - 88) < 0.001 &&
+        Math.Abs(defaultFullBustReportedTargets.HipGirthCm - 116) < 0.001,
+    "The graded shirt reports stale body-plus-ease targets even though its geometry was regenerated.");
 Assert(
     defaultFullBustChestLine is > 0.56 and < 0.64,
     $"The full-bust grade calibrated chest ease at {defaultFullBustChestLine:P1} of panel height instead of the armscye-derived bust line.");

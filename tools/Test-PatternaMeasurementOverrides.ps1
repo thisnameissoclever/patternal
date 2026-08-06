@@ -4,7 +4,7 @@ param()
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$mainPagePath = Join-Path $PSScriptRoot '..\Patterna\MainPage.xaml.cs'
+$mainPagePath = Join-Path $PSScriptRoot '..\Patternal\MainPage.xaml.cs'
 $source = Get-Content -Raw -LiteralPath $mainPagePath
 $classMatch = [regex]::Match(
     $source,

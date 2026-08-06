@@ -61,6 +61,8 @@ dotnet run --project .\Patternal\Patternal.csproj -p:Platform=x64 --no-build
 
 The project uses the packaged WinUI 3 model and the package-aware `dotnet run` support included by the Microsoft template.
 
+Automated packaged UI interaction must use the isolated Hyper-V guest workflow in [`docs/isolated-windows-ui-testing.md`](docs/isolated-windows-ui-testing.md). The host builds and transfers the AppX payload through PowerShell Direct; all UI Automation and screenshots originate inside the guest so the user's host input and focus remain untouched.
+
 For visual verification, do not launch `Patternal.exe` directly from the output folder. The registered debug AppX is a separate loose-layout payload. `dotnet run` invokes the WinApp staging target before activation. If a verification tool activates the existing AUMID directly, restage content first with:
 
 ```powershell
