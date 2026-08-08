@@ -123,6 +123,66 @@ function Find-UiElement {
     }
 }
 
+function Find-UiElementByAutomationIdOnce {
+    param(
+        [Parameter(Mandatory)]
+        [System.Windows.Automation.AutomationElement]$Root,
+        [Parameter(Mandatory)]
+        [string]$AutomationId
+    )
+
+    $walker = [System.Windows.Automation.TreeWalker]::ControlViewWalker
+    $pending = [System.Collections.Generic.Queue[System.Windows.Automation.AutomationElement]]::new()
+    $pending.Enqueue($Root)
+    $visited = 0
+
+    while ($pending.Count -gt 0 -and $visited -lt 2500) {
+        $parent = $pending.Dequeue()
+        $visited++
+        try {
+            $child = $walker.GetFirstChild($parent)
+        }
+        catch {
+            continue
+        }
+
+        while ($child -and $visited -lt 2500) {
+            try {
+                if ($child.Current.AutomationId -eq $AutomationId) {
+                    return $child
+                }
+                $pending.Enqueue($child)
+            }
+            catch {
+            }
+
+            try {
+                $child = $walker.GetNextSibling($child)
+            }
+            catch {
+                $child = $null
+            }
+        }
+    }
+
+    return $null
+}
+
+function Find-UiElementByAutomationId {
+    param(
+        [Parameter(Mandatory)]
+        [System.Windows.Automation.AutomationElement]$Root,
+        [Parameter(Mandatory)]
+        [string]$AutomationId,
+        [ValidateRange(1, 180)]
+        [int]$TimeoutSeconds = 20
+    )
+
+    return Wait-ForCondition -Description "UI element with automation ID '$AutomationId'" -TimeoutSeconds $TimeoutSeconds -Condition {
+        Find-UiElementByAutomationIdOnce -Root $Root -AutomationId $AutomationId
+    }
+}
+
 function Get-UiPattern {
     param(
         [Parameter(Mandatory)]
@@ -237,21 +297,23 @@ function Save-WindowScreenshot {
     )
 
     $rect = $Window.Current.BoundingRectangle
-    $width = [math]::Floor($rect.Width)
-    $height = [math]::Floor($rect.Height)
+    $left = [int][math]::Floor($rect.Left)
+    $top = [int][math]::Floor($rect.Top)
+    $width = [int][math]::Floor($rect.Width)
+    $height = [int][math]::Floor($rect.Height)
     if ($width -lt 100 -or $height -lt 100) {
-        throw "Window bounds are invalid: $width x $height."
+        throw "Window bounds are invalid: left $left, top $top, width $width, height $height."
     }
 
-    $bitmap = [System.Drawing.Bitmap]::new($width, $height)
+    $bitmap = [System.Drawing.Bitmap]::new([int]$width, [int]$height)
     $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
     try {
         $graphics.CopyFromScreen(
-            [math]::Floor($rect.Left),
-            [math]::Floor($rect.Top),
+            [int]$left,
+            [int]$top,
             0,
             0,
-            [System.Drawing.Size]::new($width, $height),
+            [System.Drawing.Size]::new([int]$width, [int]$height),
             [System.Drawing.CopyPixelOperation]::SourceCopy)
         $bitmap.Save($Path, [System.Drawing.Imaging.ImageFormat]::Png)
     }
@@ -339,6 +401,147 @@ function Invoke-UiCheck {
     }
 }
 
+function Get-FailureDiagnostics {
+    param(
+        [System.Diagnostics.Process]$Process,
+        [Parameter(Mandatory)]
+        [DateTimeOffset]$StartedAt
+    )
+
+    $processState = $null
+    if ($Process) {
+        try {
+            $Process.Refresh()
+            $processState = [ordered]@{
+                id = $Process.Id
+                hasExited = $Process.HasExited
+                responding = if ($Process.HasExited) { $false } else { $Process.Responding }
+                mainWindowHandle = if ($Process.HasExited) { 0 } else { $Process.MainWindowHandle.ToInt64() }
+                mainWindowTitle = if ($Process.HasExited) { $null } else { $Process.MainWindowTitle }
+            }
+        }
+        catch {
+            $processState = [ordered]@{ error = $_.Exception.Message }
+        }
+    }
+
+    $events = [System.Collections.Generic.List[object]]::new()
+    foreach ($logName in @(
+        'Application',
+        'Microsoft-Windows-AppModel-Runtime/Admin',
+        'Microsoft-Windows-TWinUI/Operational'
+    )) {
+        try {
+            $matchingEvents = Get-WinEvent -FilterHashtable @{
+                LogName = $logName
+                StartTime = $StartedAt.UtcDateTime
+            } -ErrorAction Stop | Where-Object {
+                $_.Level -le 3 -or
+                $_.ProviderName -in @('.NET Runtime', 'Application Error', 'Windows Error Reporting') -or
+                $_.Message -match 'Patternal|C513E361-86E8-4FBD-9FF7-FABA0EAFA8FE'
+            } | Select-Object -First 30
+            foreach ($eventRecord in $matchingEvents) {
+                $message = [string]$eventRecord.Message
+                if ($message.Length -gt 2000) {
+                    $message = $message.Substring(0, 2000) + ' [truncated]'
+                }
+                $events.Add([ordered]@{
+                    timeCreatedUtc = if ($eventRecord.TimeCreated) { $eventRecord.TimeCreated.ToUniversalTime().ToString('O') } else { $null }
+                    logName = $logName
+                    provider = $eventRecord.ProviderName
+                    id = $eventRecord.Id
+                    level = $eventRecord.LevelDisplayName
+                    message = $message
+                })
+            }
+        }
+        catch {
+            $events.Add([ordered]@{
+                logName = $logName
+                queryError = $_.Exception.Message
+            })
+        }
+    }
+
+    return [ordered]@{
+        process = $processState
+        events = @($events)
+    }
+}
+
+function Invoke-ThreeDimensionalChecks {
+    param(
+        [Parameter(Mandatory)]
+        [System.Windows.Automation.AutomationElement]$Window,
+        [Parameter(Mandatory)]
+        [string]$EvidenceDirectory
+    )
+
+    $tab3d = Find-UiElement -Root $Window -Name '3D DRAPE'
+    Invoke-UiElement -Element $tab3d
+    Find-UiElementByAutomationId -Root $Window -AutomationId 'DrapeFrontCameraButton' -TimeoutSeconds 120 | Out-Null
+    Start-Sleep -Seconds 3
+
+    $drapeState = Wait-ForCondition -Description 'truthful accepted or stale 3D state' -TimeoutSeconds 120 -Condition {
+        $stale = Find-UiElementByAutomationIdOnce -Root $Window -AutomationId 'DrapeStaleSimulationState'
+        if ($stale) {
+            return [pscustomobject]@{ stale = $true; element = $stale }
+        }
+        $accepted = Find-UiElementByAutomationIdOnce -Root $Window -AutomationId 'DrapeAcceptedSimulationState'
+        if ($accepted) {
+            return [pscustomobject]@{ stale = $false; element = $accepted }
+        }
+        return $null
+    }
+    $staleNotice = if ($drapeState.stale) { $drapeState.element } else { $null }
+    $evidencePrefix = if ($staleNotice) { '3d-stale-avatar' } else { '3d-cloth' }
+
+    $cameraViews = @(
+        [pscustomobject]@{ name = 'front'; control = 'Show front cloth view'; automationId = 'DrapeFrontCameraButton' },
+        [pscustomobject]@{ name = 'right'; control = 'Show right side cloth view'; automationId = 'DrapeRightCameraButton' },
+        [pscustomobject]@{ name = 'rear'; control = 'Show rear cloth view'; automationId = 'DrapeRearCameraButton' },
+        [pscustomobject]@{ name = 'left'; control = 'Show left side cloth view'; automationId = 'DrapeLeftCameraButton' },
+        [pscustomobject]@{ name = 'oblique'; control = 'Show front oblique cloth view'; automationId = 'DrapeObliqueCameraButton' },
+        [pscustomobject]@{ name = 'fit'; control = 'Reset three dimensional camera'; automationId = 'DrapeFitCameraButton' }
+    )
+    $script:shotIndex = 2
+    foreach ($view in $cameraViews) {
+        Invoke-UiCheck -Name "3D camera: $($view.name)" -Check {
+            $camera = Find-UiElementByAutomationId -Root $Window -AutomationId $view.automationId
+            if (-not $camera.Current.IsEnabled) {
+                throw "Camera control '$($view.control)' is disabled."
+            }
+            Invoke-UiElement -Element $camera
+            Start-Sleep -Milliseconds 1200
+            $shotPath = Join-Path $EvidenceDirectory ('{0:D2}-{1}-{2}.png' -f $script:shotIndex, $evidencePrefix, $view.name)
+            Save-WindowScreenshot -Window $Window -Path $shotPath
+            $script:screenshots.Add([pscustomobject]@{ name = "3d-$($view.name)"; file = [IO.Path]::GetFileName($shotPath) })
+            $script:shotIndex++
+            [ordered]@{ invoked = $view.control; screenshot = [IO.Path]::GetFileName($shotPath) }
+        }
+    }
+
+    $script:uiTreeNodeCount = 0
+    Convert-UiTreeNode -Element $Window | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath (Join-Path $EvidenceDirectory 'ui-tree-3d.json') -Encoding utf8
+
+    $tab2d = Find-UiElement -Root $Window -Name '2D FLAT'
+    Invoke-UiElement -Element $tab2d
+    Find-UiElement -Root $Window -Name 'Interactive two dimensional pattern layout' | Out-Null
+    Add-ActionResult -Name 'Return to 2D workspace' -Passed $true -Details ([ordered]@{ selected = '2D FLAT' }) -ErrorMessage $null
+    if ($staleNotice) {
+        Add-ActionResult -Name 'Current accepted cloth is available' -Passed $false -Details ([ordered]@{
+            staleNotice = $staleNotice.Current.Name
+            cameraInterfaceExercised = $true
+        }) -ErrorMessage 'The packaged baseline has no accepted cloth for its current pattern, body, assembly, and fabric revision.'
+    }
+    else {
+        Add-ActionResult -Name 'Current accepted cloth is available' -Passed $true -Details ([ordered]@{
+            cameraInterfaceExercised = $true
+            capturedViews = $cameraViews.Count
+        }) -ErrorMessage $null
+    }
+}
+
 if (-not (Test-Path -LiteralPath $RequestPath)) {
     throw "UI request does not exist: $RequestPath"
 }
@@ -361,6 +564,9 @@ $startedAt = [DateTimeOffset]::UtcNow
 $window = $null
 $process = $null
 $fatalError = $null
+$fatalErrorType = $null
+$fatalScriptStackTrace = $null
+$failureDiagnostics = $null
 
 try {
     [void][PatternalDisplayMode]::TrySet(1920, 1080)
@@ -394,6 +600,8 @@ try {
 
     $script:uiTreeNodeCount = 0
     Convert-UiTreeNode -Element $window | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath (Join-Path $evidenceDirectory 'ui-tree-2d.json') -Encoding utf8
+
+    Invoke-ThreeDimensionalChecks -Window $window -EvidenceDirectory $evidenceDirectory
 
     foreach ($toggleName in @(
         'Show pattern pieces panel',
@@ -468,54 +676,24 @@ try {
         [ordered]@{ original = $originalReverse; changed = $changedReverse; restoredAfterUndo = $originalReverse }
     }
 
-    $tab3d = Find-UiElement -Root $window -Name '3D DRAPE'
-    Invoke-UiElement -Element $tab3d
-    Find-UiElement -Root $window -Name 'Show front cloth view' -TimeoutSeconds 60 | Out-Null
-    Start-Sleep -Seconds 3
-
-    $cameraViews = @(
-        [pscustomobject]@{ name = 'front'; control = 'Show front cloth view' },
-        [pscustomobject]@{ name = 'right'; control = 'Show right side cloth view' },
-        [pscustomobject]@{ name = 'rear'; control = 'Show rear cloth view' },
-        [pscustomobject]@{ name = 'left'; control = 'Show left side cloth view' },
-        [pscustomobject]@{ name = 'oblique'; control = 'Show front oblique cloth view' },
-        [pscustomobject]@{ name = 'fit'; control = 'Reset three dimensional camera' }
-    )
-    $script:shotIndex = 2
-    foreach ($view in $cameraViews) {
-        Invoke-UiCheck -Name "3D camera: $($view.name)" -Check {
-            $camera = Find-UiElement -Root $window -Name $view.control
-            if (-not $camera.Current.IsEnabled) {
-                throw "Camera control '$($view.control)' is disabled."
-            }
-            Invoke-UiElement -Element $camera
-            Start-Sleep -Milliseconds 1200
-            $shotPath = Join-Path $evidenceDirectory ('{0:D2}-3d-{1}.png' -f $script:shotIndex, $view.name)
-            Save-WindowScreenshot -Window $window -Path $shotPath
-            $script:screenshots.Add([pscustomobject]@{ name = "3d-$($view.name)"; file = [IO.Path]::GetFileName($shotPath) })
-            $script:shotIndex++
-            [ordered]@{ invoked = $view.control; screenshot = [IO.Path]::GetFileName($shotPath) }
-        }
-    }
-
-    $script:uiTreeNodeCount = 0
-    Convert-UiTreeNode -Element $window | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath (Join-Path $evidenceDirectory 'ui-tree-3d.json') -Encoding utf8
-
-    Invoke-UiCheck -Name 'Return to 2D workspace' -Check {
-        $tab2d = Find-UiElement -Root $window -Name '2D FLAT'
-        Invoke-UiElement -Element $tab2d
-        Find-UiElement -Root $window -Name 'Interactive two dimensional pattern layout' | Out-Null
-        [ordered]@{ selected = '2D FLAT' }
-    }
 }
 catch {
     $fatalError = $_.Exception.Message
+    $fatalErrorType = $_.Exception.GetType().FullName
+    $fatalScriptStackTrace = $_.ScriptStackTrace
+    $failureDiagnostics = Get-FailureDiagnostics -Process $process -StartedAt $startedAt
     Add-ActionResult -Name 'Fatal runner error' -Passed $false -Details $null -ErrorMessage $fatalError
     if ($window) {
         try {
             $failureShot = Join-Path $evidenceDirectory '99-failure.png'
             Save-WindowScreenshot -Window $window -Path $failureShot
             $script:screenshots.Add([pscustomobject]@{ name = 'failure'; file = [IO.Path]::GetFileName($failureShot) })
+        }
+        catch {
+        }
+        try {
+            $script:uiTreeNodeCount = 0
+            Convert-UiTreeNode -Element $window | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath (Join-Path $evidenceDirectory 'ui-tree-failure.json') -Encoding utf8
         }
         catch {
         }
@@ -554,6 +732,9 @@ finally {
         actions = @($script:actions)
         screenshots = @($script:screenshots)
         fatalError = $fatalError
+        fatalErrorType = $fatalErrorType
+        fatalScriptStackTrace = $fatalScriptStackTrace
+        failureDiagnostics = $failureDiagnostics
     }
     $result | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath (Join-Path $evidenceDirectory 'result.json') -Encoding utf8
 }

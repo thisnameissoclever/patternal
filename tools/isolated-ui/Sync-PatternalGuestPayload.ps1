@@ -7,6 +7,9 @@ param(
     [ValidateSet('x64')]
     [string]$Platform = 'x64',
     [string]$RuntimeInstallerUri = 'https://aka.ms/windowsappsdk/2.3/2.3.1/windowsappruntimeinstall-x64.exe',
+    [string]$RuntimeRedistributableUri = 'https://aka.ms/windowsappsdk/2.3/2.3.1/Microsoft.WindowsAppRuntime.Redist.2.3.zip',
+    [version]$DotNetRuntimeVersion = '10.0.10',
+    [string]$DotNetRuntimeInstallerUri = 'https://builds.dotnet.microsoft.com/dotnet/Runtime/10.0.10/dotnet-runtime-10.0.10-win-x64.exe',
     [switch]$PrepareOnly
 )
 
@@ -63,8 +66,8 @@ try {
 
         $key = $packagePath.ToLowerInvariant()
         if ($packagePaths.ContainsKey($key)) {
-            $existingHash = (Get-FileHash -LiteralPath $packagePaths[$key] -Algorithm SHA256).Hash
-            $incomingHash = (Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256).Hash
+            $existingHash = Get-PatternalFileSha256 -Path $packagePaths[$key]
+            $incomingHash = Get-PatternalFileSha256 -Path $sourcePath
             if ($existingHash -ine $incomingHash) {
                 throw "Recipe maps different files to the same package path: $packagePath"
             }
@@ -82,6 +85,21 @@ try {
         throw 'The materialized AppX layout has no manifest.'
     }
 
+    $runtimeConfigPath = Join-Path $appxRoot 'Patternal.runtimeconfig.json'
+    if (-not (Test-Path -LiteralPath $runtimeConfigPath -PathType Leaf)) {
+        throw 'The materialized AppX layout has no Patternal runtime configuration.'
+    }
+    $runtimeConfig = Get-Content -LiteralPath $runtimeConfigPath -Raw | ConvertFrom-Json
+    if ($runtimeConfig.runtimeOptions.framework.name -ne 'Microsoft.NETCore.App') {
+        throw "Patternal declares an unsupported .NET framework: $($runtimeConfig.runtimeOptions.framework.name)"
+    }
+    $dotNetRuntimeMinimum = [version]$runtimeConfig.runtimeOptions.framework.version
+    if ($DotNetRuntimeVersion.Major -ne $dotNetRuntimeMinimum.Major -or
+        $DotNetRuntimeVersion.Minor -ne $dotNetRuntimeMinimum.Minor -or
+        $DotNetRuntimeVersion -lt $dotNetRuntimeMinimum) {
+        throw "The pinned .NET runtime $DotNetRuntimeVersion does not satisfy Patternal's $dotNetRuntimeMinimum requirement."
+    }
+
 $identityFiles = @(
     'Patternal.dll',
     'resources.pri',
@@ -97,8 +115,8 @@ $identityFiles = @(
             throw "Required package identity file is missing: $relativePath"
         }
 
-        $buildHash = (Get-FileHash -LiteralPath $buildPath -Algorithm SHA256).Hash
-        $stagedHash = (Get-FileHash -LiteralPath $stagedPath -Algorithm SHA256).Hash
+        $buildHash = Get-PatternalFileSha256 -Path $buildPath
+        $stagedHash = Get-PatternalFileSha256 -Path $stagedPath
         if ($buildHash -ine $stagedHash) {
             throw "Materialized AppX file does not match current build output: $relativePath"
         }
@@ -136,6 +154,8 @@ $identityFiles = @(
         aumid = 'C513E361-86E8-4FBD-9FF7-FABA0EAFA8FE_1z32rh13vfry6!App'
         packageName = 'C513E361-86E8-4FBD-9FF7-FABA0EAFA8FE'
         windowsAppRuntime = '2.3.1'
+        dotNetRuntimeMinimum = $dotNetRuntimeMinimum.ToString()
+        dotNetRuntimeInstallerVersion = $DotNetRuntimeVersion.ToString()
         identityFiles = @($identityComparisons)
     }
     $manifest | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $manifestPath -Encoding utf8
@@ -163,12 +183,16 @@ $identityFiles = @(
             Copy-Item -ToSession $session -LiteralPath (Join-Path $PSScriptRoot 'guest\Invoke-PatternalUiSmoke.ps1') -Destination 'C:\PatternalTest\Guest\Invoke-PatternalUiSmoke.ps1'
 
             $installResult = Invoke-Command -Session $session -ScriptBlock {
-                param($TransferRoot, $RuntimeUri)
+                param($TransferRoot, $RuntimeUri, $RedistributableUri, $DotNetUri, $DotNetVersion)
+                Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
                 & 'C:\PatternalTest\Guest\Install-PatternalGuestPayload.ps1' `
                     -PayloadZip (Join-Path $TransferRoot 'Patternal-AppX.zip') `
                     -PayloadManifest (Join-Path $TransferRoot 'payload-manifest.json') `
-                    -RuntimeInstallerUri $RuntimeUri
-            } -ArgumentList $guestTransferRoot, $RuntimeInstallerUri
+                    -RuntimeInstallerUri $RuntimeUri `
+                    -RuntimeRedistributableUri $RedistributableUri `
+                    -DotNetRuntimeInstallerUri $DotNetUri `
+                    -DotNetRuntimeVersion $DotNetVersion
+            } -ArgumentList $guestTransferRoot, $RuntimeInstallerUri, $RuntimeRedistributableUri, $DotNetRuntimeInstallerUri, $DotNetRuntimeVersion
         }
         finally {
             Remove-PSSession -Session $session

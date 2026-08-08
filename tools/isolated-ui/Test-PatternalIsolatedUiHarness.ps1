@@ -54,6 +54,11 @@ $guestRunnerPath = Join-Path $PSScriptRoot 'guest\Invoke-PatternalUiSmoke.ps1'
 $guestRunner = Get-Content -LiteralPath $guestRunnerPath -Raw
 $xamlPath = Join-Path $repositoryRoot 'Patternal\MainPage.xaml'
 $xaml = Get-Content -LiteralPath $xamlPath -Raw
+$codeBehindPath = Join-Path $repositoryRoot 'Patternal\MainPage.xaml.cs'
+$codeBehind = Get-Content -LiteralPath $codeBehindPath -Raw
+if ($xaml.Contains('Exact measured MPFB body') -or $codeBehind.Contains('Exact measured MPFB body')) {
+    throw 'The product UI again hard-codes the legacy MPFB backend name for every current collision body.'
+}
 $requiredAutomationNames = @(
     'Pattern workspace views',
     'Show pattern pieces panel',
@@ -89,6 +94,55 @@ foreach ($name in $requiredAutomationNames) {
         throw "MainPage.xaml no longer exposes the automation name '$name'."
     }
 }
+$requiredCameraAutomationIds = @(
+    'DrapeFrontCameraButton',
+    'DrapeRightCameraButton',
+    'DrapeRearCameraButton',
+    'DrapeLeftCameraButton',
+    'DrapeObliqueCameraButton',
+    'DrapeFitCameraButton'
+)
+foreach ($automationId in $requiredCameraAutomationIds) {
+    if (-not $guestRunner.Contains("'$automationId'")) {
+        throw "Guest runner no longer targets camera automation ID '$automationId'."
+    }
+    if (-not $xaml.Contains(('x:Name="{0}"' -f $automationId))) {
+        throw "MainPage.xaml no longer exposes camera automation ID '$automationId'."
+    }
+}
+$requiredDrapeStateAutomationIds = @(
+    'DrapeStaleSimulationState',
+    'DrapeAcceptedSimulationState'
+)
+foreach ($automationId in $requiredDrapeStateAutomationIds) {
+    if (-not $guestRunner.Contains("'$automationId'")) {
+        throw "Guest runner no longer targets 3D state automation ID '$automationId'."
+    }
+    if (-not $xaml.Contains(('AutomationProperties.AutomationId="{0}"' -f $automationId))) {
+        throw "MainPage.xaml no longer exposes 3D state automation ID '$automationId'."
+    }
+}
+if (-not $guestRunner.Contains('failureDiagnostics = $failureDiagnostics')) {
+    throw 'Guest runner no longer preserves process and event-log diagnostics with failed UI evidence.'
+}
+if (-not $guestRunner.Contains('fatalScriptStackTrace = $fatalScriptStackTrace')) {
+    throw 'Guest runner no longer preserves the failing PowerShell script line with failed UI evidence.'
+}
+if (-not $guestRunner.Contains('[System.Drawing.Bitmap]::new([int]$width, [int]$height)')) {
+    throw 'Guest screenshot capture no longer pins System.Drawing bitmap dimensions to integer pixels.'
+}
+if ($guestRunner.IndexOf('Invoke-ThreeDimensionalChecks -Window $window', [StringComparison]::Ordinal) -gt
+    $guestRunner.IndexOf("'Disable linked proportions for isolated slider tests'", [StringComparison]::Ordinal)) {
+    throw 'Guest runner no longer captures current accepted cloth before simulation-invalidating slider tests.'
+}
+if (-not $guestRunner.Contains("'ui-tree-failure.json'")) {
+    throw 'Guest runner no longer preserves the live UI tree after a fatal interaction failure.'
+}
+foreach ($diagnosticLog in @('Application', 'Microsoft-Windows-AppModel-Runtime/Admin', 'Microsoft-Windows-TWinUI/Operational')) {
+    if (-not $guestRunner.Contains("'$diagnosticLog'")) {
+        throw "Guest runner no longer captures failure diagnostics from $diagnosticLog."
+    }
+}
 
 $requiredSchemas = @(
     'patternal.isolated-ui-payload/1.0',
@@ -101,6 +155,46 @@ foreach ($schema in $requiredSchemas) {
     if (-not ($allSource -match [regex]::Escape($schema))) {
         throw "Harness schema is missing: $schema"
     }
+}
+
+$syncScriptPath = Join-Path $PSScriptRoot 'Sync-PatternalGuestPayload.ps1'
+$syncScript = Get-Content -LiteralPath $syncScriptPath -Raw
+if ($syncScript.Contains('Get-FileHash')) {
+    throw 'Guest payload synchronization again depends on PowerShell module auto-loading for SHA-256 identity checks.'
+}
+if (-not $syncScript.Contains('Get-PatternalFileSha256')) {
+    throw 'Guest payload synchronization no longer uses the module-independent SHA-256 helper.'
+}
+if (-not $syncScript.Contains('Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force')) {
+    throw 'Guest payload installation no longer permits the copied installer script in a clean Windows guest.'
+}
+if (-not $syncScript.Contains('Microsoft.WindowsAppRuntime.Redist.2.3.zip')) {
+    throw 'Guest payload installation no longer pins the official Windows App Runtime redistributable fallback.'
+}
+if (-not $syncScript.Contains('dotnet-runtime-10.0.10-win-x64.exe')) {
+    throw 'Guest payload installation no longer pins the official .NET 10 x64 runtime installer.'
+}
+
+$guestInstallerPath = Join-Path $PSScriptRoot 'guest\Install-PatternalGuestPayload.ps1'
+$guestInstaller = Get-Content -LiteralPath $guestInstallerPath -Raw
+foreach ($packageName in @(
+    'Microsoft.WindowsAppRuntime.2.msix',
+    'Microsoft.WindowsAppRuntime.Main.2.msix',
+    'Microsoft.WindowsAppRuntime.Singleton.2.msix',
+    'Microsoft.WindowsAppRuntime.DDLM.2.msix'
+)) {
+    if (-not $guestInstaller.Contains("'$packageName'")) {
+        throw "Guest runtime fallback no longer installs $packageName."
+    }
+}
+if (-not $guestInstaller.Contains("Get-AuthenticodeSignature -LiteralPath `$packagePath")) {
+    throw 'Guest runtime fallback no longer validates every direct MSIX package signature.'
+}
+if (-not $guestInstaller.Contains("Get-AuthenticodeSignature -LiteralPath `$dotNetInstaller")) {
+    throw 'Guest payload installation no longer validates the .NET runtime installer signature.'
+}
+if (-not $guestInstaller.Contains("'Microsoft Corporation'")) {
+    throw 'Guest payload installation no longer requires Microsoft-signed prerequisites.'
 }
 
 $documentationPath = Join-Path $repositoryRoot 'docs\isolated-windows-ui-testing.md'

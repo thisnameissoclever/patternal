@@ -30,7 +30,9 @@ public sealed record SimulationPipelineResult(
     string FabricName,
     double FabricThicknessMillimeters,
     string Message,
-    string? VisualProofManifestPath = null);
+    string? VisualProofManifestPath = null,
+    string? AvatarBackend = null,
+    string? AvatarOutputLicense = null);
 
 public sealed record SimulationFitEvidence(
     int BodyCollisions,
@@ -1220,7 +1222,9 @@ public static class SimulationPipeline
             bridge.Garment.Fabric.Name,
             bridge.Garment.Fabric.ThicknessMillimeters,
             "The current measurements and edited pattern were solved through the three-stage Newton Style3D production gate.",
-            visualProofManifestPath);
+            visualProofManifestPath,
+            runtime.AvatarBackend,
+            runtime.AvatarOutputLicense);
         if (!TryValidateProductVisualProof(result))
         {
             throw new SimulationPipelineException(
@@ -1613,7 +1617,9 @@ public static class SimulationPipeline
             manifestPath,
             bridge.Garment.Fabric.Name,
             bridge.Garment.Fabric.ThicknessMillimeters,
-            "The exact avatar was animated inside the accepted dressed cloth and resettled from the current Patternal document.");
+            "The exact avatar was animated inside the accepted dressed cloth and resettled from the current Patternal document.",
+            AvatarBackend: "MPFB hm08",
+            AvatarOutputLicense: "CC0");
         await File.WriteAllTextAsync(
             reportPath,
             JsonSerializer.Serialize(result, JsonOptions),

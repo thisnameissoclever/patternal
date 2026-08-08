@@ -11,7 +11,10 @@ public sealed record SimulationRuntime(
     string BlenderPath,
     string CompilerPath,
     string ToolsDirectory,
-    string Origin);
+    string Origin,
+    string AvatarBackend = "CharMorph mb_female (manifest undeclared)",
+    string AvatarOutputLicense = "AGPL-3.0 (manifest undeclared)",
+    string? AvatarLicensePath = null);
 
 internal sealed record SimulationRuntimeManifest(
     string SchemaVersion,
@@ -21,7 +24,10 @@ internal sealed record SimulationRuntimeManifest(
     string Blender,
     string Compiler,
     string ToolsDirectory,
-    Dictionary<string, string> EntrypointSha256);
+    Dictionary<string, string> EntrypointSha256,
+    string? AvatarBackend = null,
+    string? AvatarOutputLicense = null,
+    string? AvatarLicenseFile = null);
 
 public static class SimulationRuntimeLocator
 {
@@ -42,6 +48,7 @@ public static class SimulationRuntimeLocator
         "generate_charmorph_avatar.py",
         "prepare_charmorph_garmentcode_body.py",
         "charmorph_collision.py",
+        "charmorph_character.py",
         "charmorph_morphs.py",
         "charmorph_profile_controls.py",
         "mesh_torso_arcs.py",
@@ -121,19 +128,36 @@ public static class SimulationRuntimeLocator
                 rejection = $"The manifest must use {ManifestSchema} and declare a runtime version.";
                 return false;
             }
+            bool declaresAnyAvatarMetadata =
+                !string.IsNullOrWhiteSpace(manifest.AvatarBackend) ||
+                !string.IsNullOrWhiteSpace(manifest.AvatarOutputLicense) ||
+                !string.IsNullOrWhiteSpace(manifest.AvatarLicenseFile);
+            bool declaresCompleteAvatarMetadata =
+                !string.IsNullOrWhiteSpace(manifest.AvatarBackend) &&
+                !string.IsNullOrWhiteSpace(manifest.AvatarOutputLicense) &&
+                !string.IsNullOrWhiteSpace(manifest.AvatarLicenseFile);
+            if (declaresAnyAvatarMetadata && !declaresCompleteAvatarMetadata)
+            {
+                rejection = "Avatar runtime metadata must declare backend, output license, and license file together.";
+                return false;
+            }
 
             string garmentCodePython = ResolveContainedPath(runtimeRoot, manifest.GarmentCodePython, false);
             string style3DPython = ResolveContainedPath(runtimeRoot, manifest.Style3DPython, false);
             string blender = ResolveContainedPath(runtimeRoot, manifest.Blender, false);
             string compiler = ResolveContainedPath(runtimeRoot, manifest.Compiler, false);
             string toolsDirectory = ResolveContainedPath(runtimeRoot, manifest.ToolsDirectory, true);
+            string? avatarLicensePath = string.IsNullOrWhiteSpace(manifest.AvatarLicenseFile)
+                ? null
+                : ResolveContainedPath(runtimeRoot, manifest.AvatarLicenseFile, false);
             string[] requiredFiles =
             [
                 garmentCodePython,
                 style3DPython,
                 blender,
                 compiler,
-                .. RequiredScripts.Select(script => Path.Combine(toolsDirectory, script))
+                .. RequiredScripts.Select(script => Path.Combine(toolsDirectory, script)),
+                .. (avatarLicensePath is null ? Array.Empty<string>() : new[] { avatarLicensePath })
             ];
             string? missing = requiredFiles.FirstOrDefault(path => !File.Exists(path));
             if (missing is not null)
@@ -183,7 +207,14 @@ public static class SimulationRuntimeLocator
                 blender,
                 compiler,
                 toolsDirectory,
-                "installed-manifest");
+                "installed-manifest",
+                string.IsNullOrWhiteSpace(manifest.AvatarBackend)
+                    ? "CharMorph mb_female (manifest undeclared)"
+                    : manifest.AvatarBackend,
+                string.IsNullOrWhiteSpace(manifest.AvatarOutputLicense)
+                    ? "AGPL-3.0 (manifest undeclared)"
+                    : manifest.AvatarOutputLicense,
+                avatarLicensePath);
             return true;
         }
         catch (Exception exception) when (
@@ -240,7 +271,10 @@ public static class SimulationRuntimeLocator
                 blender!,
                 compiler!,
                 toolsDirectory,
-                "developer-checkout");
+                "developer-checkout",
+                "CharMorph mb_female",
+                "AGPL-3.0",
+                Path.Combine(root, "third_party", "CharMorph-db", "characters", "mb_female", "license.txt"));
             return true;
         }
         return false;

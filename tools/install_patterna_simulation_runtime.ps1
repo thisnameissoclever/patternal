@@ -182,6 +182,9 @@ foreach ($sourceDirectoryName in @('MPFB2', 'GarmentCode', 'MakeHumanAssets', 'N
 if (-not $sourceRevisions.Contains('MPFB2')) {
     throw 'The installer could not record the exact MPFB source revision.'
 }
+if (-not $sourceRevisions.Contains('CharMorph-db')) {
+    throw 'The installer could not record the exact CharMorph character-data revision.'
+}
 $sourceRevisionPath = Join-Path $staging 'runtime-source-revisions.json'
 [System.IO.File]::WriteAllText(
     $sourceRevisionPath,
@@ -193,6 +196,7 @@ $requiredScripts = @(
     'generate_charmorph_avatar.py',
     'prepare_charmorph_garmentcode_body.py',
     'charmorph_collision.py',
+    'charmorph_character.py',
     'charmorph_morphs.py',
     'charmorph_profile_controls.py',
     'mesh_torso_arcs.py',
@@ -220,7 +224,8 @@ $integrityFiles += Get-ChildItem -LiteralPath (Join-Path $staging 'compiler') -F
 $integrityFiles += @(
     (Join-Path $staging 'third_party\GarmentCode\pygarment\__init__.py'),
     (Join-Path $staging '.venv-newton\Lib\site-packages\newton\__init__.py'),
-    (Join-Path $staging '.venv-newton\Lib\site-packages\warp\__init__.py')
+    (Join-Path $staging '.venv-newton\Lib\site-packages\warp\__init__.py'),
+    (Join-Path $staging 'third_party\CharMorph-db\characters\mb_female\license.txt')
 ) | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf }
 $integrityFiles = $integrityFiles | Sort-Object -Unique
 
@@ -238,6 +243,9 @@ $manifest = [ordered]@{
     blender = 'blender/blender.exe'
     compiler = 'compiler/Patternal.UnrealGarmentCompiler.exe'
     toolsDirectory = 'tools'
+    avatarBackend = 'CharMorph mb_female'
+    avatarOutputLicense = 'AGPL-3.0'
+    avatarLicenseFile = 'third_party/CharMorph-db/characters/mb_female/license.txt'
     entrypointSha256 = $hashes
 }
 $manifestPath = Join-Path $staging 'runtime-manifest.json'

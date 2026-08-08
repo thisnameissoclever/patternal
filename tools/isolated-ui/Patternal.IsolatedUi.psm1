@@ -8,6 +8,26 @@ function Get-PatternalRepositoryRoot {
     return [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
 }
 
+function Get-PatternalFileSha256 {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Path
+    )
+
+    $resolvedPath = (Resolve-Path -LiteralPath $Path).Path
+    $stream = [System.IO.File]::OpenRead($resolvedPath)
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $hash = $sha256.ComputeHash($stream)
+    }
+    finally {
+        $sha256.Dispose()
+        $stream.Dispose()
+    }
+
+    return ([BitConverter]::ToString($hash) -replace '-', '').ToLowerInvariant()
+}
+
 function Get-PatternalVmCredentialPath {
     param(
         [string]$VmName = $script:DefaultVmName
@@ -214,7 +234,7 @@ function Get-PatternalDirectoryIdentity {
     $lines = foreach ($file in Get-ChildItem -LiteralPath $resolvedPath -File -Recurse | Sort-Object FullName) {
         $rootPrefix = $resolvedPath.TrimEnd('\') + '\'
         $relativePath = $file.FullName.Substring($rootPrefix.Length).Replace('\', '/')
-        $hash = (Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+        $hash = Get-PatternalFileSha256 -Path $file.FullName
         "$relativePath`t$($file.Length)`t$hash"
     }
 
@@ -233,6 +253,7 @@ function Get-PatternalDirectoryIdentity {
 Export-ModuleMember -Function @(
     'Assert-PatternalHyperVAccess',
     'Get-PatternalDirectoryIdentity',
+    'Get-PatternalFileSha256',
     'Get-PatternalGuestCredential',
     'Get-PatternalRepositoryRoot',
     'Get-PatternalVmCredentialPath',

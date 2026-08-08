@@ -666,6 +666,7 @@
                                 Visibility="Collapsed">
                                 <StackPanel Spacing="12">
                                     <TextBlock
+                                        AutomationProperties.AutomationId="DrapeStaleSimulationState"
                                         FontFamily="Segoe UI Variable Display"
                                         FontSize="18"
                                         FontWeight="SemiBold"
@@ -692,31 +693,43 @@
                                 Orientation="Horizontal"
                                 Spacing="8">
                                 <Button
+                                    x:Name="DrapeFrontCameraButton"
+                                    AutomationProperties.AutomationId="DrapeFrontCameraButton"
                                     AutomationProperties.Name="Show front cloth view"
                                     Click="OnDrapeCameraViewClicked"
                                     Content="Front"
                                     Tag="front" />
                                 <Button
+                                    x:Name="DrapeRightCameraButton"
+                                    AutomationProperties.AutomationId="DrapeRightCameraButton"
                                     AutomationProperties.Name="Show right side cloth view"
                                     Click="OnDrapeCameraViewClicked"
                                     Content="Right"
                                     Tag="right" />
                                 <Button
+                                    x:Name="DrapeRearCameraButton"
+                                    AutomationProperties.AutomationId="DrapeRearCameraButton"
                                     AutomationProperties.Name="Show rear cloth view"
                                     Click="OnDrapeCameraViewClicked"
                                     Content="Rear"
                                     Tag="rear" />
                                 <Button
+                                    x:Name="DrapeLeftCameraButton"
+                                    AutomationProperties.AutomationId="DrapeLeftCameraButton"
                                     AutomationProperties.Name="Show left side cloth view"
                                     Click="OnDrapeCameraViewClicked"
                                     Content="Left"
                                     Tag="left" />
                                 <Button
+                                    x:Name="DrapeObliqueCameraButton"
+                                    AutomationProperties.AutomationId="DrapeObliqueCameraButton"
                                     AutomationProperties.Name="Show front oblique cloth view"
                                     Click="OnDrapeCameraViewClicked"
                                     Content="Oblique"
                                     Tag="oblique" />
                                 <Button
+                                    x:Name="DrapeFitCameraButton"
+                                    AutomationProperties.AutomationId="DrapeFitCameraButton"
                                     AutomationProperties.Name="Reset three dimensional camera"
                                     Click="OnResetDrapeCameraClicked"
                                     Content="Fit view" />
@@ -736,6 +749,7 @@
                                 <StackPanel Spacing="2">
                                     <TextBlock
                                         x:Name="AcceptedEquilibriumHeaderText"
+                                        AutomationProperties.AutomationId="DrapeAcceptedSimulationState"
                                         FontSize="11"
                                         FontWeight="SemiBold"
                                         Foreground="#69D1FF"
@@ -743,7 +757,7 @@
                                     <TextBlock
                                         x:Name="AcceptedEquilibriumTopologyText"
                                         Foreground="White"
-                                        Text="Exact measured MPFB body · topology pending"
+                                        Text="Exact measured collision body · topology pending"
                                         TextWrapping="Wrap" />
                                     <TextBlock
                                         x:Name="AcceptedEquilibriumDetailText"

@@ -3226,8 +3226,8 @@ public sealed partial class MainPage : Page
     {
         GarmentDocument? garment = _garmentDocument ?? _adaptiveShirtDocument;
         AcceptedEquilibriumTopologyText.Text = garment is null
-            ? "Exact measured MPFB body · topology unavailable"
-            : $"Exact measured MPFB body · {garment.Panels.Count} pattern panels · {garment.Seams.Count} construction seams";
+            ? "Exact measured collision body · topology unavailable"
+            : $"Exact measured collision body · {garment.Panels.Count} pattern panels · {garment.Seams.Count} construction seams";
     }
 
     private bool IsBundledProductionBaseline() => GetBundledProductionBaselineMismatch() is null;

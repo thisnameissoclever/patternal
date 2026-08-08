@@ -1,0 +1,275 @@
+# Patternal architecture v3 reassessment
+
+Status: proposed replacement boundary based on packaged UI evidence and a local asset bake-off on 2026-08-08.
+
+This document does not declare the product complete. It records why the present stack cannot honestly meet the CLO-class acceptance target and defines the smallest credible migration for a one-person, non-revenue project.
+
+## Bottom line
+
+Keep WinUI 3, the editable 2D document model, GarmentCode pattern exchange, Blender proof rendering, and the current Newton/Warp solver as a comparison backend. Replace the avatar product boundary, make cloth solvers interchangeable, and stop using numerical collision and strain reports as a substitute for visual acceptance.
+
+The recommended target is:
+
+1. CC-BY Antonia as the first feminine display and collision source, with explicit attribution.
+2. A separately reviewed masculine source. Reom may be a measurement and topology research input, but the vendored copy has no license or attribution artifact and its unsubdivided base is not acceptable as the hero display mesh. Do not redistribute it from Patterna until both problems are resolved.
+3. A display mesh and a collision mesh derived from the same fitted body state but allowed to use different topology. Their registration must be proved numerically.
+4. ZOZO's Apache-2.0 PPF Contact Solver as the first challenger in a controlled solver bake-off on the local RTX 4090.
+5. Newton 1.4.0 with Warp 1.15.0 retained as the current control backend until another solver wins the same garment, body, material, contact, timing, and multi-view gates.
+6. Blender as the canonical offline render and comparison boundary. The packaged WinUI/WebView2 viewer remains the interactive surface, but it should consume compact PBR GLB assets rather than giant raw OBJ files and ad hoc material rules.
+
+## Evidence collected
+
+### Packaged application
+
+The isolated Windows 11 guest launched the registered AppX as a real responsive top-level window. Run `20260808-234620-27d56bf4` proved all 25 functional interaction checks: the six semantic cameras, return to 2D, panel and drawing toggles, body and fabric sliders, linked-value restoration, fitted-bra availability, assembly direction editing, and Undo. The run correctly failed only the current-cloth freshness gate.
+
+The current package does not have current accepted cloth at startup. Its 3D surface reports that the bundled neckline, shoulder, armscye, sleeve cap, width distribution, or balance differs from the bundled simulation. Hiding that old cloth is correct. Shipping a baseline that immediately hides its only accepted garment is not.
+
+The preserved reviewed run is `artifacts/isolated-ui/runs/20260808-234620-27d56bf4`. It is local evidence and is not a release artifact. Its payload identity is `224e9d5ce154b76273a004887da14fac2256d5d54148390083c95d70b25bf973`.
+
+### 2D interface review
+
+The 1920 by 1080 packaged screenshot is readable and exposes substantial editing functionality, but the automatic layout is not professionally usable yet.
+
+Observed problems:
+
+1. Small collar and cuff pieces are scaled below their labels and appear as thin bars.
+2. Several labels overlap adjacent pieces or clip at the viewport boundary.
+3. The large torso pieces dominate the fit calculation, leaving small pieces visually meaningless.
+4. The inspector and piece list consume enough width that lower pattern rows are clipped below the window.
+5. There is no obvious persistent zoom, pan, frame-selection, or actual-size control in the main canvas chrome.
+6. The canvas communicates an 86 percent fabric-use metric before it communicates whether every piece can be inspected and edited.
+
+Required correction:
+
+1. Compute layout and camera fit separately. Packing efficiency must not determine the minimum readable piece scale.
+2. Introduce a minimum on-screen label and feature size. Move labels outside small pieces with leader lines or hide them below a documented zoom threshold.
+3. Add visible zoom, pan, frame-all, frame-selected, and actual-size controls with keyboard and automation coverage.
+4. Preserve access to every piece through list selection and frame the selected piece without destroying the user's prior camera state.
+5. Add screenshot gates at 1280 by 720, 1600 by 900, 1920 by 1080, and 200 percent text scaling.
+
+### 3D interface review
+
+Observed problems:
+
+1. The package opens to a stale cloth revision, so the six camera buttons only orbit an undressed avatar.
+2. The stale notice covers a large portion of the lower body and competes with camera inspection.
+3. The 130 MB raw garment OBJ makes the mixed XAML and WebView2 accessibility tree slow enough to interfere with UI Automation discovery.
+4. The current display avatar is recognizably human but has exaggerated hands, feet, shoulder mass, calf mass, and an awkward presentation pose.
+5. Texture and hair help the old body, but they cannot repair its silhouette and anatomy.
+6. The camera labels were initially reversed for Front and Rear. Packaged screenshot review caught and corrected the production-avatar yaw mapping; interaction success alone had not proved camera semantics.
+6. Existing collision, seam, strain, hash, and equilibrium gates all passed for an asset that still fails an ordinary visual review.
+
+Required correction:
+
+1. Do not package any baseline unless its complete current revision has accepted cloth.
+2. Move stale status into a compact non-modal evidence bar that does not cover the inspected body.
+3. Use modest presentation clothing or underwear by default. A nude technical body may remain an explicit inspection mode.
+4. Load a compact indexed GLB with PBR textures, normals, and optional level of detail. Keep the collision mesh out of the render payload.
+5. Add anatomy, pose, material, silhouette, and fold-quality gates to the same multi-angle evidence required for release.
+
+## Current stack inventory
+
+| Layer | Current reality | License | Decision |
+| --- | --- | --- | --- |
+| Windows product shell | WinUI 3 with WebView2 3D surface | Microsoft platform terms | Keep |
+| 2D pattern document | Native Patternal model with GarmentCode import and export | Project code plus MIT GarmentCode | Keep and improve UX |
+| Bundled display body | MakeHuman and MPFB-derived mesh and CC0 appearance assets | CC0 assets; tool code varies | Retire as hero baseline after replacement proof |
+| Current source avatar path | CharMorph `mb_female` | Generated body is AGPL-3.0 | Reject as the distributable product boundary |
+| Available feminine source | CharMorph Antonia | CC-BY 3.0 | Primary replacement candidate |
+| Available masculine source | CharMorph Reom | Declared CC-BY; license artifact missing | Research-only candidate; do not redistribute |
+| Current accepted cloth backend | Newton 1.4.0 `SolverStyle3D` on Warp 1.15.0 | Apache-2.0 | Keep as bake-off control |
+| Legacy GarmentCode Python environment | Customized Warp 1.0.0b6 | Old NVIDIA source license | Isolate, replace, or remove after an import audit |
+| Canonical offline rendering | Blender 4.5.11 LTS | GPL application; generated assets remain governed by their inputs | Keep |
+| Packaged rendering | Custom WebGL in WebView2 over OBJ and PNG | Project code and bundled assets | Retain shell, replace payload format and material path |
+| Unreal experiment | Unreal 5.8 garment target | Epic license | Keep diagnostic only unless it proves a complete handoff |
+
+The two Python environments must not be described as one Warp dependency. Production simulation already uses modern Apache-2.0 Warp. The old restricted Warp exists because the vendored GarmentCode mesh stack imports custom `warp.collision` and `warp.sim` APIs. Removing it requires an import and output-equivalence audit, not a blind package upgrade.
+
+## Avatar bake-off
+
+Local deterministic Blender renders are stored under `artifacts/architecture-avatar-bakeoff`.
+
+| Source | Vertices | Visual result | License result |
+| --- | ---: | --- | --- |
+| Antonia | 36,030 | Best overall silhouette, hands, feet, limb proportions, and neutral anatomy of the three local candidates | Acceptable with attribution |
+| `mb_female` | 18,210 | Reproduces oversized hands, feet, shoulders, and calves; extensive morph vocabulary does not repair the base silhouette | Reject for product output because generated meshes are AGPL-3.0 |
+| Reom | 8,434 | Useful masculine proportions but visibly faceted torso and limbs at base resolution | The upstream metadata declares CC-BY, but the vendored character lacks a license or attribution file; do not ship it |
+
+This bake-off used flat studio materials to compare geometry rather than flattering one candidate with better textures. It is not proof that Antonia already supports Patternal's 151 editable values. It proves that spending more time polishing `mb_female` would optimize the wrong base asset.
+
+## Avatar architecture
+
+### One fitted state, two meshes
+
+The current architecture overvalues coordinate-identical display and collision topology. A professional avatar system needs different concerns:
+
+1. The fitted state stores measurements, morph weights, pose parameters, landmarks, and provenance.
+2. The collision body is watertight, stable, moderately dense, and free of fingers, hair, eyelashes, internal mouth surfaces, and other collision hazards.
+3. The display body preserves anatomical topology, UVs, facial features, hands, feet, normals, and PBR materials.
+4. A deterministic cage, barycentric, or nearest-surface binding maps both meshes to the same fitted state.
+5. Registration gates limit landmark error, bidirectional surface distance, floor error, and garment-to-body clearance.
+
+This removes the false choice between a solver-friendly body and a human-looking body.
+
+### Required avatar gates
+
+1. Height error at or below 1 mm.
+2. Primary circumference error at or below the existing documented measurement tolerance.
+3. Left-right landmark symmetry for a symmetric preset, with an explicit exception list for authored asymmetry.
+4. Hand length, foot length, shoulder breadth, head height, arm span, and leg-length ratios inside reviewed human ranges.
+5. No non-manifold collision edges, inverted faces, internal body surfaces, or open holes.
+6. Display-to-collision surface distance reported by anatomical region, not only as one maximum.
+7. Front, rear, left, right, and both oblique display renders approved at the packaged camera and canonical Blender camera.
+8. Texture, normal, roughness, eye, hair, and underwear assets present and correctly licensed.
+
+### Antonia migration spike
+
+The first spike must not replace the shipped avatar. It must:
+
+1. Generalize CharMorph character loading from hard-coded `mb_female`, `African`, `L2_packed/__main__.npz`, and `textures/albedo.png` values to the character's `config.yaml`.
+2. Map a minimal measurement set to Antonia's named morphs and constrained surface corrections.
+3. Export Antonia's multiple material regions, UVs, textures, eyes, mouth, lashes, and underwear to GLB.
+4. Derive and validate a simplified collision proxy from the fitted Antonia surface.
+5. Run the current production shirt through both the current Newton backend and the challenger backend.
+6. Promote nothing until measurement, contact, visual, performance, and license gates pass together.
+
+## Cloth solver architecture
+
+### Why the current metrics were insufficient
+
+Zero intersections, closed seams, finite positions, bounded strain percentiles, static displacement, and deterministic hashes are necessary. They say nothing about whether folds, weight, silhouette, hems, sleeves, bust shaping, and gravity look like fabric.
+
+The present solver adapter also owns custom warm-start, contact, seam, and projection behavior. A clean report from that adapter is partly a report about its own correction logic. Independent comparison is therefore mandatory.
+
+### Solver candidates
+
+| Candidate | Strength | Cost and risk | Role |
+| --- | --- | --- | --- |
+| Newton `SolverStyle3D` | Already integrated, GPU accelerated, fast, Apache-2.0, current accepted evidence exists | Research-oriented and changing rapidly; current visuals are unconvincing | Control backend |
+| ZOZO PPF Contact Solver | Apache-2.0, Windows native executable, Blender 5 add-on, GPU contact and elasticity, penetration-free focus, fitting example, RTX 4090 explicitly recommended | New integration, CUDA 12.8 requirement, potentially minutes per result, Blender add-on requires Blender 5 | First challenger |
+| IPC Toolkit and C-IPC | MIT toolkit, strong intersection-free codimensional contact research, thickness and friction formulation | Integration-heavy C++ research stack; unsuitable as the first interactive backend | Offline oracle and difficult-case validator |
+| PositionBasedDynamics | MIT, mature XPBD and deformable examples, Windows build path | General library rather than garment product; would recreate much of the missing sewing and material stack | Reference only |
+| Blender built-in cloth | Already available and artist-friendly | Past project evidence showed unstable sewing and collision for this garment | Diagnostic comparison only |
+
+### Common solver contract
+
+Every backend must consume the same normalized bundle:
+
+1. Authored 2D panel curves and stable edge identities.
+2. Triangulated material coordinates and rest lengths.
+3. Exact seam correspondence and closure constraints.
+4. Fitted collision body with region labels.
+5. Fabric density, warp, weft, bias, bend, thickness, friction, damping, and gravity in explicit units.
+6. Initial placement and optional prior accepted state.
+
+Every backend must emit:
+
+1. Physical surface and welded render surface.
+2. Per-vertex material coordinates and panel ownership.
+3. Contact, self-contact, seam, strain, energy, and equilibrium evidence.
+4. Backend version, source revision, executable hashes, device, settings, timing, and determinism evidence.
+5. Six registered packaged-view renders and six canonical Blender renders.
+
+### Bake-off decision rule
+
+Use one unchanged shirt, body, fabric, initial placement, and camera set. A challenger wins only if it:
+
+1. Passes every current numerical gate without post-solve geometry projection that hides contact failures.
+2. Produces visibly better folds, sleeve fall, hem behavior, bust shaping, seam behavior, and material weight in a blind multi-view comparison.
+3. Completes within a documented local interaction budget on the RTX 4090.
+4. Can be installed, updated, and removed by the owned runtime installer.
+5. Has a license compatible with redistribution and a personal proprietary project.
+
+## Rendering and packaged asset format
+
+The 130 MB production OBJ is an evidence and UX liability. OBJ has no compact scene hierarchy, skinning, modern PBR material model, binary texture packaging, or efficient indexed delivery.
+
+The target payload is GLB with:
+
+1. Indexed meshes and mesh compression only after cross-machine decoder proof.
+2. Normals, tangents, UVs, base color, normal, roughness, and optional subsurface approximation inputs.
+3. Separate display body, eyes, hair, underwear, and garment nodes.
+4. Optional collision proxy excluded from the visual scene or marked non-renderable.
+5. Explicit meters, axis convention, floor datum, revision, and source hashes.
+6. A low-detail interactive body and a high-detail canonical render body bound to the same fitted state.
+
+WebView2 may remain because it provides an isolated, easily packaged interactive viewport. If GLB loading and PBR parity cannot meet the packaged screenshot gates, replace only the viewport implementation. Replacing the WinUI workflow shell would add risk without fixing the body or cloth.
+
+## Quality gates that must be added
+
+### Anatomy and avatar
+
+1. Reviewed ratio and landmark ranges.
+2. Symmetry and pose checks.
+3. Regional display-to-collider registration.
+4. Texture and material completeness.
+5. Six-view packaged and Blender image review.
+
+### Cloth appearance
+
+1. Silhouette difference against an approved reference envelope.
+2. Sleeve fall angle and cuff opening plausibility.
+3. Neckline, shoulder, armscye, bust, waist, and hem clearance bands.
+4. Fold wavelength and amplitude ranges appropriate to the selected material.
+5. No rubber-sheet stretching, contact dents, seam ridges, floating hems, or body clipping.
+6. A visual rejection remains a rejection even when all numerical metrics pass.
+
+### Product UI
+
+1. Real packaged AppX launch in the isolated Windows guest.
+2. 2D toggles, sliders, editing, Undo and Redo, save and load, and export round trips.
+3. 3D orbit, zoom, all fixed views, fit view, stale-state handling, and current-cloth proof.
+4. Multi-resolution and text-scaling screenshots.
+5. Keyboard navigation, focus order, automation names and IDs, and screen-reader labels.
+6. No release declaration while accepted cloth, 2D usability, or packaged multi-view evidence is missing.
+
+## Phased implementation
+
+### Phase 0: restore truthfulness
+
+1. Make the isolated runner exercise all controls even when cloth is stale, then fail the freshness gate explicitly.
+2. Correct UI and documentation that still call the current body MPFB when the source path is CharMorph.
+3. Record the current avatar asset and generated-output licenses in the runtime manifest and every simulation job. New runtime manifests now declare `CharMorph mb_female` and `AGPL-3.0`; legacy manifests are labeled as undeclared rather than silently presented as permissive.
+4. Do not promote the current AGPL `mb_female` source as the replacement baseline.
+
+### Phase 1: Antonia measurement and display spike
+
+1. Generalize CharMorph input discovery from `config.yaml`.
+2. Fit the six primary measurements plus the upper-body measurements required by the shirt.
+3. Export a textured GLB and a watertight collision proxy.
+4. Add regional registration and six-view anatomy gates.
+
+### Phase 2: cloth bake-off
+
+1. Keep Newton as the control.
+2. Install the PPF native Windows solver in a separate versioned runtime only after dependency approval.
+3. Convert one accepted Patternal job into the common solver contract.
+4. Compare numerical evidence, visual evidence, runtime, and integration complexity.
+5. Use IPC Toolkit only for cases where both interactive solvers disagree or fail contact.
+
+### Phase 3: packaged viewer and baseline
+
+1. Replace raw OBJ delivery with GLB.
+2. Load the winning Antonia body and winning cloth result.
+3. Correct the 2D layout and responsive behavior.
+4. Rerun the complete isolated UI suite at every required viewport and text scale.
+5. Promote a baseline only when the current source revision and bundled evidence hashes agree.
+
+## Dependency approval boundary
+
+This reassessment does not install or upgrade a dependency. The first requested dependency change should be a separate versioned PPF evaluation runtime. The current host has an RTX 4090, which the official project names as an ideal GPU, but driver, CUDA, executable provenance, and Blender 5 compatibility must be verified before installation.
+
+The old GarmentCode Warp environment should be removed only after proving that the product-critical mesh export can run without its customized collision and simulation modules. Updating it in place would be the traditional dependency-upgrade method of discovering that archaeology is also a branch of applied explosives.
+
+## Primary references
+
+1. CharMorph licensing and character matrix: <https://blendercharacterproject.org/docs/html/Introduction.html>
+2. CharMorph source and feature inventory: <https://github.com/Upliner/CharMorph>
+3. ZOZO PPF Contact Solver: <https://github.com/st-tech/ppf-contact-solver>
+4. Newton physics engine: <https://github.com/newton-physics/newton>
+5. NVIDIA Warp license history: <https://github.com/NVIDIA/warp/blob/main/CHANGELOG.md>
+6. IPC Toolkit license and project: <https://ipctk.xyz/v1.4.0/about/license.html>
+7. C-IPC project: <https://ipc-sim.github.io/C-IPC/>
+8. PositionBasedDynamics: <https://github.com/InteractiveComputerGraphics/PositionBasedDynamics>
+9. MakeHuman CC0 assets: <https://github.com/makehumancommunity/makehuman-assets>

@@ -14,6 +14,7 @@ from scipy.optimize import least_squares
 import trimesh
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from charmorph_character import load_character
 from charmorph_morphs import apply_controls, load_packed_morphs
 from charmorph_profile_controls import (
     FIT_CONTROL_NAMES,
@@ -34,7 +35,6 @@ from mesh_torso_arcs import measure_torso_arc_section
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CHARACTER_DIR = REPO_ROOT / "third_party" / "CharMorph-db" / "characters" / "mb_female"
 DEFAULT_PROFILE = REPO_ROOT / "PatternaUnreal" / "SourceAssets" / "Avatar" / "PatternaFullBustDefault.avatar-profile.json"
-DEFAULT_BASIS = "African"
 STATION_RATIOS = {
     "hip": 0.505,
     "abdomen": 0.585,
@@ -305,7 +305,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--character-dir", type=Path, default=DEFAULT_CHARACTER_DIR)
     parser.add_argument("--profile", type=Path, default=DEFAULT_PROFILE)
-    parser.add_argument("--basis", default=DEFAULT_BASIS)
+    parser.add_argument("--basis")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--report", type=Path)
     parser.add_argument("--vertices", type=Path)
@@ -315,6 +315,7 @@ def main() -> None:
         raise ValueError("Maximum evaluation count must be positive")
 
     character_dir = resolve(args.character_dir)
+    character = load_character(character_dir)
     profile_path = resolve(args.profile)
     output_path = resolve(args.output)
     report_path = resolve(args.report) if args.report else output_path.with_suffix(".fit-report.json")
@@ -325,11 +326,12 @@ def main() -> None:
         raise ValueError("CharMorph fitting requires a measurements object")
     target_height_cm = float(profile["measurements"]["height"])
 
-    basis_path = character_dir / "morphs" / "L1" / f"{args.basis}.npy"
+    basis_name = args.basis or character.basis_name
+    basis_path = character_dir / "morphs" / "L1" / f"{basis_name}.npy"
     if not basis_path.is_file():
         raise FileNotFoundError(f"CharMorph basis not found: {basis_path}")
-    faces_path = character_dir / "faces.npy"
-    pack_path = character_dir / "morphs" / "L2_packed" / "__main__.npz"
+    faces_path = character.faces_path
+    pack_path = character.morph_pack_path
     basis = np.load(basis_path).astype(np.float64)
     faces = triangulate_quads(np.load(faces_path))
     raw_morphs = load_packed_morphs(pack_path)
@@ -409,7 +411,12 @@ def main() -> None:
         "sourcePack": str(pack_path),
         "sourcePackSha256": sha256(pack_path),
         "sourceBasis": str(basis_path),
-        "sourceBasisName": args.basis,
+        "sourceBasisName": basis_name,
+        "characterBackend": character.title,
+        "characterObject": character.object_name,
+        "generatedOutputLicense": character.license_name,
+        "characterLicenseFile": str(character.license_path),
+        "characterLicenseSha256": sha256(character.license_path),
         "sourceBasisSha256": sha256(basis_path),
         "targetHeightCm": target_height_cm,
         "targetsCm": targets,

@@ -10,12 +10,12 @@ The isolated lane proves the following:
 
 1. The current source builds as x64 with no stale loose-layout binaries.
 2. The AppX payload materialized from `Patternal.build.appxrecipe` is complete and hash-identified.
-3. A clean Windows user can install the exact Windows App Runtime dependency and register that payload.
+3. A clean Windows user can install the exact .NET and Windows App Runtime dependencies and register that payload.
 4. The packaged AUMID launches a responsive top-level Patternal window.
 5. Primary 2D and 3D controls expose usable Windows UI Automation patterns.
 6. Toggles and sliders change and restore their values as a user would expect.
 7. Front, right, rear, left, oblique, and fit camera commands produce separate screenshot evidence.
-8. Every run records the guest OS, display size, actions, failures, UI trees, screenshots, payload identity, and timestamps.
+8. Every run records the guest OS, display size, actions, failures, UI trees, screenshots, payload identity, and timestamps. A fatal run also records the Patternal process state and relevant Application, AppModel Runtime, and TWinUI events in the same result bundle.
 
 Hyper-V's synthetic display is not proof of RTX 4090 rendering fidelity, frame pacing, or final cloth appearance. CLO-class completion still requires one physical-GPU packaged pass on the target host or an equivalent physical Windows machine. The guest lane removes routine desktop contention; it does not turn virtual graphics into physical graphics through wishful thinking.
 
@@ -89,7 +89,7 @@ Microsoft documents PowerShell Direct and its Hyper-V administrator requirement 
 
 No elevated shell, VMConnect window, or host UI automation is required after one-time setup.
 
-1. Build the current worktree, materialize a clean AppX layout from the generated recipe, verify identity files, copy the payload into the guest, install the signed Windows App Runtime 2.3.1 if needed, register the payload, and refresh the guest task:
+1. Build the current worktree, materialize a clean AppX layout from the generated recipe, verify identity files, copy the payload into the guest, install the signed .NET 10 and Windows App Runtime 2.3.1 prerequisites if needed, register the payload, and refresh the guest task:
 
 ```powershell
 .\tools\isolated-ui\Sync-PatternalGuestPayload.ps1
@@ -101,7 +101,7 @@ To create and verify the guest archive without contacting Hyper-V, use:
 .\tools\isolated-ui\Sync-PatternalGuestPayload.ps1 -PrepareOnly
 ```
 
-The matching runtime is downloaded from Microsoft's pinned 2.3.1 x64 installer URL. The guest rejects it unless Authenticode reports a valid Microsoft Corporation signature. Microsoft documents the silent `--quiet` deployment option in the [Windows App SDK deployment guide](https://learn.microsoft.com/windows/apps/windows-app-sdk/deploy-unpackaged-apps).
+The host applies an execution-policy bypass only to the current PowerShell Direct process before invoking the copied guest installer; it does not weaken the guest's persistent policy. The payload manifest records the minimum `Microsoft.NETCore.App` version from `Patternal.runtimeconfig.json`, and the guest installs Microsoft's pinned .NET 10.0.10 x64 runtime when no compatible patch is present. The matching Windows App Runtime is downloaded from Microsoft's pinned 2.3.1 x64 installer URL. The guest rejects either installer unless Authenticode reports a valid Microsoft Corporation signature. If the signed Windows App Runtime wrapper crashes, the guest downloads Microsoft's matching redistributable ZIP, verifies the Microsoft signature on each x64 MSIX, and directly installs Framework, Main, Singleton, and DDLM. Microsoft documents both supported Windows App SDK deployment choices in the [Windows App SDK deployment guide](https://learn.microsoft.com/windows/apps/windows-app-sdk/deploy-unpackaged-apps).
 
 2. Run the isolated packaged interaction suite:
 
@@ -126,13 +126,13 @@ The current guest suite performs these checks in order:
 1. Requests a 1920 by 1080 guest display and rejects anything below 1280 by 720.
 2. Launches the packaged AUMID and verifies a responsive Patternal window.
 3. Captures the startup 2D view and a bounded UI Automation tree.
-4. Round-trips the Pieces panel, Inspector panel, seam allowance, and grainline toggles.
-5. Temporarily disables linked proportional estimates, round-trips Height, Full bust, Waist, Hip, Shoulder, and Torso sliders, then restores the link state.
-6. Round-trips Fabric weight and Fabric stretch.
-7. Round-trips the fitted-bra toggle when available, or verifies that it is disabled when no matching fitted asset exists.
-8. Enters Assembly mode, changes reverse side B, invokes Undo, and verifies that the visible toggle returns to the original state.
-9. Enters 3D and captures Front, Right, Rear, Left, Oblique, and Fit views.
-10. Returns to 2D, writes the result bundle, and closes the guest app unless `-KeepAppOpen` was requested.
+4. Before changing any simulation input, enters 3D and locates the six camera controls by stable automation ID. It captures Front, Right, Rear, Left, Oblique, and Fit views, then returns to 2D. If the cloth is stale, the files are labeled `3d-stale-avatar` and the freshness gate fails while the remaining 2D interaction coverage continues.
+5. Round-trips the Pieces panel, Inspector panel, seam allowance, and grainline toggles.
+6. Temporarily disables linked proportional estimates, round-trips Height, Full bust, Waist, Hip, Shoulder, and Torso sliders, then restores the link state.
+7. Round-trips Fabric weight and Fabric stretch.
+8. Round-trips the fitted-bra toggle when available, or verifies that it is disabled when no matching fitted asset exists.
+9. Enters Assembly mode, changes reverse side B, invokes Undo, and verifies that the visible toggle returns to the original state.
+10. Writes the result bundle and closes the guest app unless `-KeepAppOpen` was requested.
 
 Expand this list whenever a new user-facing toggle, slider, authoring command, camera, persistence behavior, or acceptance gate is added. UI contracts rot if they are treated as museum pieces.
 
@@ -142,6 +142,6 @@ Windows Sandbox is suitable for a disposable install or launch smoke test when H
 
 ## Current setup status
 
-As of 2026-08-06, the host audit confirms Windows 11 Pro, Hyper-V services, Windows Sandbox, 64 GB RAM, an RTX 4090, and sufficient disk space. The repository scripts parse, the unattended data ISO generator passes a create and mount test, and the current 88-file AppX archive round-trips to payload identity `a121d360ea91888e4929712a08b41e51e69c5f2b2d90a664f7bacb2ff156357f`.
+As of 2026-08-08, the host audit confirms Windows 11 Pro, Hyper-V services, Windows Sandbox, 64 GB RAM, an RTX 4090, and sufficient disk space. The persistent Windows 11 guest launches the registered AppX as a responsive top-level window without taking over the host desktop. Reviewed run `20260808-234620-27d56bf4` passed all 25 functional interaction checks and captured anatomically correct Front, Rear, Right, Left, Oblique, and Fit views. It correctly failed the freshness gate because the bundled cloth is stale relative to the current pattern construction, so CLO-class 3D acceptance remains open.
 
-The persistent guest has not yet been created because the official evaluation ISO is not present and this Codex process has no elevated Hyper-V management token. Those are setup prerequisites, not evidence that the packaged UI passed. Until the guest run and screenshot review occur, the repaired 2D and 3D interaction gates remain open.
+The persistent guest and its signed application prerequisites are operational. This proves the isolated packaged interaction lane, not the visual quality of the current product. The 2D layout usability, current accepted cloth, physical-GPU rendering, and CLO-class multi-view gates remain open.

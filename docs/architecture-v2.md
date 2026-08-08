@@ -1,5 +1,7 @@
 # Patternal architecture v2
 
+> Historical implementation record. The evidence-backed replacement boundary and migration plan are in [architecture-v3-reassessment.md](architecture-v3-reassessment.md). This file remains authoritative for how the current implementation was assembled, but it is not a declaration that the current avatar, cloth, or packaged UX meets the CLO-class target.
+
 Last reviewed: 2026-07-23
 
 ## Decision

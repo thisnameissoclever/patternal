@@ -58,6 +58,26 @@ class CharMorphMorphTests(unittest.TestCase):
         np.testing.assert_allclose(vertices[0], [0.4, 0.0, 0.0])
         np.testing.assert_allclose(vertices[1], [0.0, 0.0, 0.0])
 
+    def test_applies_direct_named_morph_for_antonia_style_pack(self) -> None:
+        basis = np.zeros((2, 3), dtype=np.float64)
+        raw = {
+            "Breast big": MorphDelta(
+                np.array([1]),
+                np.array([[0.0, -0.03, 0.01]]),
+            )
+        }
+        vertices, weights = apply_controls(basis, raw, {"Breast big": 0.6})
+        self.assertEqual({"Breast big": 0.6}, weights)
+        np.testing.assert_allclose(vertices[0], [0.0, 0.0, 0.0])
+        np.testing.assert_allclose(vertices[1], [0.0, -0.018, 0.006])
+
+    def test_direct_named_morph_clamps_to_non_negative_shape_key_range(self) -> None:
+        basis = np.zeros((1, 3), dtype=np.float64)
+        raw = {"Waist narrow": MorphDelta(None, np.ones((1, 3)))}
+        vertices, weights = apply_controls(basis, raw, {"Waist narrow": -0.5})
+        self.assertEqual({}, weights)
+        np.testing.assert_allclose(vertices, basis)
+
 
 if __name__ == "__main__":
     unittest.main()

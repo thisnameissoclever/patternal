@@ -14,6 +14,7 @@ import bpy
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from charmorph_character import CharacterDescriptor, load_character
 from charmorph_morphs import apply_controls, load_packed_morphs
 from charmorph_profile_controls import PATTERNA_FULL_BUST_CONTROLS
 from generate_mpfb_avatar import write_bra_shell_obj, write_solid_texture
@@ -22,7 +23,6 @@ from generate_mpfb_avatar import write_bra_shell_obj, write_solid_texture
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CHARACTER_DIR = REPO_ROOT / "third_party" / "CharMorph-db" / "characters" / "mb_female"
 DEFAULT_PROFILE = REPO_ROOT / "PatternaUnreal" / "SourceAssets" / "Avatar" / "PatternaFullBustDefault.avatar-profile.json"
-DEFAULT_BASIS = "African"
 
 DEFAULT_CONTROLS = PATTERNA_FULL_BUST_CONTROLS
 
@@ -35,14 +35,14 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--character-dir", type=Path, default=DEFAULT_CHARACTER_DIR)
     parser.add_argument("--profile", type=Path, default=DEFAULT_PROFILE)
-    parser.add_argument("--basis", default=DEFAULT_BASIS)
+    parser.add_argument("--basis")
     parser.add_argument("--controls", type=Path)
     parser.add_argument(
         "--vertices",
         type=Path,
         help="Optional fitted vertex array produced by fit_charmorph_profile.py.",
     )
-    parser.add_argument("--object", default="mb_female")
+    parser.add_argument("--object")
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--render-output-dir", type=Path)
@@ -107,7 +107,7 @@ def obj_geometry_counts(path: Path) -> tuple[int, int, int]:
 
 def build_display_avatar(
     body: bpy.types.Object,
-    character_dir: Path,
+    character: CharacterDescriptor,
     output_dir: Path,
     collision_path: Path,
 ) -> dict[str, object]:
@@ -125,9 +125,11 @@ def build_display_avatar(
     finally:
         body.modifiers.remove(subdivision)
     display_body_counts = obj_geometry_counts(display_body_path)
-    skin_texture = character_dir / "textures" / "albedo.png"
-    if not skin_texture.is_file():
-        raise FileNotFoundError(f"CharMorph skin texture not found: {skin_texture}")
+    skin_texture = character.single_body_albedo
+    if skin_texture is None:
+        raise ValueError(
+            f"{character.title} uses multiple body materials and requires the GLB display exporter"
+        )
     shutil.copy2(skin_texture, output_dir / "body.png")
 
     body_group = body.vertex_groups.get("body") or body.vertex_groups.new(name="body")
@@ -146,8 +148,8 @@ def build_display_avatar(
     floor_offset_m = min(float(vertex.z) for vertex in coordinates)
     manifest = {
         "schema_version": "patterna.display-avatar/1.0",
-        "source": "CharMorph mb_female",
-        "license": "AGPL-3.0",
+        "source": character.title,
+        "license": character.license_name,
         "floor_offset_m": floor_offset_m,
         "collision_geometry": f"../{collision_path.name}",
         "assets": {
@@ -183,6 +185,7 @@ def build_display_avatar(
 def main() -> None:
     args = parse_args()
     character_dir = resolve(args.character_dir)
+    character = load_character(character_dir)
     profile_path = resolve(args.profile)
     if args.output_dir is None and args.output is None:
         raise ValueError("Either --output-dir or --output is required")
@@ -190,16 +193,18 @@ def main() -> None:
     output_dir = resolve(args.output_dir) if args.output_dir else output_path.parent
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    if args.object not in bpy.data.objects:
-        raise RuntimeError(f"CharMorph source object {args.object!r} is not loaded")
-    body = bpy.data.objects[args.object]
+    object_name = args.object or character.object_name
+    if object_name not in bpy.data.objects:
+        raise RuntimeError(f"CharMorph source object {object_name!r} is not loaded")
+    body = bpy.data.objects[object_name]
     if body.type != "MESH":
-        raise RuntimeError(f"CharMorph source object {args.object!r} is not a mesh")
+        raise RuntimeError(f"CharMorph source object {object_name!r} is not a mesh")
 
-    basis_path = character_dir / "morphs" / "L1" / f"{args.basis}.npy"
+    basis_name = args.basis or character.basis_name
+    basis_path = character_dir / "morphs" / "L1" / f"{basis_name}.npy"
     if not basis_path.is_file():
         raise FileNotFoundError(f"CharMorph basis not found: {basis_path}")
-    pack_path = character_dir / "morphs" / "L2_packed" / "__main__.npz"
+    pack_path = character.morph_pack_path
     basis = np.load(basis_path).astype(np.float64)
     if basis.shape != (len(body.data.vertices), 3):
         raise ValueError(f"Basis shape {basis.shape} does not match mesh vertex count {len(body.data.vertices)}")
@@ -249,18 +254,20 @@ def main() -> None:
     if args.render_output_dir is not None:
         display_manifest = build_display_avatar(
             body,
-            character_dir,
+            character,
             resolve(args.render_output_dir),
             output_path,
         )
 
     report = {
         "schemaVersion": "patterna.charmorph-avatar/1.0",
-        "backend": "CharMorph mb_female",
-        "sourceLicense": "AGPL-3.0",
-        "sourceObject": args.object,
+        "backend": character.title,
+        "sourceLicense": character.license_name,
+        "sourceLicenseFile": str(character.license_path),
+        "sourceLicenseSha256": sha256(character.license_path),
+        "sourceObject": object_name,
         "sourceBasis": str(basis_path),
-        "sourceBasisName": args.basis,
+        "sourceBasisName": basis_name,
         "sourcePack": str(pack_path),
         "sourcePackSha256": sha256(pack_path),
         "vertexCount": len(vertices),

@@ -133,6 +133,11 @@ def apply_controls(
 ) -> tuple[np.ndarray, dict[str, float]]:
     groups = combine_morphs(raw_morphs)
     weights = morph_weights(groups, controls)
+    for raw_name in raw_morphs:
+        if raw_name in controls and raw_name not in weights:
+            direct_weight = float(np.clip(controls[raw_name], 0.0, 1.0))
+            if direct_weight > 1.0e-6:
+                weights[raw_name] = direct_weight
     vertices = basis.astype(np.float64, copy=True)
     for raw_name, weight in weights.items():
         raw_morphs[raw_name].apply(vertices, weight)

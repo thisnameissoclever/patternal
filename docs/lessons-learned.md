@@ -2250,3 +2250,183 @@ Treat `Patternal.build.appxrecipe` as the authoritative file-to-package mapping 
 ### How to verify
 
 Run `.\tools\isolated-ui\Sync-PatternalGuestPayload.ps1 -PrepareOnly`. It must build successfully, materialize every current recipe entry, prove that `Patternal.dll`, `resources.pri`, `avatar3d.html`, the accepted garment OBJ, and the fabric texture match current output byte-for-byte, then produce a ZIP whose recomputed entry identity equals `payload-manifest.json`.
+
+## Clean Windows guests block copied PowerShell scripts by default
+
+### What happened
+
+The first isolated payload transfer reached the newly provisioned guest, then failed before AppX registration because Windows refused to load `Install-PatternalGuestPayload.ps1`. Host-side tests had parsed the script but had not exercised the clean guest's default execution policy.
+
+### Root cause
+
+The host invoked the copied installer as a script inside a PowerShell Direct session without applying a process-scoped execution-policy override. The scheduled UI task already used `-ExecutionPolicy Bypass`, but the installation path did not share that contract.
+
+### Prevention rule
+
+Before invoking any repository-owned script copied into a clean guest, apply `Bypass` only to that guest PowerShell process or pass it explicitly to a child `powershell.exe`. Do not persistently weaken LocalMachine or CurrentUser policy. Cover both installation and scheduled execution paths in the harness contract.
+
+### How to verify
+
+Provision a fresh Windows guest with its default execution policy, run `Sync-PatternalGuestPayload.ps1`, and require the copied installer to validate the payload, register the AppX, and create the interactive smoke-test task. Confirm that the persistent LocalMachine and CurrentUser execution policies remain unchanged.
+
+## Preserve a direct MSIX fallback for Windows App Runtime deployment
+
+### What happened
+
+After the clean guest accepted the copied payload installer, Microsoft's signed Windows App Runtime 2.3.1 wrapper crashed with status `0xC0000409`. The framework package was still absent, so Patternal could not be registered or launched.
+
+### Root cause
+
+The harness treated the convenience EXE as the only supported runtime deployment path. Microsoft also publishes a redistributable ZIP containing the signed Framework, Main, Singleton, and DDLM MSIX packages, but the guest installer had no path to use them when the wrapper process failed.
+
+### Prevention rule
+
+Verify the wrapper's Microsoft signature and try its quiet installation first. On a nonzero exit, download the exact-version Microsoft redistributable, require all four x64 packages, verify every package's Microsoft signature, and install them directly. Re-query the x64 Framework package before registering Patternal. Do not treat a downloaded or signed installer as proof that it executed successfully.
+
+### How to verify
+
+Run guest installation on a clean Windows image while forcing or reproducing a wrapper failure. Require the direct MSIX path to install Framework, Main, Singleton, and DDLM, record the failed wrapper exit code and fallback mode, register the Patternal package, and proceed to the interactive smoke test.
+
+## A clean packaged-app guest still needs the declared .NET runtime
+
+### What happened
+
+The first registered-AppX smoke run started a responding `Patternal.exe` process but never produced a top-level window. The guest Application log recorded .NET Runtime event 1023: `You must install .NET to run this application.` The package registration and Windows App Runtime deployment had both succeeded, so a process-only check would have lied about startup.
+
+### Root cause
+
+The guest bootstrap installed the Windows App Runtime but omitted `Microsoft.NETCore.App`, even though `Patternal.runtimeconfig.json` declared .NET 10. A development machine concealed the missing prerequisite because its SDK already supplied the runtime.
+
+### Prevention rule
+
+Read the minimum .NET runtime from the materialized AppX runtime configuration and record it in the payload manifest. On the guest, require a compatible major and minor runtime at or above that minimum. If it is absent, install the pinned x64 Microsoft runtime only after verifying its Authenticode signature, then re-query the shared framework before registering and launching Patternal.
+
+### How to verify
+
+Run the packaged payload on a clean guest with no .NET installation. Require the installer result to record the installed runtime version, then require a real Patternal top-level window before any UI Automation step or screenshot can pass.
+
+Preserve the failed run's process snapshot and relevant Windows event records inside `result.json`. Startup failures should be diagnosable from the copied evidence bundle without requiring a second elevated guest query.
+
+## Screenshot geometry must cross PowerShell overload boundaries as integers
+
+### What happened
+
+The first packaged guest run with .NET installed proved a responsive Patternal top-level window, then failed before its first screenshot with `Exception calling .ctor with 2 argument(s): Parameter is not valid.` The runner had derived its window dimensions with `Math.Floor`, which returns `Double`, and passed those values into overloaded `System.Drawing.Bitmap` and `System.Drawing.Size` constructors.
+
+### Root cause
+
+The automation treated a whole-number value as equivalent to an integer-typed pixel coordinate. Windows PowerShell overload binding still saw floating-point arguments, so the constructor boundary was ambiguous and failed inside the guest even though the dimensions were numerically sensible.
+
+### Prevention rule
+
+Convert screenshot left, top, width, and height to explicit `Int32` values before calling any `System.Drawing` constructor or screen-copy API. Preserve the exception type and PowerShell script stack trace in failed evidence so the next defect identifies its exact line instead of leaving only an overloaded-constructor message.
+
+### How to verify
+
+Launch the registered AppX in the interactive guest, maximize its real top-level window, and require a nonempty startup PNG before proceeding to control interaction. Confirm a deliberately thrown runner failure records both `fatalErrorType` and `fatalScriptStackTrace` in `result.json`.
+
+## Capture accepted cloth before exercising simulation-invalidating controls
+
+### What happened
+
+The first complete 2D interaction pass round-tripped body and fabric sliders before opening 3D. Patternal correctly invalidated the old equilibrium while those inputs changed. Restoring the linked-proportions toggle then recomputed detailed body estimates, so restoring only the six primary slider values did not restore the complete 151-value body. The 3D tab truthfully hid the stale cloth and exposed only the measurement avatar.
+
+### Root cause
+
+The test sequence treated numeric control restoration as equivalent to restoring the full model and accepted simulation revision. Linked measurements update a larger dependent state graph, and a valid product must not keep showing cloth solved against an earlier body merely because the visible slider numbers happen to match again.
+
+### Prevention rule
+
+Capture and exercise every accepted-cloth camera before changing body, fabric, pattern, seam, or closure inputs. Return to 2D before running round-trip interaction checks. Close the unsaved test session afterward, and never use a stale-cloth frame as multi-angle acceptance evidence. Preserve the live UI tree whenever a 3D transition fails.
+
+### How to verify
+
+Start from the bundled accepted revision. Require six distinct current-cloth screenshots before the first simulation-invalidating action. Then change and restore the covered controls, require their visible values and toggles to round-trip, and confirm the application hides cloth whenever the complete revision does not match rather than silently reusing it.
+
+## Hidden Windows PowerShell may inherit a PowerShell 7-only module path
+
+### What happened
+
+The non-elevated background validation wrapper failed before guest synchronization because Windows PowerShell 5.1 could not resolve its normally built-in `Get-FileHash` cmdlet.
+
+### Root cause
+
+The child process inherited a module search path that exposed the PowerShell 7 utility module but not the Windows PowerShell utility module. Relying on command auto-loading made a basic identity check depend on the launcher's module-path state.
+
+### Prevention rule
+
+Isolated UI scripts must calculate SHA-256 identities through `System.Security.Cryptography.SHA256`, not through an auto-loaded PowerShell utility cmdlet.
+
+### How to verify
+
+Launch payload synchronization from a hidden Windows PowerShell 5.1 process and confirm it reaches the guest transfer phase without importing `Microsoft.PowerShell.Utility`.
+
+## Slow WebView accessibility traversal can hide sibling XAML controls from broad UIA searches
+
+### What happened
+
+The packaged 3D tab visibly rendered its camera toolbar, and the failure UI tree contained every camera button, but a broad name-based UI Automation descendant search timed out while WebView2 was loading the 130 MB garment surface.
+
+### Root cause
+
+The search traversed the complete mixed XAML and WebView2 accessibility tree. The browser subtree could delay a descendant query long enough that a visible sibling control appeared absent. The buttons also had no stable automation IDs, leaving the runner dependent on a costly name-only scan.
+
+### Prevention rule
+
+Give product-critical XAML controls stable automation IDs and target those IDs from isolated UI tests. Keep a bounded longer first-load allowance for the 3D surface. A stale-cloth state may still exercise the camera interface, but its screenshots must be labeled as stale-avatar evidence and must fail the accepted-cloth gate.
+
+### How to verify
+
+Open the packaged 3D tab in the guest, locate all six camera controls by automation ID, capture all six views, return to 2D, and confirm a stale baseline produces a specific failed freshness action instead of a misleading missing-control timeout.
+
+When the stable IDs are present but `AutomationElement.FindFirst` still returns no match, walk the control view breadth-first and stop at the requested ID. A mixed WinUI and WebView2 descendant query can cross a slow or inconsistent provider boundary; the control-view walker is the same interface used by the evidence tree and keeps the lookup on observable controls.
+
+The stale and accepted 3D states need stable automation IDs too. Never infer accepted cloth merely because a name-based stale-state search returned nothing; require one of the two mutually exclusive native state containers to be observable before recording the freshness action.
+
+Attach those IDs to visible semantic controls such as the state heading `TextBlock`, not layout-only `Border` or `StackPanel` containers. WinUI may omit layout containers from the UI Automation control view even when they have attached IDs.
+
+## Semantic camera labels require screenshot verification
+
+### What happened
+
+The Front, Rear, Oblique, and Fit buttons invoked distinct camera rotations and passed the interaction harness, but the screenshots showed the back of the avatar for Front and the front for Rear. The renderer's source mesh faces the opposite direction from the procedural model assumption encoded in the presets.
+
+### Root cause
+
+The topology test asserted numeric yaw values instead of proving what anatomy appeared in the labeled output. Distinct camera motion was mistaken for correct camera semantics.
+
+### Prevention rule
+
+Define semantic camera presets against the packaged production avatar coordinate system. Review the front, right, rear, left, oblique, and fit screenshots after any avatar or renderer change; a button invocation alone cannot prove that its label is truthful.
+
+### How to verify
+
+Front must show the face and chest, Rear must show the back, right and left must show opposite anatomical profiles, and Oblique and Fit must show the intended front three-quarter presentation. Keep the numeric preset assertions only as regression guards after visual acceptance establishes the correct mapping.
+
+## Character-generator code and generated body assets can have different licenses
+
+### What happened
+
+The architecture review initially treated CharMorph as one reusable open-source avatar option. The current production source actually selects CharMorph's `mb_female` character, whose generated body data is AGPL-3.0, while the same database also contains CC-BY Antonia and Reom characters.
+
+### Root cause
+
+The runtime manifest recorded source revisions and executable hashes but not the selected character backend, the generated-output license, or its license file. Tool licensing and content licensing were collapsed into one vague dependency label.
+
+### Prevention rule
+
+Every versioned simulation runtime and accepted simulation job must name the avatar backend and generated-output license. The relevant license file must be inside the owned runtime and covered by the same SHA-256 integrity boundary as the executable entry points.
+
+### How to verify
+
+Load a fixture runtime whose avatar license file is hash-bound, confirm the resolved runtime exposes its backend and output license, then modify only the license file and confirm manifest validation rejects it.
+
+## License metadata is not a redistributable license artifact
+
+**What happened:** Reom's CharMorph configuration and upstream documentation label the character CC-BY, but the vendored character directory contains no license or attribution file.
+
+**Root cause:** The architecture review initially treated a license name in metadata as equivalent to the actual terms and attribution material required for redistribution.
+
+**Prevention rule:** A character is not eligible for a packaged runtime unless its concrete license and attribution artifact is stored with the character, reviewed, and covered by the runtime manifest's SHA-256 integrity boundary. A metadata-only declaration may support research, but not shipping.
+
+**How to verify:** Resolve every candidate through `charmorph_character.load_character`. Confirm Antonia and `mb_female` resolve their local license files, and confirm Reom is rejected while its license artifact remains absent.

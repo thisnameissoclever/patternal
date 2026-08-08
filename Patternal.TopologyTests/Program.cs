@@ -966,9 +966,9 @@ Assert(viewportSource.Contains("uniform float uRoughness", StringComparison.Ordi
 Assert(viewportSource.Contains("fabricRoughness", StringComparison.Ordinal), "The packaged renderer lost fabric-specific surface response.");
 Assert(viewportSource.Contains("setCameraView(viewName)", StringComparison.Ordinal), "The renderer lost its semantic camera-view API.");
 Assert(
-    viewportSource.Contains("front:{yaw:0,pitch:.01,distance:5.35}", StringComparison.Ordinal) &&
-        viewportSource.Contains("rear:{yaw:180,pitch:.01,distance:5.35}", StringComparison.Ordinal) &&
-        viewportSource.Contains("oblique:{yaw:35,pitch:.01,distance:5.45}", StringComparison.Ordinal),
+    viewportSource.Contains("front:{yaw:180,pitch:.01,distance:5.35}", StringComparison.Ordinal) &&
+        viewportSource.Contains("rear:{yaw:0,pitch:.01,distance:5.35}", StringComparison.Ordinal) &&
+        viewportSource.Contains("oblique:{yaw:145,pitch:.01,distance:5.45}", StringComparison.Ordinal),
     "The packaged camera presets no longer map front, rear, and front-oblique labels to anatomical views.");
 Assert(viewportSource.Contains("resetCamera(){setCameraView('fit');}", StringComparison.Ordinal), "Fit view no longer returns to the accepted full-body presentation.");
 Assert(viewportSource.Contains("uniform vec3 uCameraPosition", StringComparison.Ordinal), "Material lighting is no longer derived from the live inspection camera.");
@@ -2434,12 +2434,14 @@ try
     string blenderRelative = "blender/blender.exe";
     string compilerRelative = "compiler/Patternal.UnrealGarmentCompiler.exe";
     string toolsRelative = "tools";
+    string avatarLicenseRelative = "third_party/CharMorph-db/characters/antonia/license.txt";
     string[] scriptNames =
     [
         "fit_charmorph_profile.py",
         "generate_charmorph_avatar.py",
         "prepare_charmorph_garmentcode_body.py",
         "charmorph_collision.py",
+        "charmorph_character.py",
         "charmorph_morphs.py",
         "charmorph_profile_controls.py",
         "mesh_torso_arcs.py",
@@ -2457,6 +2459,7 @@ try
         style3DPythonRelative,
         blenderRelative,
         compilerRelative,
+        avatarLicenseRelative,
         .. scriptNames.Select(script => $"{toolsRelative}/{script}")
     ];
     foreach (string relativePath in entrypointRelativePaths)
@@ -2485,6 +2488,9 @@ try
                 blender = blenderRelative,
                 compiler = compilerPath,
                 toolsDirectory = toolsRelative,
+                avatarBackend = "CharMorph Antonia",
+                avatarOutputLicense = "CC-BY-3.0",
+                avatarLicenseFile = avatarLicenseRelative,
                 entrypointSha256 = runtimeHashes
             },
             new JsonSerializerOptions { WriteIndented = true });
@@ -2496,11 +2502,27 @@ try
     Assert(
         installedRuntime.Origin == "installed-manifest" &&
             installedRuntime.RuntimeVersion == "test-runtime" &&
+            installedRuntime.AvatarBackend == "CharMorph Antonia" &&
+            installedRuntime.AvatarOutputLicense == "CC-BY-3.0" &&
+            string.Equals(
+                installedRuntime.AvatarLicensePath,
+                Path.Combine(runtimeFixtureRoot, avatarLicenseRelative.Replace('/', Path.DirectorySeparatorChar)),
+                StringComparison.OrdinalIgnoreCase) &&
             string.Equals(
                 installedRuntime.RootDirectory,
                 runtimeFixtureRoot,
                 StringComparison.OrdinalIgnoreCase),
         "The runtime locator did not prefer a valid installed manifest without a source checkout.");
+
+    string avatarLicensePath = Path.Combine(
+        runtimeFixtureRoot,
+        avatarLicenseRelative.Replace('/', Path.DirectorySeparatorChar));
+    File.AppendAllText(avatarLicensePath, ":tampered");
+    Assert(
+        !SimulationRuntimeLocator.TryLoadManifest(manifestPath, out _, out string licenseTamperRejection) &&
+            licenseTamperRejection.Contains("SHA-256", StringComparison.Ordinal),
+        "The runtime manifest accepted a modified avatar license declaration.");
+    File.WriteAllText(avatarLicensePath, $"fixture:{avatarLicenseRelative}", new UTF8Encoding(false));
 
     string tamperedScript = Path.Combine(runtimeFixtureRoot, "tools", scriptNames[0]);
     File.AppendAllText(tamperedScript, ":tampered");

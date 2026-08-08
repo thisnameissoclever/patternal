@@ -33,7 +33,7 @@ $ErrorActionPreference = 'Stop'
 Import-Module (Join-Path $PSScriptRoot 'Patternal.IsolatedUi.psm1') -Force
 
 $resolvedIsoPath = (Resolve-Path -LiteralPath $IsoPath).Path
-$actualIsoHash = (Get-FileHash -LiteralPath $resolvedIsoPath -Algorithm SHA256).Hash
+$actualIsoHash = Get-PatternalFileSha256 -Path $resolvedIsoPath
 if ($actualIsoHash -ine $ExpectedIsoSha256) {
     throw "Windows ISO hash mismatch. Expected $ExpectedIsoSha256 but found $actualIsoHash."
 }

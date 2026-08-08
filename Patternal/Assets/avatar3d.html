@@ -1607,12 +1607,12 @@
 
       function setCameraView(viewName) {
         const views={
-          front:{yaw:0,pitch:.01,distance:5.35},
+          front:{yaw:180,pitch:.01,distance:5.35},
           right:{yaw:-90,pitch:.01,distance:5.35},
-          rear:{yaw:180,pitch:.01,distance:5.35},
+          rear:{yaw:0,pitch:.01,distance:5.35},
           left:{yaw:90,pitch:.01,distance:5.35},
-          oblique:{yaw:35,pitch:.01,distance:5.45},
-          fit:{yaw:35,pitch:.01,distance:5.65}
+          oblique:{yaw:145,pitch:.01,distance:5.45},
+          fit:{yaw:145,pitch:.01,distance:5.65}
         };
         const view=views[String(viewName).toLowerCase()];
         if(!view)return false;
