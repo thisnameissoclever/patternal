@@ -14,7 +14,7 @@ Patterna should use a deliberately boring composition of permissive foundations 
 6. Keep Blender as the offline GLB assembly, rendering, and visual-proof boundary.
 7. Evaluate Meta Momentum Human Rig LOD1 as the first avatar challenger after explicit dependency approval. The maintainer confirmed on 2026-06-10 that its assets are Apache 2.0 and updated `assets.zip` to include the license. Patterna already contains a narrow TorchScript mesh bridge, measurement fitter, anthropometry helpers, and focused tests; the remaining work is a versioned runtime and an honest bake-off, not a speculative rewrite.
 8. Keep Anny 0.5 as a semantic measurement and collision comparator. Its Apache-2.0 code, CC0 MPFB2 data, native shape controls, texture coordinates, and optional Apache-2.0 SOMA topology are useful, but its MakeHuman-derived appearance does not solve the rejected hero-avatar problem.
-9. Keep SOMA-X as a later interoperability layer for shared topology, rigging, and pose correctives if MHR wins. Do not add it to the first bake-off because it adds PyTorch, Warp, auto-downloaded assets, and another mapping layer before the base avatar is accepted.
+9. Keep SOMA-X 0.2.1 as a later interoperability layer for shared topology, rigging, pose correctives, and procedural twist joints if MHR wins. Do not add it to the first bake-off because it adds CUDA PyTorch, Warp, Git LFS or auto-downloaded assets, and another mapping layer before the base avatar is accepted.
 10. Use Blender Studio's CC0 Human Base Meshes only as sculpted detail, topology, and appearance references. They are not parametric bodies and do not replace measurement fitting.
 11. Do not adopt XRTailor as the primary authoring or assembly solver. Its documented custom-garment path starts with Marvelous Designer sewing and draping, then imports a welded template. That does not remove the CLO-class dependency Patterna is trying to replace.
 
@@ -24,17 +24,27 @@ Patterna should use a deliberately boring composition of permissive foundations 
 | --- | --- | --- | --- | --- |
 | CharMorph Antonia | Character is CC-BY; the vendored character includes its exact license and attribution | Stable 36,030-vertex feminine body, UVs, material regions, named morphs, underwear, and a Blender source | Already integrated, fitted, exported to GLB, packaged, and hash-bound | Current control avatar |
 | MakeHuman and MPFB core assets | Core graphical assets are CC0; tool code is GPL or AGPL | Hair, eyes, skin, clothing proxies, targets, rigs, and Blender fitting tools | Assets are already vendored, but topology-specific proxies need a new fit to Antonia | Appearance donor only, never assume cross-body fit |
-| Meta Momentum Human Rig | Apache 2.0 code and assets; the maintainer confirmed the asset license and added it to the release ZIP on 2026-06-10 | 45 identity parameters, 204 pose parameters, 72 facial controls, pose correctives, detailed face and hands, seven levels of detail, rigged FBX assets, and a LOD1 TorchScript path | Existing Patterna bridge avoids PyMomentum and needs only a versioned Python 3.11 or 3.12 CPU PyTorch runtime plus the roughly 190 MB v1.0.1 asset ZIP for the first geometry bake-off | First avatar challenger after approval |
-| Anny 0.5 | Apache-2.0 code, CC0 MPFB2 data, and optional Apache-2.0 SOMA data; optional SMPL-X topology is separately non-commercial and excluded | Interpretable age and body controls, stable topology, hands and face models, rigging, texture coordinates, differentiable fitting, and SOMA interoperability | Patterna already contains an Anny fitter and garment-collider preparation path, but the current product has already rejected MakeHuman-family appearance | Measurement and collision comparator, not hero display |
-| SOMA-X 0.1 | Apache-2.0 code; optional identity backends and downloaded assets retain their own terms | One topology and rig across MHR, Anny, GarmentMeasurement, and separately licensed SMPL-family inputs, with shared pose correctives | Valuable only after one identity source wins; otherwise it adds a second parametric layer and a larger PyTorch and Warp runtime | Later interoperability challenger |
+| Meta Momentum Human Rig | Apache 2.0 code and assets; the maintainer confirmed the asset license and added it to the release ZIP on 2026-06-10 | 45 identity parameters, 204 pose parameters, 72 facial controls, pose correctives, detailed face and hands, seven levels of detail, rigged FBX assets, and a LOD1 TorchScript path | Existing Patterna bridge avoids PyMomentum and needs only a versioned Python 3.11 or 3.12 CPU PyTorch runtime plus the 198,943,157-byte v1.0.1 asset ZIP for the first geometry bake-off | First avatar challenger after approval |
+| Anny 0.5 | Apache-2.0 code, CC0 MPFB2 data, and optional Apache-2.0 SOMA data; optional SMPL-X topology is separately non-commercial and excluded | Interpretable age and body controls, stable topology, hands and face models, rigging, texture coordinates, differentiable fitting, and SOMA interoperability | Patterna already contains an Anny fitter and garment-collider preparation path, but the current product has already rejected MakeHuman-family appearance. Its own installation notes warn that the free examples extra may download non-commercial assets, so any comparator runtime must disable implicit downloads and admit only hash-pinned MPFB2 and SOMA data. | Measurement and collision comparator, not hero display |
+| SOMA-X 0.2.1 | Apache-2.0 code; optional identity backends and downloaded assets retain their own terms | One topology and rig across MHR, Anny, GarmentMeasurement, and separately licensed SMPL-family inputs, with shared pose correctives, procedural twist joints, extra-low level of detail, and Blender and Maya reference tools | Valuable only after one identity source wins; otherwise it adds a second parametric layer, Git LFS assets, CUDA PyTorch, Warp, and another mapping layer | Later interoperability challenger |
 | Blender Human Base Meshes 1.4.1 | CC0 asset bundle from Blender Studio | Realistic and stylized closed quad meshes, multi-resolution sculpt detail, UVs, hands, feet, heads, eyes, jaws, and teeth | Excellent reference and donor material, but no measurement model, production rig, or fitted clothing follows automatically | Appearance and topology reference only |
 | Newton Style3D | Apache 2.0 Newton and current Apache-2.0 Warp | GPU shell simulation with current Patterna seam adapter | Already owned and reproducible; exact Antonia control renders remain rejected | Keep as control backend |
-| ZOZO PPF Contact Solver | Apache 2.0 with explicit proprietary and commercial-use permission | GPU finite-element shells, contact barriers, strain limiting, friction, pins, cross-object soft stitches, Windows executable, Docker service, Blender API, and offline fitting examples | Native Windows package is about 320 MB, needs a modern NVIDIA driver but no local Python or CUDA Toolkit, and can run headlessly without desktop focus | First cloth challenger after approval |
+| ZOZO PPF Contact Solver | Apache 2.0 with explicit proprietary and commercial-use permission | GPU finite-element shells, contact barriers, strain limiting, friction, pins, cross-object soft stitches, Windows executable, Docker service, Blender API, and offline fitting examples | The 2026-08-08 native Windows archive is 447,925,491 bytes, needs a modern NVIDIA driver but no local Python or CUDA Toolkit, and can run headlessly without desktop focus | First cloth challenger after approval |
 | XRTailor | Codebase declares Apache 2.0 and lists third-party licenses | CUDA cloth, obstacle collision, self-collision, anisotropic quality mode, GLTF animation input, and Alembic or OBJ output | Windows build is non-trivial. Documented custom assets require Marvelous Designer, RizomUV, MeshLab, and an already welded and draped garment template | Do not use as primary assembly solver; possible later animation comparator |
 | PositionBasedDynamics | MIT | General XPBD constraints, deformables, collision, signed-distance fields, C++ and Python interfaces | Mature and Windows-capable, but Patterna would still have to build sewing, fabric calibration, contact policy, and garment exchange around it | Reference implementation only |
 | IPC Toolkit and C-IPC | MIT project licenses | High-accuracy codimensional continuous contact and friction | Excellent offline oracle; substantial C++ integration and poor interactive-product fit | Difficult-case validator only |
 | MB-Lab | GPL/AGPL family data and archived repository | Parametric bodies and Blender character tools | Repository is archived and its own README says development moved to CharMorph | Reject |
 | SMPL family | Model licenses differ from the open-source wrappers that consume them | Research-standard body topology and motion ecosystem | License and registration requirements make it a poor default for a freely redistributable personal Windows app | Do not make it the product boundary |
+
+## Concrete pinned evaluation inputs
+
+The first evaluation must use exact artifacts, not whichever GitHub asset happens to sort as latest that morning:
+
+1. MHR `v1.0.1` `assets.zip`: 198,943,157 bytes, GitHub-published SHA-256 `e4f4f205cd87c0fa106577ba1de4fc763e4eb197c924461d2ef7e6944e9d6b94`. The release note says the license was added to the assets. This is the only MHR archive eligible for the first bake-off.
+2. PPF native solver tag `2026-08-08-03-55`: `ppf-contact-solver-2026-08-08-03-55-win64.zip`, 447,925,491 bytes, GitHub-published SHA-256 `50d84ce0c9bc57d6d72564efa21b66c19c4e5e7e9eddd528c4d9fa050f5cafec`.
+3. PPF Blender add-on tag `addon-2026-08-08-0540`: `ppf_contact_solver_2026_08_08_0540.zip`, 3,884,115 bytes, GitHub-published SHA-256 `0254a9d5fb54cd41f3a71d34896a043f938e089977694a7ba8156e54d97c50c2`. This is optional for the first file-driven solver experiment.
+4. Do not resolve PPF through GitHub's generic latest-release endpoint. The add-on was published 41 seconds after its matching native engine and currently wins that endpoint despite not containing the engine.
+5. The host currently reports an RTX 4090, NVIDIA driver 610.88, 24,564 MiB, compute capability 8.9, and CUDA user-mode driver 13.3. That exceeds PPF's documented CUDA 12.8 support requirement, but only an actual pinned-executable smoke test can prove runtime compatibility.
 
 ## Why PPF is the first challenger
 
@@ -52,7 +62,7 @@ This is still a challenger, not a foregone conclusion. Its snap workflow expects
 
 After explicit dependency approval, install PPF into a separate versioned runtime. Do not alter the accepted Newton runtime in place.
 
-1. Prefer the signed or workflow-proven Windows-native release over Docker for the first local evaluation. It is headless, avoids a second Linux and GPU-container layer, and does not require the Blender add-on.
+1. Prefer the hash-pinned `2026-08-08-03-55` Windows-native release over Docker for the first local evaluation. It is headless, avoids a second Linux and GPU-container layer, and does not require the Blender add-on.
 2. Record the release URL, release tag, downloaded SHA-256, license, executable hashes, NVIDIA driver, GPU, and every solver parameter.
 3. Convert the existing 0.50 cm common bundle into one shell object per material panel with exact seam vertex identities.
 4. Create stitch anchors from the existing seam correspondence, not from unconstrained nearest-neighbor guessing.
@@ -75,7 +85,7 @@ The minimum Antonia control work is:
 
 The MHR bake-off boundary, after dependency approval, is:
 
-1. Create a separate versioned runtime with Python 3.11 or 3.12, CPU PyTorch, and the v1.0.1 `mhr_model.pt`. Do not install into the host's Python 3.14 environment and do not alter the Antonia runtime.
+1. Create a separate versioned runtime with Python 3.11 or 3.12, CPU PyTorch, and `mhr_model.pt` extracted from the hash-pinned v1.0.1 asset archive. Do not install into the host's Python 3.14 environment and do not alter the Antonia runtime.
 2. Record the release URL, asset ZIP SHA-256, embedded Apache-2.0 license hash, Torch version, runtime lock, and every generated-output hash.
 3. Run the existing neutral bridge and focused unit tests before fitting any measurement profile.
 4. Fit the same 167 cm full-bust profile using the existing measurement fitter. Bound every identity coefficient, report every circuit and landmark residual, and reject anatomy that only wins numerically.
@@ -127,3 +137,7 @@ Momentum Human Rig is eligible for a controlled bake-off now that the asset arch
 11. CharMorph character licensing: <https://blendercharacterproject.org/docs/html/Introduction.html>
 12. PositionBasedDynamics: <https://github.com/InteractiveComputerGraphics/PositionBasedDynamics>
 13. IPC Toolkit: <https://ipctk.xyz/>
+14. MHR v1.0.1 release: <https://github.com/facebookresearch/MHR/releases/tag/v1.0.1>
+15. PPF 2026-08-08 Windows release: <https://github.com/st-tech/ppf-contact-solver/releases/tag/2026-08-08-03-55>
+16. PPF 2026-08-08 Blender add-on release: <https://github.com/st-tech/ppf-contact-solver/releases/tag/addon-2026-08-08-0540>
+17. SOMA-X v0.2.1 release: <https://github.com/NVlabs/SOMA-X/releases/tag/v0.2.1>

@@ -297,6 +297,10 @@ WebView2 may remain because it provides an isolated, easily packaged interactive
 
 This reassessment does not install or upgrade a dependency. The first requested dependency change should be a separate versioned PPF evaluation runtime. The current host has an RTX 4090, which the official project names as an ideal GPU, but driver, CUDA, executable provenance, and Blender 5 compatibility must be verified before installation.
 
+The concrete PPF request is now bounded to native tag `2026-08-08-03-55`, archive size 447,925,491 bytes, and GitHub-published SHA-256 `50d84ce0c9bc57d6d72564efa21b66c19c4e5e7e9eddd528c4d9fa050f5cafec`. The separately tagged Blender add-on is optional and must not be mistaken for the native engine through GitHub's generic latest-release endpoint. The host currently reports NVIDIA driver 610.88 and CUDA user-mode driver 13.3, which exceeds the documented CUDA 12.8 support requirement. Compatibility remains unproved until the pinned native executable runs.
+
+The concrete MHR request is bounded to v1.0.1 `assets.zip`, size 198,943,157 bytes, and GitHub-published SHA-256 `e4f4f205cd87c0fa106577ba1de4fc763e4eb197c924461d2ef7e6944e9d6b94`, plus a separate Python 3.11 or 3.12 CPU PyTorch environment. The current Patterna simulation runtime is already Python 3.12.10 but contains no PyTorch; it must not be mutated in place. MHR's LOD1 TorchScript route remains the smallest honest challenger because it avoids PyMomentum and preserves a narrow runtime boundary.
+
 The old GarmentCode Warp environment should be removed only after proving that the product-critical mesh export can run without its customized collision and simulation modules. Updating it in place would be the traditional dependency-upgrade method of discovering that archaeology is also a branch of applied explosives.
 
 ## Primary references
