@@ -44,8 +44,10 @@ The 0.50 cm material surface is the current useful control resolution. It reduce
 2. Keep rigid source placement, explicit sewing, semantic seam phases, and the common bundle as backend-neutral inputs.
 3. Do not spend another full control run on the rejected C# initial arrangement.
 4. Evaluate ZOZO PPF Contact Solver next in a separate versioned runtime after explicit dependency approval. Give it this same 0.50 cm bundle, body, fabric, seam graph, cameras, and gates.
+   PPF's current Snap and Merge contract supports cross-object soft stitches with barycentric anchor evidence and an exact fetched-surface post-snap. The adapter must create anchors from authored seam correspondence and prove raw soft-stitch closure before post-snap; post-processing cannot turn a rejected solve into accepted cloth.
 5. Use IPC Toolkit only as an offline contact oracle if Newton and PPF disagree about a difficult collision case.
-6. Treat the current adaptive sleeve-cap and cuff behavior as a possible pattern or seam-contract defect as well as a solver result. A new solver is not allowed to hide malformed construction input.
+6. Do not use XRTailor as the first challenger. Its documented custom-garment workflow starts with Marvelous Designer sewing and draping and imports a welded template, so it does not test Patterna's panel-assembly problem independently.
+7. Treat the current adaptive sleeve-cap and cuff behavior as a possible pattern or seam-contract defect as well as a solver result. A new solver is not allowed to hide malformed construction input.
 
 ## Evidence boundary
 

@@ -4,6 +4,8 @@ Status: active replacement boundary based on packaged UI evidence and local asse
 
 This document does not declare the product complete. It records why the present stack cannot honestly meet the CLO-class acceptance target and defines the smallest credible migration for a one-person, non-revenue project.
 
+The detailed candidate, licensing, and one-person integration decision is maintained in `docs/open-source-foundation-decision.md`.
+
 ## Bottom line
 
 Keep WinUI 3, the editable 2D document model, GarmentCode pattern exchange, Blender proof rendering, and the current Newton/Warp solver as a comparison backend. Replace the avatar product boundary, make cloth solvers interchangeable, and stop using numerical collision and strain reports as a substitute for visual acceptance.
@@ -161,6 +163,7 @@ The present solver adapter also owns custom warm-start, contact, seam, and proje
 | ZOZO PPF Contact Solver | Apache-2.0, Windows native executable, Blender 5 add-on, GPU contact and elasticity, penetration-free focus, fitting example, RTX 4090 explicitly recommended | New integration, CUDA 12.8 requirement, potentially minutes per result, Blender add-on requires Blender 5 | First challenger |
 | IPC Toolkit and C-IPC | MIT toolkit, strong intersection-free codimensional contact research, thickness and friction formulation | Integration-heavy C++ research stack; unsuitable as the first interactive backend | Offline oracle and difficult-case validator |
 | PositionBasedDynamics | MIT, mature XPBD and deformable examples, Windows build path | General library rather than garment product; would recreate much of the missing sewing and material stack | Reference only |
+| XRTailor | Apache-2.0, CUDA, Windows, GLTF bodies, self-collision, anisotropic quality mode | Its documented custom-asset path requires Marvelous Designer sewing and draping plus a welded template; it does not replace Patterna's missing assembly solve | Later animation comparator only |
 | Blender built-in cloth | Already available and artist-friendly | Past project evidence showed unstable sewing and collision for this garment | Diagnostic comparison only |
 
 ### Antonia control result
@@ -296,3 +299,5 @@ The old GarmentCode Warp environment should be removed only after proving that t
 7. C-IPC project: <https://ipc-sim.github.io/C-IPC/>
 8. PositionBasedDynamics: <https://github.com/InteractiveComputerGraphics/PositionBasedDynamics>
 9. MakeHuman CC0 assets: <https://github.com/makehumancommunity/makehuman-assets>
+10. XRTailor: <https://github.com/openxrlab/xrtailor>
+11. Momentum Human Rig: <https://github.com/facebookresearch/MHR>
