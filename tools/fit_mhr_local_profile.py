@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 from pathlib import Path
 import sys
 
@@ -40,6 +41,12 @@ TORSO_SIGMA_RATIOS = {
     "waist": 0.020,
     "underbust": 0.016,
     "bust": 0.024,
+}
+DEFAULT_UPPER_ARM_LENGTH_RATIO = 0.17
+DEFAULT_ARM_FORWARD_SWEEP_DEGREES = 20.0
+MHR_ARM_JOINTS = {
+    "right": {"shoulder": 39, "elbow": 40, "descendants": range(40, 74)},
+    "left": {"shoulder": 75, "elbow": 76, "descendants": range(76, 110)},
 }
 
 
@@ -252,6 +259,154 @@ def mesh_quality(
     }
 
 
+def scaled_skeleton_state(
+    skeleton_state: np.ndarray,
+    source_vertices_cm: np.ndarray,
+    target_height_cm: float,
+) -> np.ndarray:
+    """Scale MHR global joint translations to the fitted body's stature."""
+    state = np.asarray(skeleton_state, dtype=np.float64).copy()
+    if state.ndim != 2 or state.shape[1] != 8 or state.shape[0] < 2:
+        raise ValueError("MHR skeleton state must contain at least two 8-value joints.")
+    if not np.isfinite(state).all():
+        raise ValueError("MHR skeleton state contains a non-finite value.")
+    source_height_cm = float(np.ptp(source_vertices_cm[:, 1]))
+    if source_height_cm <= 0.0:
+        raise ValueError("MHR source body has no measurable standing height.")
+    state[:, :3] *= target_height_cm / source_height_cm
+    return state
+
+
+def normalize_upper_arm_length(
+    vertices_cm: np.ndarray,
+    skeleton_state: np.ndarray,
+    *,
+    target_ratio: float = DEFAULT_UPPER_ARM_LENGTH_RATIO,
+) -> tuple[np.ndarray, np.ndarray, dict[str, object]]:
+    """Lengthen the default MHR upper arms and their rig branches together."""
+    vertices = np.asarray(vertices_cm, dtype=np.float64).copy()
+    state = np.asarray(skeleton_state, dtype=np.float64).copy()
+    if vertices.ndim != 2 or vertices.shape[1] != 3 or not np.isfinite(vertices).all():
+        raise ValueError("MHR upper-arm normalization requires finite 3D vertices.")
+    if state.shape != (127, 8) or not np.isfinite(state).all():
+        raise ValueError("MHR upper-arm normalization requires the 127-joint state.")
+    stature = float(np.ptp(vertices[:, 1]))
+    if stature <= 0.0 or not 0.16 <= target_ratio <= 0.23:
+        raise ValueError("MHR upper-arm normalization target is outside the anatomy gate.")
+    target_length = target_ratio * stature
+    floor = float(vertices[:, 1].min())
+    sides: dict[str, object] = {}
+
+    for side_name, contract in MHR_ARM_JOINTS.items():
+        shoulder = state[contract["shoulder"], :3].copy()
+        elbow = state[contract["elbow"], :3].copy()
+        vector = elbow - shoulder
+        current_length = float(np.linalg.norm(vector))
+        if current_length <= 0.0:
+            raise ValueError(f"MHR {side_name} upper arm has no usable length.")
+        direction = vector / current_length
+        extension = max(0.0, target_length - current_length)
+        delta = direction * extension
+        side = 1.0 if side_name == "left" else -1.0
+        projection = np.dot(vertices - shoulder, direction) / current_length
+        longitudinal_weight = _smooth_edge(projection)
+        lateral_weight = _smooth_edge(
+            (np.abs(vertices[:, 0]) - 0.105 * stature) / (0.035 * stature)
+        )
+        height_weight = _smooth_edge(
+            (vertices[:, 1] - (floor + 0.55 * stature)) / (0.08 * stature)
+        )
+        side_weight = (vertices[:, 0] * side > 0.0).astype(np.float64)
+        weights = longitudinal_weight * lateral_weight * height_weight * side_weight
+        vertices += weights[:, None] * delta[None, :]
+        for joint_index in contract["descendants"]:
+            state[joint_index, :3] += delta
+        sides[side_name] = {
+            "beforeCm": current_length,
+            "afterCm": current_length + extension,
+            "extensionCm": extension,
+        }
+
+    return vertices, state, {
+        "accepted": all(
+            side["afterCm"] / stature >= 0.16
+            for side in sides.values()
+        ),
+        "method": "symmetric smooth upper-arm surface extension with matching MHR descendant-joint translation",
+        "targetRatioToStature": target_ratio,
+        "targetLengthCm": target_length,
+        "sides": sides,
+    }
+
+
+def normalize_arm_forward_sweep(
+    vertices_cm: np.ndarray,
+    skeleton_state: np.ndarray,
+    *,
+    target_degrees: float = DEFAULT_ARM_FORWARD_SWEEP_DEGREES,
+) -> tuple[np.ndarray, np.ndarray, dict[str, object]]:
+    """Reduce excessive forward arm sweep while preserving bilateral symmetry."""
+    vertices = np.asarray(vertices_cm, dtype=np.float64).copy()
+    state = np.asarray(skeleton_state, dtype=np.float64).copy()
+    if vertices.ndim != 2 or vertices.shape[1] != 3 or not np.isfinite(vertices).all():
+        raise ValueError("MHR arm-sweep normalization requires finite 3D vertices.")
+    if state.shape != (127, 8) or not np.isfinite(state).all():
+        raise ValueError("MHR arm-sweep normalization requires the 127-joint state.")
+    if not 0.0 <= target_degrees <= 25.0:
+        raise ValueError("MHR arm-sweep target must remain inside the inspection-pose gate.")
+    stature = float(np.ptp(vertices[:, 1]))
+    floor = float(vertices[:, 1].min())
+    sides: dict[str, object] = {}
+
+    for side_name, contract in MHR_ARM_JOINTS.items():
+        side = 1.0 if side_name == "left" else -1.0
+        shoulder = state[contract["shoulder"], :3].copy()
+        candidates = vertices[
+            (vertices[:, 0] * side > 0.105 * stature)
+            & (vertices[:, 1] > floor + 0.55 * stature)
+        ]
+        if len(candidates) < 100:
+            raise ValueError(f"MHR {side_name} arm sweep has too few surface samples.")
+        endpoint = candidates[int(np.argmax(np.linalg.norm(candidates - shoulder, axis=1)))]
+        vector = endpoint - shoulder
+        before_degrees = math.degrees(math.atan2(vector[2], abs(vector[0])))
+        correction_degrees = max(0.0, before_degrees - target_degrees)
+        angle = math.radians(correction_degrees * side)
+        cosine = math.cos(angle)
+        sine = math.sin(angle)
+
+        relative = vertices - shoulder
+        rotated = relative.copy()
+        rotated[:, 0] = cosine * relative[:, 0] + sine * relative[:, 2]
+        rotated[:, 2] = -sine * relative[:, 0] + cosine * relative[:, 2]
+        lateral_weight = _smooth_edge(
+            (np.abs(vertices[:, 0]) - 0.105 * stature) / (0.035 * stature)
+        )
+        height_weight = _smooth_edge(
+            (vertices[:, 1] - (floor + 0.55 * stature)) / (0.08 * stature)
+        )
+        side_weight = (vertices[:, 0] * side > 0.0).astype(np.float64)
+        weights = lateral_weight * height_weight * side_weight
+        vertices += weights[:, None] * (shoulder + rotated - vertices)
+
+        for joint_index in contract["descendants"]:
+            joint_relative = state[joint_index, :3] - shoulder
+            state[joint_index, 0] = shoulder[0] + cosine * joint_relative[0] + sine * joint_relative[2]
+            state[joint_index, 2] = shoulder[2] - sine * joint_relative[0] + cosine * joint_relative[2]
+        sides[side_name] = {
+            "beforeDegrees": before_degrees,
+            "targetDegrees": target_degrees,
+            "rotationDegrees": correction_degrees,
+        }
+
+    return vertices, state, {
+        "accepted": all(side["beforeDegrees"] - side["rotationDegrees"] <= 25.0 for side in sides.values()),
+        "method": "symmetric smooth arm-surface yaw correction with matching MHR descendant-joint rotation",
+        "targetAbsoluteForwardSweepDegrees": target_degrees,
+        "sides": sides,
+    }
+
+
 def fit_local_measurements(
     vertices_cm: np.ndarray,
     faces: np.ndarray,
@@ -338,25 +493,57 @@ def main() -> None:
     model = torch.jit.load(str(model_path), map_location="cpu")
     model.eval()
     with torch.no_grad():
-        vertices, _ = model(
+        vertices, skeleton_state = model(
             torch.from_numpy(identity).reshape(1, -1),
             torch.zeros((1, 204), dtype=torch.float32),
             torch.zeros((1, 72), dtype=torch.float32),
             True,
         )
-        vertices = scaled_to_height(vertices, target_height_cm)
+    unscaled_vertices = vertices[0].cpu().numpy().astype(np.float64)
+    fitted_rig_state = scaled_skeleton_state(
+        skeleton_state[0].cpu().numpy(),
+        unscaled_vertices,
+        target_height_cm,
+    )
+    vertices = scaled_to_height(vertices, target_height_cm)
     source_vertices = vertices[0].cpu().numpy().astype(np.float64)
     mesh = model.character_torch.mesh
     faces = mesh.faces.cpu().numpy().astype(np.int64)
     texture_coordinates = mesh.texcoords.cpu().numpy().astype(np.float64)
     texture_faces = mesh.texcoord_faces.cpu().numpy().astype(np.int64)
+    sweep_vertices, fitted_rig_state, sweep_normalization = normalize_arm_forward_sweep(
+        source_vertices,
+        fitted_rig_state,
+    )
+    normalized_vertices, fitted_rig_state, length_normalization = normalize_upper_arm_length(
+        sweep_vertices,
+        fitted_rig_state,
+    )
     fitted_vertices, evidence = fit_local_measurements(
-        source_vertices, faces, targets, iterations=args.iterations
+        normalized_vertices, faces, targets, iterations=args.iterations
+    )
+    overall_quality = mesh_quality(source_vertices, fitted_vertices, faces)
+    if (
+        not sweep_normalization["accepted"]
+        or not length_normalization["accepted"]
+        or not overall_quality["accepted"]
+    ):
+        evidence["status"] = "rejected"
+    evidence["anatomyNormalization"] = {
+        "armForwardSweep": sweep_normalization,
+        "upperArmLength": length_normalization,
+    }
+    evidence["overallMeshQuality"] = overall_quality
+    total_displacements = np.linalg.norm(fitted_vertices - source_vertices, axis=1)
+    evidence["maximumTotalDisplacementCm"] = float(total_displacements.max())
+    evidence["rmsTotalDisplacementCm"] = float(
+        np.sqrt(np.mean(total_displacements**2))
     )
 
     output_directory.mkdir(parents=True, exist_ok=True)
     collision_path = output_directory / "avatar-mhr-local-fit-garmentcode-cm.obj"
     preview_path = output_directory / "avatar-mhr-local-fit-blender-m.obj"
+    rig_state_path = output_directory / "mhr-rig-state.json"
     report_path = output_directory / "local-fit-report.json"
     write_obj(
         collision_path,
@@ -365,6 +552,20 @@ def main() -> None:
         texture_coordinates,
         texture_faces,
         reverse_winding=False,
+    )
+    rig_state = {
+        "schemaVersion": "patterna.mhr-rig-state/1.0",
+        "coordinateSystem": "MHR centimeters, X right, Y up, Z back",
+        "jointCount": int(fitted_rig_state.shape[0]),
+        "fbxBoneCount": int(fitted_rig_state.shape[0] - 1),
+        "worldJointIndex": 0,
+        "fbxBoneStateOffset": 1,
+        "heightTargetCm": target_height_cm,
+        "jointStates": fitted_rig_state.tolist(),
+    }
+    rig_state_path.write_text(
+        json.dumps(rig_state, indent=2) + "\n",
+        encoding="utf-8",
     )
     write_obj(
         preview_path,
@@ -394,6 +595,8 @@ def main() -> None:
             "collisionObjSha256": sha256(collision_path),
             "previewObj": str(preview_path),
             "previewObjSha256": sha256(preview_path),
+            "rigState": str(rig_state_path),
+            "rigStateSha256": sha256(rig_state_path),
         },
     }
     report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")

@@ -54,6 +54,47 @@ $request | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $localRequestPath 
 $credential = Get-PatternalGuestCredential -VmName $VmName
 $session = New-PatternalVmSession -VmName $VmName -Credential $credential
 try {
+    $guestSession = Invoke-Command -Session $session -ScriptBlock {
+        param($ExpectedUserName)
+
+        $expectedLeafName = ($ExpectedUserName -split '\\')[-1]
+        $interactiveSessions = @(Get-CimInstance Win32_Process -Filter "Name = 'explorer.exe'" | ForEach-Object {
+            $owner = Invoke-CimMethod -InputObject $_ -MethodName GetOwner
+            if ($owner.ReturnValue -eq 0 -and $owner.User -ieq $expectedLeafName) {
+                [int]$_.SessionId
+            }
+        } | Sort-Object -Unique)
+        if ($interactiveSessions.Count -ne 1) {
+            throw "Expected exactly one $expectedLeafName explorer session, found $($interactiveSessions.Count)."
+        }
+
+        $sessionId = $interactiveSessions[0]
+        $queryBefore = (& "$env:SystemRoot\System32\query.exe" session $sessionId 2>&1) -join [Environment]::NewLine
+        if ($queryBefore -notmatch '\s(?:Active|Disc)\s') {
+            throw "Could not query guest session $sessionId`: $queryBefore"
+        }
+        $reconnectedToConsole = $false
+        if ($queryBefore -match '\sDisc\s') {
+            & "$env:SystemRoot\System32\tscon.exe" $sessionId /dest:console
+            if ($LASTEXITCODE -ne 0) {
+                throw "Could not reconnect guest session $sessionId to the VM console."
+            }
+            $reconnectedToConsole = $true
+            Start-Sleep -Seconds 2
+        }
+
+        $queryAfter = (& "$env:SystemRoot\System32\query.exe" session $sessionId 2>&1) -join [Environment]::NewLine
+        if ($queryAfter -notmatch '\sActive\s') {
+            throw "Guest session $sessionId is not active after console recovery: $queryAfter"
+        }
+        [pscustomobject]@{
+            sessionId = $sessionId
+            active = $true
+            reconnectedToConsole = $reconnectedToConsole
+            query = $queryAfter.Trim()
+        }
+    } -ArgumentList $credential.UserName
+
     Copy-Item -ToSession $session -LiteralPath $localRequestPath -Destination $guestStagedRequestPath
     Invoke-Command -Session $session -ScriptBlock {
         param($StagedRequestPath, $RequestPath)
@@ -126,4 +167,5 @@ if (-not $result.passed) {
     ResultPath = $resultPath
     HostInputInjected = $false
     VmConnectLaunched = $false
+    GuestSession = $guestSession
 }

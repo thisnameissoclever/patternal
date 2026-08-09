@@ -107,6 +107,9 @@ $identityFiles = @(
     'Assets\Candidate\Antonia\antonia.glb',
     'Assets\Candidate\Antonia\manifest.json',
     'Assets\Candidate\Antonia\license.txt',
+    'Assets\Candidate\MHR\mhr.glb',
+    'Assets\Candidate\MHR\manifest.json',
+    'Assets\Candidate\MHR\license.txt',
     'Assets\Production\patterna-production-crew-neck.obj',
     'Assets\Production\fabric-texture.png'
 )

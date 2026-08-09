@@ -746,8 +746,8 @@
         function visitNode(nodeIndex) {
           const node=document.nodes?.[nodeIndex];
           if(!node)throw new Error(`Candidate GLB node ${nodeIndex} is missing.`);
-          if(node.matrix||node.translation||node.rotation||node.scale)throw new Error(`Candidate GLB node ${node.name||nodeIndex} has an unsupported transform.`);
           if(node.mesh!==undefined) {
+            if(node.matrix||node.translation||node.rotation||node.scale)throw new Error(`Candidate GLB mesh node ${node.name||nodeIndex} has an unsupported transform.`);
             const mesh=document.meshes?.[node.mesh];
             if(!mesh)throw new Error(`Candidate GLB mesh ${node.mesh} is missing.`);
             for(const [primitiveIndex,primitive] of (mesh.primitives||[]).entries()) {
@@ -773,14 +773,17 @@
         for(const nodeIndex of scene.nodes)visitNode(nodeIndex);
         const textureMap=new Map(await Promise.all(Array.from(textureIndices).map(async index=>[index,await loadEmbeddedGlbTexture(document,binary,index)])));
         for(const entry of entries)entry.texture=entry.textureIndex===undefined?null:textureMap.get(entry.textureIndex);
-        const bodyEntry=entries.find(entry=>entry.nodeName==='Patterna_Antonia_Body'&&entry.materialName==='cm_antonia_body');
-        if(!bodyEntry)throw new Error('Candidate GLB has no primary Antonia body material.');
+        const primaryBodyNode=String(manifest.primaryBodyNode||'Patterna_Antonia_Body');
+        const primaryBodyMaterial=String(manifest.primaryBodyMaterial||'cm_antonia_body');
+        const bodyEntry=entries.find(entry=>entry.nodeName===primaryBodyNode&&entry.materialName===primaryBodyMaterial);
+        if(!bodyEntry)throw new Error(`Candidate GLB has no declared primary body ${primaryBodyNode}/${primaryBodyMaterial}.`);
+        const assetNodes=manifest.assetNodes&&typeof manifest.assetNodes==='object'?manifest.assetNodes:{};
         const assets=entries.filter(entry=>entry!==bodyEntry).map((entry,index)=>({
-          key:entry.nodeName==='Patterna_Antonia_Panties'
+          key:assetNodes[entry.nodeName]||(entry.nodeName==='Patterna_Antonia_Panties'
             ?'panties'
             :entry.nodeName==='Patterna_Antonia_ModestyBandeau'
               ?'modesty-bandeau'
-              :`antonia-${index}-${entry.materialName}`,
+              :`candidate-${index}-${entry.materialName}`),
           data:entry.data,
           texture:entry.texture,
           color:entry.color,
@@ -792,7 +795,7 @@
           bodyTexture:bodyEntry.texture,
           bodyColor:bodyEntry.color,
           assets,
-          mode:'antonia-candidate'
+          mode:String(manifest.displayMode||'antonia-candidate')
         };
       }
 
@@ -815,7 +818,7 @@
         return decodeCandidateGlb(geometryBuffer,manifest);
       }
 
-      async function loadCandidateDisplayAvatar(baseUrl='Candidate/Antonia/') {
+      async function loadCandidateDisplayAvatar(baseUrl='Candidate/MHR/') {
         return loadGlbDisplayAvatar(baseUrl);
       }
 
@@ -914,11 +917,11 @@
           const displayAvatar=await loadCandidateDisplayAvatar();
           if(requestSequence!==state.assetRequestSequence){discardDisplayAvatar(displayAvatar);return;}
           applyDisplayAvatar(displayAvatar);
-          state.acceptedBuildLabel='Antonia candidate · measurement fit accepted · cloth and production visual gates pending';
+          state.acceptedBuildLabel='MHR candidate · measurement, rig, anatomy, and pose gates accepted · cloth and product visual gates pending';
           scheduleRebuild();
         } catch(error) {
           if(requestSequence!==state.assetRequestSequence)return;
-          document.getElementById('buildLabel').textContent=`Antonia candidate unavailable · ${error.message}`;
+          document.getElementById('buildLabel').textContent=`MHR candidate unavailable · ${error.message}`;
         }
       }
 
@@ -1704,7 +1707,8 @@
         }
 
         const numericCount=Object.entries(a).filter(([key,value])=>key!=='photos'&&typeof value==='number').length;
-        const candidateAvatar=state.displayAvatarMode==='antonia-candidate';
+        const candidateAvatar=String(state.displayAvatarMode||'').endsWith('-candidate');
+        const mhrCandidate=state.displayAvatarMode==='mhr-candidate';
         document.getElementById('avatarEyebrow').textContent=candidateAvatar
           ?'FITTED AVATAR CANDIDATE'
           :'MEASUREMENT PREVIEW';
@@ -1713,7 +1717,7 @@
           :`${Math.round(a.height)} cm · ${numericCount} mapped values`;
         if(globalThis.chrome?.webview)globalThis.chrome.webview.postMessage({
           type:'avatar-state',
-          mode:candidateAvatar?'fitted-antonia-candidate':'editable-measurement-mesh',
+          mode:mhrCandidate?'fitted-mhr-candidate':candidateAvatar?'fitted-antonia-candidate':'editable-measurement-mesh',
           height:a.height,
           mappedValues:numericCount
         });

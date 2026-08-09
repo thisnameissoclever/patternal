@@ -3346,3 +3346,57 @@ Every cloth phase that materially changes assembly must produce deterministic mu
 ### How to verify
 
 Render the exact hash-bound garment and collider from front, rear, both sides, and both obliques. Reject any phase with a crumpled mass, laterally detached sleeve volume, inverted panel region, missing neckline, or body-shaped compression even when p95 strain and most seam links pass. Confirm the solver route remains isolated from the accepted Newton runtime and product asset path.
+
+## Avatar anatomy corrections must move the surface and rig together
+
+### What happened
+
+The first fitted MHR surface looked materially better than the control but failed the existing upper-arm and forward-sweep gates. Its native upper-arm ratio was `0.148714`, below the `0.16` minimum, and its arms swept forward by roughly 28.75 degrees. Stretching only the visible mesh would have left the skeleton inside the wrong anatomy.
+
+### Root cause
+
+Measurement fitting, visible surface correction, and rig landmarks were initially treated as separate proof stages. A numerically plausible surface can still disagree with the joints that will animate it.
+
+### Prevention rule
+
+Do not weaken an anatomy or pose gate to admit a preferred model. Apply smooth symmetric corrections to the affected surface and the exact descendant joint chain together. Preserve topology, skin weights, and joint mapping, then re-run mesh quality, anatomy, pose, registration, and exported-skin checks.
+
+### How to verify
+
+Require a `0.170000` upper-arm ratio, mean forward sweep within 25 degrees, zero orientation flips, one 126-joint GLB skin, zero unweighted vertices, at most four influences per vertex, joint-head error below `0.00001 m`, and exact display-to-collision registration. Review all six views afterward because these checks still do not prove appearance.
+
+## Semantic camera labels require visual review after every avatar swap
+
+### What happened
+
+The first packaged MHR run passed every camera-button interaction, but the Front screenshot showed the avatar's back and Rear showed its face. The GLB used a 0 degree display yaw while the established packaged camera convention required 180 degrees.
+
+### Root cause
+
+Automation proved that each button invoked a camera state, not that the asset's anatomical axes matched the label. Replacing the avatar changed the axis contract without changing the controls.
+
+### Prevention rule
+
+Bind display orientation in the hash-bound avatar manifest and inspect Front, Rear, Left, and Right pixels after every body-family or exporter change. A successful click is not semantic evidence.
+
+### How to verify
+
+Require the manifest's 180 degree display yaw, rerun the packaged six-camera suite, and manually confirm face, back, and profile direction. Preserve the first reversed run as rejected evidence rather than renaming its screenshots.
+
+## A logged-on guest session can be alive but uncapturable
+
+### What happened
+
+The isolated runner launched and controlled Patternal successfully, but every screenshot failed with `The handle is invalid`. Windows reported the disposable user's session as `Disc`, so UI Automation still worked while the screen device context did not.
+
+### Root cause
+
+Logged on, interactive, active, and capturable were treated as one state. Enhanced Session disconnection separates them.
+
+### Prevention rule
+
+Before a screenshot-bearing acceptance run, resolve the single owned Explorer session and require an explicit `Active` state. When it is `Disc`, use Windows' supported `tscon <id> /dest:console` handoff inside the guest and verify `Active` before starting. Do not open VMConnect or inject host input as recovery.
+
+### How to verify
+
+Run the host preflight against both active and disconnected guest states. Require `GuestSession.active: true`, record whether console recovery occurred, capture all expected PNGs, and retain `hostInputInjected: false` plus `vmConnectLaunched: false` in the result.

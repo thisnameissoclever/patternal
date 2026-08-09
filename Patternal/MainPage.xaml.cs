@@ -3510,10 +3510,15 @@ public sealed partial class MainPage : Page
                         : 0;
                 AvatarPreviewStateText.Text = string.Equals(
                     mode,
-                    "fitted-antonia-candidate",
+                    "fitted-mhr-candidate",
                     StringComparison.Ordinal)
-                        ? $"Avatar preview: fitted Antonia candidate · {height:0} cm"
-                        : $"Avatar preview: editable measurement mesh · {height:0} cm";
+                        ? $"Avatar preview: fitted MHR candidate · {height:0} cm"
+                    : string.Equals(
+                        mode,
+                        "fitted-antonia-candidate",
+                        StringComparison.Ordinal)
+                            ? $"Avatar preview: fitted Antonia candidate · {height:0} cm"
+                            : $"Avatar preview: editable measurement mesh · {height:0} cm";
                 return;
             }
 

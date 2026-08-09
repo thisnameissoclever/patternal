@@ -1333,7 +1333,7 @@ try {
             } | Out-Null
             $avatarPreviewState = Find-UiElementByAutomationId -Root $window -AutomationId 'DrapeAvatarPreviewState'
             Wait-ForCondition -Description 'keyboard Fabric restore to settle the fitted avatar state' -TimeoutSeconds 30 -Condition {
-                if ($avatarPreviewState.Current.Name -like 'Avatar preview: fitted Antonia candidate*') {
+                if ($avatarPreviewState.Current.Name -like 'Avatar preview: fitted MHR candidate*') {
                     $avatarPreviewState.Current.Name
                 }
                 else {
@@ -2309,9 +2309,9 @@ try {
                 } | Out-Null
                 Invoke-UiElement -Element $tab3d
                 $avatarState = Find-UiElementByAutomationId -Root $window -AutomationId 'DrapeAvatarPreviewState' -TimeoutSeconds 120
-                $restoredState = Wait-ForCondition -Description '3D preview to restore the fitted Antonia candidate' -TimeoutSeconds 120 -Condition {
+                $restoredState = Wait-ForCondition -Description '3D preview to restore the fitted MHR candidate' -TimeoutSeconds 120 -Condition {
                     $currentName = $avatarState.Current.Name
-                    if ($currentName -like 'Avatar preview: fitted Antonia candidate*') { $currentName } else { $null }
+                    if ($currentName -like 'Avatar preview: fitted MHR candidate*') { $currentName } else { $null }
                 }
                 $fitCamera = Find-UiElementByAutomationId -Root $window -AutomationId 'DrapeFitCameraButton' -TimeoutSeconds 120
                 Invoke-UiElement -Element $fitCamera

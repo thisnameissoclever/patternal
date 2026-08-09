@@ -193,7 +193,7 @@ foreach ($automationId in $requiredDrapeStateAutomationIds) {
 foreach ($avatarStateContract in @(
     "'3D avatar follows edited measurements'",
     "'Avatar preview: editable measurement mesh*'",
-    "'Avatar preview: fitted Antonia candidate*'",
+    "'Avatar preview: fitted MHR candidate*'",
     "'15-3d-edited-measurement-avatar.png'",
     "'16-3d-restored-fitted-avatar.png'"
 )) {
@@ -308,7 +308,7 @@ foreach ($dialogLifecycleContract in @(
 $viewport = Get-Content -LiteralPath (Join-Path $repositoryRoot 'Patternal\Assets\avatar3d.html') -Raw
 if (-not $codeBehind.Contains('"avatar-state"') -or
     -not $codeBehind.Contains('Avatar preview: editable measurement mesh') -or
-    -not $codeBehind.Contains('Avatar preview: fitted Antonia candidate') -or
+    -not $codeBehind.Contains('Avatar preview: fitted MHR candidate') -or
     -not $viewport.Contains("type:'avatar-state'")) {
     throw 'The packaged renderer no longer reports its measured-avatar preview state to the accessible WinUI surface.'
 }
@@ -351,6 +351,16 @@ foreach ($earlyExitContract in @(
 )) {
     if (-not $hostRunner.Contains($earlyExitContract)) {
         throw "Host runner no longer fails promptly when the guest task exits before evidence initialization: '$earlyExitContract'."
+    }
+}
+foreach ($consoleSessionContract in @(
+    'query.exe" session $sessionId',
+    'tscon.exe" $sessionId /dest:console',
+    'reconnectedToConsole',
+    'GuestSession = $guestSession'
+)) {
+    if (-not $hostRunner.Contains($consoleSessionContract)) {
+        throw "Host runner no longer recovers a disconnected interactive guest session through the supported console handoff: '$consoleSessionContract'."
     }
 }
 if (-not $guestRunner.Contains('[System.Drawing.Bitmap]::new([int]$width, [int]$height)')) {

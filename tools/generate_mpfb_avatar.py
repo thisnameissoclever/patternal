@@ -120,6 +120,11 @@ def parse_args() -> argparse.Namespace:
             "third_party/MakeHumanAssets/makehuman_system_assets"
         ),
     )
+    parser.add_argument(
+        "--hair-style",
+        choices=("afro01", "bob01", "bob02", "braid01", "long01", "ponytail01", "short01", "short02", "short03", "short04"),
+        default="braid01",
+    )
     return parser.parse_args(blender_arguments())
 
 
@@ -976,6 +981,7 @@ def build_display_avatar(
     coordinates: list[Any],
     asset_root: Path,
     output_dir: Path,
+    hair_style: str,
 ) -> dict[str, Any]:
     """Build the visual avatar while keeping the collision body unchanged."""
     if not asset_root.is_dir():
@@ -1000,6 +1006,23 @@ def build_display_avatar(
         output_dir / "body.obj",
         coordinates,
     )
+
+    hair_directory = asset_root / "hair" / hair_style
+    hair_material_path = hair_directory / f"{hair_style}.mhmat"
+    if not hair_material_path.is_file():
+        raise FileNotFoundError(f"Missing MakeHuman hair material: {hair_material_path}")
+    diffuse_texture_name = next(
+        (
+            line.split(maxsplit=1)[1].strip()
+            for line in hair_material_path.read_text(encoding="utf-8").splitlines()
+            if line.strip().startswith("diffuseTexture ")
+        ),
+        None,
+    )
+    if not diffuse_texture_name:
+        raise ValueError(
+            f"MakeHuman hair material has no diffuseTexture entry: {hair_material_path}"
+        )
 
     asset_definitions = [
         (
@@ -1029,8 +1052,8 @@ def build_display_avatar(
         (
             "hair",
             "Hair",
-            asset_root / "hair" / "braid01" / "braid01.mhclo",
-            asset_root / "hair" / "braid01" / "braid01_diffuse.png",
+            hair_directory / f"{hair_style}.mhclo",
+            hair_directory / diffuse_texture_name,
         ),
     ]
 
@@ -1134,6 +1157,7 @@ def build_display_avatar(
         "license": "CC0",
         "floor_offset_m": floor_offset_m,
         "collision_geometry": "../patterna-mpfb-female.obj",
+        "hair_style": hair_style,
         "assets": generated_assets,
         "default_garment": default_garment,
     }
@@ -1343,6 +1367,7 @@ def main() -> None:
             coordinates,
             resolve(args.render_asset_root),
             resolve(args.render_output_dir),
+            args.hair_style,
         )
         if args.render_output_dir is not None
         else None

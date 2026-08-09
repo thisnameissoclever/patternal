@@ -1,0 +1,358 @@
+{
+  "schemaVersion": "patterna.display-avatar-glb/1.0",
+  "accepted": false,
+  "candidateOnly": true,
+  "displayMode": "mhr-candidate",
+  "source": "Meta Momentum Human Rig",
+  "sourceVersion": "1.0.1",
+  "sourceUrl": "https://github.com/facebookresearch/MHR",
+  "outputLicense": "Apache-2.0",
+  "licenseFile": "license.txt",
+  "licenseSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+  "geometry": "mhr.glb",
+  "geometrySha256": "cc50a422a17c00b65cf10eb827aa824c9a2d057ee8f1fb1afe92482023bfc840",
+  "geometryBytes": 6329384,
+  "primaryBodyNode": "Patterna_MHR_Body",
+  "primaryBodyMaterial": "Patterna MHR skin",
+  "assetNodes": {
+    "Patterna_MHR_LeftEyeSclera": "eyes",
+    "Patterna_MHR_LeftEyeIris": "eyes",
+    "Patterna_MHR_LeftEyePupil": "eyes",
+    "Patterna_MHR_RightEyeSclera": "eyes",
+    "Patterna_MHR_RightEyeIris": "eyes",
+    "Patterna_MHR_RightEyePupil": "eyes",
+    "Patterna_MHR_Hair": "hair",
+    "Patterna_MHR_ModestyTop": "modesty-top",
+    "Patterna_MHR_ModestyBriefs": "modesty-briefs"
+  },
+  "heightTargetCm": 167.0,
+  "heightMeasuredCm": 166.9999931,
+  "floorOffsetM": -0.0018026038305833936,
+  "displayYawDegrees": 180.0,
+  "measurementFit": {
+    "accepted": true,
+    "reportSha256": "60ba3e94d5c28db5241c731a277dbbdb5ed4bdb08f10c011b32a79c7e97db6dc",
+    "maximumAbsoluteResidualCm": 0.741525467854288
+  },
+  "topology": {
+    "vertexCount": 18439,
+    "triangleCount": 36874,
+    "uvLayerCount": 1,
+    "fbxAndFittedFaceOrderMatch": true,
+    "maximumVertexReplacementErrorM": 1.772849291249653e-07
+  },
+  "rig": {
+    "schemaVersion": "patterna.mhr-rig-export/1.0",
+    "accepted": true,
+    "boneCount": 126,
+    "vertexGroupCount": 100,
+    "unweightedVertexCount": 0,
+    "minimumWeightSum": 0.9999999543651938,
+    "maximumWeightSum": 1.0000000447034836,
+    "maximumInfluencesPerVertex": 4,
+    "maximumJointHeadErrorM": 1.1944189326376765e-07,
+    "jointHeadErrorLimitM": 1e-05,
+    "mapping": "joint state 0 is body_world; FBX bone order maps to joint states 1 through 126",
+    "limitations": [
+      "the exported GLB retains linear skinning but does not embed MHR pose-corrective inference",
+      "the local measurement correction changes surface sections around the MHR rig and does not introduce new joint translations"
+    ]
+  },
+  "glbContract": {
+    "accepted": true,
+    "nodeCount": 137,
+    "meshCount": 10,
+    "skinCount": 1,
+    "exportedJointCount": 126,
+    "bodyHasJoints0": true,
+    "bodyHasWeights0": true,
+    "meshNodesUseIdentityTransforms": true
+  },
+  "registration": {
+    "schemaVersion": "patterna.avatar-surface-registration/1.0",
+    "accepted": true,
+    "method": "exact fitted MHR display and collision vertex-order comparison with skin-weight anatomical regions",
+    "maximumSurfaceDistanceM": 1.772849291249653e-07,
+    "comparedDisplayVertexCount": 18439,
+    "comparedCollisionVertexCount": 18439,
+    "floorDatumErrorM": 1.6941660639473166e-10,
+    "regions": {
+      "head": {
+        "accepted": true,
+        "sampleCount": 5525,
+        "maximumDistanceM": 9.622888496257932e-08,
+        "p95DistanceM": 8.648200837113548e-08,
+        "thresholdsM": {
+          "maximum": 0.005,
+          "p95": 0.0025
+        }
+      },
+      "torso": {
+        "accepted": true,
+        "sampleCount": 2202,
+        "maximumDistanceM": 1.7267921285907589e-07,
+        "p95DistanceM": 8.154606608047951e-08,
+        "thresholdsM": {
+          "maximum": 0.005,
+          "p95": 0.0025
+        }
+      },
+      "arms": {
+        "accepted": true,
+        "sampleCount": 6492,
+        "maximumDistanceM": 1.772849291249653e-07,
+        "p95DistanceM": 8.753432859208096e-08,
+        "thresholdsM": {
+          "maximum": 0.01,
+          "p95": 0.004
+        }
+      },
+      "legs": {
+        "accepted": true,
+        "sampleCount": 4220,
+        "maximumDistanceM": 8.253049995004609e-08,
+        "p95DistanceM": 2.8650945816927436e-08,
+        "thresholdsM": {
+          "maximum": 0.01,
+          "p95": 0.004
+        }
+      }
+    },
+    "issues": []
+  },
+  "anatomy": {
+    "schemaVersion": "patterna.avatar-anatomy/1.0",
+    "accepted": true,
+    "acceptanceScope": "gross proportion and symmetric-preset landmark sanity only",
+    "statureM": 1.6699998780386522,
+    "floorDatumM": -0.0018026038305833936,
+    "measurements": {
+      "armLength": {
+        "accepted": true,
+        "valueM": 0.7092155701641514,
+        "ratioToStature": 0.42468001314892107,
+        "minimumRatio": 0.37,
+        "maximumRatio": 0.64,
+        "method": "shoulder-to-elbow, elbow-to-wrist, and wrist-to-fingertip segment chain",
+        "leftM": 0.7092155953351351,
+        "rightM": 0.7092155449931676,
+        "leftRightDifferenceM": 5.034196748354702e-08
+      },
+      "upperArmLength": {
+        "accepted": true,
+        "valueM": 0.2839000098643398,
+        "ratioToStature": 0.17000001832201864,
+        "minimumRatio": 0.16,
+        "maximumRatio": 0.23,
+        "method": "shoulder to elbow rig landmarks",
+        "leftM": 0.2839000093115972,
+        "rightM": 0.28390001041708235,
+        "leftRightDifferenceM": 1.1054851478675687e-09
+      },
+      "handLength": {
+        "accepted": true,
+        "valueM": 0.1643922423935973,
+        "ratioToStature": 0.09843847568819548,
+        "minimumRatio": 0.079,
+        "maximumRatio": 0.145,
+        "method": "wrist rig landmark to distal fingertip surface",
+        "leftM": 0.1643922664697603,
+        "rightM": 0.16439221831743428,
+        "leftRightDifferenceM": 4.815232601540487e-08
+      },
+      "footLength": {
+        "accepted": true,
+        "valueM": 0.23893537372350693,
+        "ratioToStature": 0.1430750845348126,
+        "minimumRatio": 0.11,
+        "maximumRatio": 0.2,
+        "method": "sagittal extent of the below-ankle foot surface",
+        "leftM": 0.23895302414894104,
+        "rightM": 0.23891772329807281,
+        "leftRightDifferenceM": 3.53008508682251e-05
+      },
+      "functionalLegLength": {
+        "accepted": true,
+        "valueM": 0.8769403501646593,
+        "ratioToStature": 0.5251140204839958,
+        "minimumRatio": 0.45,
+        "maximumRatio": 0.62,
+        "method": "vertical hip rig landmark to floor datum",
+        "leftM": 0.8769403501646593,
+        "rightM": 0.8769403501646593,
+        "leftRightDifferenceM": 0.0
+      },
+      "armSpan": {
+        "accepted": true,
+        "valueM": 1.7583291603573707,
+        "ratioToStature": 1.052891789682319,
+        "minimumRatio": 0.9,
+        "maximumRatio": 1.17,
+        "method": "bilateral arm segment chains plus shoulder-joint breadth, independent of authored pose"
+      },
+      "shoulderBreadth": {
+        "accepted": true,
+        "valueM": 0.4002169966697693,
+        "ratioToStature": 0.23965091371132796,
+        "minimumRatio": 0.18,
+        "maximumRatio": 0.355,
+        "method": "torso-surface breadth in a two-percent-stature band centered on shoulder landmarks"
+      },
+      "headHeight": {
+        "accepted": true,
+        "valueM": 0.207014799118042,
+        "ratioToStature": 0.12396096660867578,
+        "minimumRatio": 0.1,
+        "maximumRatio": 0.16,
+        "method": "chin rig landmark to crown of the head surface"
+      }
+    },
+    "symmetry": {
+      "accepted": true,
+      "midlineXM": 1.943046332444776e-16,
+      "pairCount": 5,
+      "maximumMirrorErrorM": 2.9802322387695312e-08,
+      "limitM": 0.001,
+      "pairs": [
+        {
+          "left": "joint_forearm.L_tail",
+          "right": "joint_forearm.R_tail",
+          "mirrorErrorM": 2.9802322387695312e-08
+        },
+        {
+          "left": "joint_shin.L_tail",
+          "right": "joint_shin.R_tail",
+          "mirrorErrorM": 2.9802321999117254e-08
+        },
+        {
+          "left": "joint_shoulder.L_tail",
+          "right": "joint_shoulder.R_tail",
+          "mirrorErrorM": 3.885780586188048e-16
+        },
+        {
+          "left": "joint_thigh.L_head",
+          "right": "joint_thigh.R_head",
+          "mirrorErrorM": 3.885780586188048e-16
+        },
+        {
+          "left": "joint_upper_arm.L_tail",
+          "right": "joint_upper_arm.R_tail",
+          "mirrorErrorM": 2.2351741790771488e-08
+        }
+      ]
+    },
+    "referenceEvidence": [
+      {
+        "title": "Race and geography impact validity of maximum allowable standing height equations for para-athletes",
+        "publication": "Scientific Reports 14, 6551 (2024), Table 2",
+        "url": "https://doi.org/10.1038/s41598-024-56597-y",
+        "scope": "arm-span and upper-arm length ratios from ANSUR II"
+      },
+      {
+        "title": "Anthropometric Survey of the Astronaut Applicants and Astronauts From 1985 to 1991",
+        "publication": "NASA RP-1304 (1993), Tables 5 through 8",
+        "url": "https://ntrs.nasa.gov/citations/19930020135",
+        "scope": "arm, upper-arm, hand, foot, and bideltoid dimensions"
+      }
+    ],
+    "limitations": [
+      "reference populations are design sanity evidence, not a universal definition of normal anatomy",
+      "head-height and functional-leg limits are broad project-owned guards pending a larger definition-matched dataset",
+      "passing this report does not prove silhouette, pose, texture, expression, or packaged visual quality"
+    ],
+    "issues": []
+  },
+  "pose": {
+    "schemaVersion": "patterna.avatar-pose/1.0",
+    "accepted": true,
+    "acceptanceScope": "symmetric garment-inspection pose surface sanity only",
+    "symmetricPresetRequired": true,
+    "statureM": 1.6699998780386522,
+    "midlineXM": 1.943046332444776e-16,
+    "surfaceEndpointsM": {
+      "L": [
+        0.6587046384811401,
+        -0.18487448990345,
+        0.9697418212890625
+      ],
+      "R": [
+        -0.6587045788764954,
+        -0.18487448990345,
+        0.9697418212890625
+      ]
+    },
+    "metrics": {
+      "armEndpointMirrorError": {
+        "accepted": true,
+        "valueM": 5.960464477539063e-08,
+        "ratioToStature": 3.569140666369023e-08,
+        "maximumRatio": 0.03
+      },
+      "armReachDifference": {
+        "accepted": true,
+        "leftM": 0.6686366033042237,
+        "rightM": 0.6686365597348101,
+        "ratioToStature": 2.6089471146341162e-08,
+        "maximumRatio": 0.015
+      },
+      "armElevationDifference": {
+        "accepted": true,
+        "leftDegrees": -36.95131433631111,
+        "rightDegrees": -36.95131714472202,
+        "differenceDegrees": 2.8084109118253764e-06,
+        "maximumDifferenceDegrees": 8.0
+      },
+      "armForwardSweepDifference": {
+        "accepted": true,
+        "leftDegrees": -23.837889263736855,
+        "rightDegrees": -23.837891846764446,
+        "differenceDegrees": 2.583027590929987e-06,
+        "maximumDifferenceDegrees": 8.0
+      },
+      "meanArmElevation": {
+        "accepted": true,
+        "valueDegrees": -36.95131574051656,
+        "minimumDegrees": -55.0,
+        "maximumDegrees": -10.0
+      },
+      "meanArmForwardSweep": {
+        "accepted": true,
+        "valueDegrees": -23.837890555250652,
+        "maximumAbsoluteDegrees": 25.0
+      }
+    },
+    "issues": [],
+    "limitations": [
+      "this project-owned gate rejects gross inspection-pose defects and is not a motion-quality score",
+      "passing does not prove joint deformation, skinning, balance, expression, or garment clearance",
+      "authored asymmetric presets require a separate target-pose contract and must not reuse this symmetric gate"
+    ]
+  },
+  "regionVertexCounts": {
+    "head": 5525,
+    "torso": 2202,
+    "legs": 4220,
+    "arms": 6492
+  },
+  "appearance": {
+    "skin": "neutral procedural PBR material",
+    "eyes": "MHR-rig-positioned procedural PBR display eyes",
+    "hair": "MPFB-fitted MakeHuman Community CC0 bob01 display asset",
+    "modesty": "body-conformed display shells, not sewing patterns or cloth simulation",
+    "appearanceAssetLicense": "CC0"
+  },
+  "renders": {
+    "front": "1a3ae08925efd8ae19f4b364bae5b934a4067c5d7eccede51786fef851d98d27",
+    "rear": "db6cc97e10c78aa6bfd26a8b9e32f7a3c409d60255c2823b32f0b330522b6236",
+    "left": "589026f3d31c3907d58dcd1709d22f1ab002c9c810b5ef905c1cccacfe8b5f54",
+    "right": "57764b69023e867c3979a08c10ecb100d3a956c036fab4e0b18920c5073d513a",
+    "front-left": "7148b258f51b2ec8041c94f52e50fea3e07d811f737514bb4a29453b89160da4",
+    "front-right": "64194408e070e0e2a59ce781c98095fe8d3e8890591ac219721546e199efaef5"
+  },
+  "openGates": [
+    "six-view host and packaged visual review is pending",
+    "measurement edits do not yet rebuild this MHR family in the packaged app",
+    "cloth has not been solved and accepted on this exact MHR body",
+    "physical-GPU packaged acceptance is pending"
+  ]
+}
