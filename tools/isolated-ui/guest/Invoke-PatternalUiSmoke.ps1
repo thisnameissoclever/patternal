@@ -891,6 +891,56 @@ try {
         }
     }
 
+    Invoke-UiCheck -Name '2D dart creation undo and redo' -Check {
+        $piece = Find-UiElement -Root $window -Name 'Back Torso'
+        Invoke-UiElement -Element $piece
+        $addDart = Find-UiElement -Root $window -Name 'Add a precise dart to the selected pattern piece'
+        Invoke-UiElement -Element $addDart
+        $dialogPrimary = Find-UiElement -Root $window -Name 'Add dart'
+        $dartName = Find-UiElement -Root $window -Name 'Dart name'
+        if ($dartName.Current.Name -ne 'Dart name') {
+            throw 'The dart dialog did not expose its named dart field.'
+        }
+        Invoke-UiElement -Element $dialogPrimary
+
+        $firstLegName = 'Back Torso dart Dart 1 first leg'
+        $secondLegName = 'Back Torso dart Dart 1 second leg'
+        Wait-ForCondition -Description 'new dart legs to appear on Back Torso' -Condition {
+            (Find-UiElementOnce -Root $window -Name $firstLegName) -and
+            (Find-UiElementOnce -Root $window -Name $secondLegName)
+        } | Out-Null
+        $dartShotPath = Join-Path $evidenceDirectory '13-2d-dart.png'
+        Save-WindowScreenshot -Window $window -Path $dartShotPath
+        $script:screenshots.Add([pscustomobject]@{ name = '2d-dart'; file = [IO.Path]::GetFileName($dartShotPath) })
+
+        $undo = Find-UiElement -Root $window -Name 'Undo pattern geometry edit'
+        Invoke-UiElement -Element $undo
+        Wait-ForCondition -Description 'Undo to remove both dart legs' -Condition {
+            -not (Find-UiElementOnce -Root $window -Name $firstLegName) -and
+            -not (Find-UiElementOnce -Root $window -Name $secondLegName)
+        } | Out-Null
+        $redo = Find-UiElement -Root $window -Name 'Redo pattern geometry edit'
+        Invoke-UiElement -Element $redo
+        Wait-ForCondition -Description 'Redo to restore both dart legs' -Condition {
+            (Find-UiElementOnce -Root $window -Name $firstLegName) -and
+            (Find-UiElementOnce -Root $window -Name $secondLegName)
+        } | Out-Null
+        $undo = Find-UiElement -Root $window -Name 'Undo pattern geometry edit'
+        Invoke-UiElement -Element $undo
+        Wait-ForCondition -Description 'final Undo to restore Back Torso without the test dart' -Condition {
+            -not (Find-UiElementOnce -Root $window -Name $firstLegName) -and
+            -not (Find-UiElementOnce -Root $window -Name $secondLegName)
+        } | Out-Null
+
+        [ordered]@{
+            piece = 'Back Torso'
+            dart = 'Dart 1'
+            construction = 'annotation'
+            restored = $true
+            screenshot = [IO.Path]::GetFileName($dartShotPath)
+        }
+    }
+
     foreach ($toggleName in @(
         'Show pattern pieces panel',
         'Show avatar and material inspector',

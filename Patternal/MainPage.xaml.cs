@@ -1388,7 +1388,7 @@ public sealed partial class MainPage : Page
             Point firstCanvas = ToCanvasPoint(piece, firstLeg);
             Point secondCanvas = ToCanvasPoint(piece, secondLeg);
             Point apexCanvas = ToCanvasPoint(piece, dart.Apex);
-            holder.Children.Add(new Line
+            Line firstLegVisual = new()
             {
                 X1 = firstCanvas.X,
                 Y1 = firstCanvas.Y,
@@ -1397,8 +1397,11 @@ public sealed partial class MainPage : Page
                 Stroke = constructionBrush,
                 StrokeThickness = 1.4,
                 StrokeDashArray = new DoubleCollection { 3, 2 }
-            });
-            holder.Children.Add(new Line
+            };
+            AutomationProperties.SetName(firstLegVisual, $"{piece.Name} dart {dart.Name} first leg");
+            AutomationProperties.SetHelpText(firstLegVisual, $"First construction leg for {dart.Name} on {piece.Name}.");
+            holder.Children.Add(firstLegVisual);
+            Line secondLegVisual = new()
             {
                 X1 = secondCanvas.X,
                 Y1 = secondCanvas.Y,
@@ -1407,7 +1410,10 @@ public sealed partial class MainPage : Page
                 Stroke = constructionBrush,
                 StrokeThickness = 1.4,
                 StrokeDashArray = new DoubleCollection { 3, 2 }
-            });
+            };
+            AutomationProperties.SetName(secondLegVisual, $"{piece.Name} dart {dart.Name} second leg");
+            AutomationProperties.SetHelpText(secondLegVisual, $"Second construction leg for {dart.Name} on {piece.Name}.");
+            holder.Children.Add(secondLegVisual);
         }
 
         foreach (PatternNotchDocument notch in piece.Notches)
