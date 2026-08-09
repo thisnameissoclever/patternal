@@ -80,6 +80,14 @@ The generated guest credential is encrypted with Windows Data Protection API for
 %LOCALAPPDATA%\Patternal\VirtualMachine\Patternal-UI.credential.xml
 ```
 
+Guest provisioning also writes the disposable username and password to a separate plaintext operator note at:
+
+```text
+%LOCALAPPDATA%\Patternal\VirtualMachine\Patternal-UI.credentials.md
+```
+
+The plaintext note is machine-local for manual VMConnect login. Existing encrypted credentials can recreate it with `Export-PatternalGuestCredentialNote`. Do not copy either credential file into the repository, an evidence bundle, or a support archive.
+
 The temporary answer-media ISO contains the generated password during setup. It is deleted after successful provisioning. If setup fails, the script preserves that media for diagnosis and prints a warning. Delete it after recovery.
 
 5. Sign out and back in once after the host bootstrap adds the account to `Hyper-V Administrators`. This refreshes the access token used by ordinary, non-elevated shells and Codex. A restart also works, but the scripts never impose one.

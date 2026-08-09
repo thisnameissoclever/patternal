@@ -972,6 +972,7 @@ string simulationPipelinePath = Path.GetFullPath(Path.Combine(Directory.GetCurre
 string simulationRuntimePath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "Patternal", "SimulationRuntime.cs"));
 string simulationRuntimeInstallerPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "tools", "install_patterna_simulation_runtime.ps1"));
 string charmorphGlbPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "tools", "charmorph_glb.py"));
+string charmorphAnatomyPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "tools", "charmorph_anatomy.py"));
 string mainPageXaml = File.ReadAllText(mainPageXamlPath);
 string mainPageCode = File.ReadAllText(mainPageCodePath);
 string viewportSource = File.ReadAllText(viewportPath);
@@ -979,6 +980,7 @@ string simulationPipelineSource = File.ReadAllText(simulationPipelinePath);
 string simulationRuntimeSource = File.ReadAllText(simulationRuntimePath);
 string simulationRuntimeInstallerSource = File.ReadAllText(simulationRuntimeInstallerPath);
 string charmorphGlbSource = File.ReadAllText(charmorphGlbPath);
+string charmorphAnatomySource = File.ReadAllText(charmorphAnatomyPath);
 using JsonDocument candidateAvatarManifest = JsonDocument.Parse(File.ReadAllText(candidateAvatarManifestPath));
 JsonElement candidateAvatarRoot = candidateAvatarManifest.RootElement;
 Assert(candidateAvatarRoot.GetProperty("accepted").ValueKind == JsonValueKind.False, "The Antonia candidate crossed the production acceptance boundary.");
@@ -1181,8 +1183,10 @@ Assert(
     "The developer runtime fallback no longer discovers the current platform-specific compiler build.");
 Assert(
     simulationRuntimeSource.Contains("\"patterna_style3d_sewing.py\"", StringComparison.Ordinal) &&
+        simulationRuntimeSource.Contains("\"charmorph_anatomy.py\"", StringComparison.Ordinal) &&
         simulationRuntimeInstallerSource.Contains("'patterna_style3d_sewing.py'", StringComparison.Ordinal) &&
-        simulationRuntimeInstallerSource.Contains("2026.08.09-style3d-antonia-v5", StringComparison.Ordinal) &&
+        simulationRuntimeInstallerSource.Contains("'charmorph_anatomy.py'", StringComparison.Ordinal) &&
+        simulationRuntimeInstallerSource.Contains("2026.08.09-style3d-antonia-v6", StringComparison.Ordinal) &&
         simulationRuntimeInstallerSource.Contains("avatarCharacterDirectory = 'third_party/CharMorph-db/characters/antonia'", StringComparison.Ordinal),
     "The project-owned Style3D sewing solver is no longer a required, versioned runtime entry point.");
 Assert(
@@ -1199,6 +1203,17 @@ Assert(
             "collision simplification and regional registration are not implemented",
             StringComparison.Ordinal),
     "The display avatar no longer enforces regional bidirectional display-to-collider registration.");
+Assert(
+    charmorphAnatomySource.Contains(
+        "patterna.avatar-anatomy/1.0",
+        StringComparison.Ordinal) &&
+        simulationPipelineSource.Contains(
+            "patterna.avatar-anatomy/1.0",
+            StringComparison.Ordinal) &&
+        simulationPipelineSource.Contains(
+            "anatomyAccepted.ValueKind is not JsonValueKind.True",
+            StringComparison.Ordinal),
+    "Product visual proof no longer requires an accepted avatar anatomy report.");
 Assert(
     simulationPipelineSource.Contains("patterna.newton-style3d-report/1.0", StringComparison.Ordinal) &&
     simulationPipelineSource.Contains("SimulationMeshResolutionCm = 0.25", StringComparison.Ordinal) &&
@@ -2581,6 +2596,7 @@ try
         "prepare_charmorph_garmentcode_body.py",
         "charmorph_collision.py",
         "charmorph_character.py",
+        "charmorph_anatomy.py",
         "charmorph_glb.py",
         "verify_charmorph_glb.py",
         "charmorph_morphs.py",
@@ -2847,6 +2863,58 @@ try
         "A visually rejected product proof was accepted.");
     rejectedProof["visual_quality"]!["accepted"] = true;
     File.WriteAllText(proofManifestPath, rejectedProof.ToJsonString(), new UTF8Encoding(false));
+
+    string antoniaGeometryPath = Path.Combine(displayAvatarDirectory, "avatar.glb");
+    string antoniaLicensePath = Path.Combine(displayAvatarDirectory, "license.txt");
+    File.WriteAllText(antoniaGeometryPath, "fixture Antonia GLB", new UTF8Encoding(false));
+    File.WriteAllText(antoniaLicensePath, "fixture Antonia license", new UTF8Encoding(false));
+    void WriteAntoniaDisplayManifest(bool anatomyAccepted)
+    {
+        File.WriteAllText(
+            displayManifestPath,
+            JsonSerializer.Serialize(new
+            {
+                schemaVersion = "patterna.display-avatar-glb/1.0",
+                geometry = "avatar.glb",
+                geometrySha256 = FileHash(antoniaGeometryPath),
+                licenseFile = "license.txt",
+                licenseSha256 = FileHash(antoniaLicensePath),
+                measurementFit = new { accepted = true },
+                anatomy = new
+                {
+                    schemaVersion = "patterna.avatar-anatomy/1.0",
+                    accepted = anatomyAccepted
+                }
+            }),
+            new UTF8Encoding(false));
+    }
+
+    WriteAntoniaDisplayManifest(true);
+    JsonNode antoniaProof = JsonNode.Parse(File.ReadAllText(proofManifestPath))
+        ?? throw new InvalidOperationException("The Antonia product-proof fixture did not parse.");
+    antoniaProof["show_bra"] = false;
+    antoniaProof["avatar_object_count"] = 1;
+    antoniaProof["avatar_hashes"] = new JsonObject
+    {
+        ["manifest"] = FileHash(displayManifestPath),
+        ["body_geometry"] = FileHash(antoniaGeometryPath),
+        ["avatar_license"] = FileHash(antoniaLicensePath)
+    };
+    File.WriteAllText(proofManifestPath, antoniaProof.ToJsonString(), new UTF8Encoding(false));
+    Assert(
+        SimulationPipeline.TryValidateProductVisualProof(visualProofResult),
+        "An Antonia proof with accepted anatomy evidence was rejected.");
+
+    WriteAntoniaDisplayManifest(false);
+    antoniaProof["avatar_hashes"]!["manifest"] = FileHash(displayManifestPath);
+    File.WriteAllText(proofManifestPath, antoniaProof.ToJsonString(), new UTF8Encoding(false));
+    Assert(
+        !SimulationPipeline.TryValidateProductVisualProof(visualProofResult),
+        "An Antonia product proof accepted a rejected anatomy report.");
+
+    WriteAntoniaDisplayManifest(true);
+    antoniaProof["avatar_hashes"]!["manifest"] = FileHash(displayManifestPath);
+    File.WriteAllText(proofManifestPath, antoniaProof.ToJsonString(), new UTF8Encoding(false));
 
     File.AppendAllText(Path.Combine(proofDirectory, "back.png"), ":tampered");
     Assert(

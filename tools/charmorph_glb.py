@@ -15,7 +15,9 @@ from typing import Any
 import bpy
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
+import numpy as np
 
+from charmorph_anatomy import evaluate_avatar_anatomy, load_charmorph_landmarks
 from charmorph_character import CharacterDescriptor
 
 
@@ -635,6 +637,18 @@ def export_glb_candidate(
     body_coordinates = [body.matrix_world @ vertex.co for vertex in body.data.vertices]
     floor_offset_m = min(point.z for point in body_coordinates)
     height_m = max(point.z for point in body_coordinates) - floor_offset_m
+    polygon_regions = body_polygon_regions(body)
+    vertex_regions = body_vertex_regions(body, polygon_regions)
+    anatomy_vertices = np.asarray([tuple(point) for point in body_coordinates], dtype=np.float64)
+    anatomy_landmarks = load_charmorph_landmarks(
+        character.directory / "joints" / "rigify.npz",
+        anatomy_vertices,
+    )
+    anatomy = evaluate_avatar_anatomy(
+        anatomy_vertices,
+        vertex_regions,
+        anatomy_landmarks,
+    )
     components = [body]
     for name in character.underwear_names:
         if name == "bra":
@@ -678,6 +692,8 @@ def export_glb_candidate(
     ]
     if fit_report is None or not fit_report.get("accepted"):
         open_gates.insert(0, "primary circumference fit is not yet accepted for Antonia")
+    if not anatomy["accepted"]:
+        open_gates.insert(0, "gross avatar anatomy ratios are not accepted")
     resolved_manifest_path = manifest_path or output_path.with_suffix(".manifest.json")
     resolved_manifest_path.parent.mkdir(parents=True, exist_ok=True)
     license_output_path = resolved_manifest_path.parent / "license.txt"
@@ -739,6 +755,7 @@ def export_glb_candidate(
             for component in components
         },
         "registration": registration,
+        "anatomy": anatomy,
         "renders": render_evidence,
         "openGates": open_gates,
     }

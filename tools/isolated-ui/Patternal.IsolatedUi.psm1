@@ -37,6 +37,41 @@ function Get-PatternalVmCredentialPath {
     return Join-Path $credentialRoot "$VmName.credential.xml"
 }
 
+function Get-PatternalVmCredentialNotePath {
+    param(
+        [string]$VmName = $script:DefaultVmName
+    )
+
+    $credentialRoot = Join-Path $env:LOCALAPPDATA 'Patternal\VirtualMachine'
+    return Join-Path $credentialRoot "$VmName.credentials.md"
+}
+
+function Export-PatternalGuestCredentialNote {
+    param(
+        [string]$VmName = $script:DefaultVmName,
+        [pscredential]$Credential = (Get-PatternalGuestCredential -VmName $VmName),
+        [string]$CredentialNotePath = (Get-PatternalVmCredentialNotePath -VmName $VmName)
+    )
+
+    $credentialDirectory = Split-Path -Parent $CredentialNotePath
+    New-Item -ItemType Directory -Path $credentialDirectory -Force | Out-Null
+    $password = $Credential.GetNetworkCredential().Password
+    $content = @"
+# Patternal UI virtual machine credentials
+
+- Virtual machine: $VmName
+- Username: $($Credential.UserName)
+- Password: $password
+
+This is the disposable local administrator for Patternal's isolated Windows UI test guest. This plaintext file is machine-local and must not be committed to a repository.
+"@
+    [System.IO.File]::WriteAllText(
+        $CredentialNotePath,
+        $content,
+        [System.Text.UTF8Encoding]::new($false))
+    return Get-Item -LiteralPath $CredentialNotePath
+}
+
 function New-PatternalGuestCredential {
     param(
         [string]$VmName = $script:DefaultVmName,
@@ -63,6 +98,7 @@ function New-PatternalGuestCredential {
     $credentialDirectory = Split-Path -Parent $CredentialPath
     New-Item -ItemType Directory -Path $credentialDirectory -Force | Out-Null
     $credential | Export-Clixml -LiteralPath $CredentialPath
+    Export-PatternalGuestCredentialNote -VmName $VmName -Credential $credential | Out-Null
 
     return $credential
 }
@@ -252,11 +288,13 @@ function Get-PatternalDirectoryIdentity {
 
 Export-ModuleMember -Function @(
     'Assert-PatternalHyperVAccess',
+    'Export-PatternalGuestCredentialNote',
     'Get-PatternalDirectoryIdentity',
     'Get-PatternalFileSha256',
     'Get-PatternalGuestCredential',
     'Get-PatternalRepositoryRoot',
     'Get-PatternalVmCredentialPath',
+    'Get-PatternalVmCredentialNotePath',
     'New-PatternalDataIso',
     'New-PatternalGuestCredential',
     'New-PatternalVmSession',

@@ -50,6 +50,14 @@ foreach ($file in $hostFiles) {
     }
 }
 
+$hostModule = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'Patternal.IsolatedUi.psm1') -Raw
+$guestProvisioner = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'New-PatternalHyperVGuest.ps1') -Raw
+if (-not $hostModule.Contains('function Export-PatternalGuestCredentialNote') -or
+    -not $hostModule.Contains('$VmName.credentials.md') -or
+    -not $guestProvisioner.Contains('Export-PatternalGuestCredentialNote -VmName $VmName')) {
+    throw 'Guest provisioning no longer creates the machine-local plaintext credential note required for manual VMConnect login.'
+}
+
 $guestRunnerPath = Join-Path $PSScriptRoot 'guest\Invoke-PatternalUiSmoke.ps1'
 $guestRunner = Get-Content -LiteralPath $guestRunnerPath -Raw
 $windowsPowerShellPath = Join-Path $env:WINDIR 'System32\WindowsPowerShell\v1.0\powershell.exe'

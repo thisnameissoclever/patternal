@@ -3002,3 +3002,39 @@ Measure registration bidirectionally between the actual display and collision su
 ### How to verify
 
 Run the Blender registration tests with a display box and a differently triangulated collision box on the same surface; it must pass despite different vertex counts. Shift the collision box by 2 cm and require a torso-region rejection. Generate the exact 167 cm fitted Antonia through the installed runtime and require `patterna.avatar-surface-registration/1.0`, accepted head, torso, arms, and legs, no issues, floor error below 1 mm, and every regional maximum and 95th percentile within its declared threshold.
+
+## Anatomy gates must not measure pose as proportion
+
+### What happened
+
+Six-view review ranked Antonia above the other local bodies, and its exact fitted display and collision surfaces passed regional registration. The first weighted-rig anatomy audit measured horizontal fingertip width at 0.886443 times stature and upper-arm length at 0.153202 times stature. Diff review caught that the fingertip metric was really measuring Antonia's asymmetric raised-arm pose. The corrected pose-independent segment-chain estimate is 0.949553 and passes; upper-arm length remains below its deliberately broad human-data rejection envelope.
+
+### Root cause
+
+The bake-off compared candidates against each other, while registration only proved that two meshes described the same fitted surface. Neither proved that the winning surface had credible human segment proportions. The first gate then reused an anthropometric arm-span range with a pose-dependent horizontal extent, conflating two separate defects and producing a false rejection.
+
+### Prevention rule
+
+Resolve semantic landmarks on the exact fitted vertices and evaluate dimensionless ratios before spending time on hair, texture, modesty assets, or cloth. Derive limb lengths from skeletal segment chains so authored pose cannot change the result. Keep surface registration, proportion sanity, pose quality, symmetry, and visual review as separate gates. Use primary anthropometric sources with matching measurement definitions; label broad project-owned guards honestly when a definition-matched population table is unavailable.
+
+### How to verify
+
+Generate the 167 cm fitted avatar through the installed runtime and require `patterna.avatar-anatomy/1.0`. Confirm the report measures pose-independent arm span, arm and upper-arm length, hand and foot length, shoulder breadth, head height, and functional leg length; require all paired landmarks to stay within 1 mm for a symmetric preset. Confirm the exact Antonia control passes arm span at 0.949553, is rejected only for its 0.153202 upper-arm ratio, and passes all 108 paired landmarks. Require product visual proof to reject any missing or non-accepted anatomy report.
+
+## Blender proof commands must fail closed and refresh evidence
+
+### What happened
+
+An installed-runtime avatar proof used repository-relative profile paths. The installed script correctly resolved them against the runtime root and raised `FileNotFoundError`, but Blender returned process exit code 0 because no Python failure exit code was requested. The old manifest remained in the output directory and initially looked like a fresh result.
+
+### Root cause
+
+The proof command trusted Blender's default process status and inspected a pre-existing artifact without first proving that the current invocation rewrote it. Blender treats an unhandled Python exception as console output unless `--python-exit-code` is supplied.
+
+### Prevention rule
+
+Pass absolute paths across repository and installed-runtime boundaries. Invoke Blender automation with `--python-exit-code 1` or another explicit nonzero value. Treat output freshness as part of the proof contract, not as housekeeping.
+
+### How to verify
+
+Run the installed generator with absolute profile, fitted-vertex, and fit-report paths plus `--python-exit-code 1`. Require exit code 0, a manifest write time from the current invocation, matching source, installed, and runtime-manifest hashes for the evaluator, and the expected current anatomy result. Deliberately pass a missing profile once and require a nonzero Blender exit instead of accepting an older manifest.

@@ -63,6 +63,7 @@ if (Test-Path -LiteralPath $credentialPath) {
 else {
     $guestCredential = New-PatternalGuestCredential -VmName $VmName -UserName $GuestUser -CredentialPath $credentialPath
 }
+Export-PatternalGuestCredentialNote -VmName $VmName -Credential $guestCredential | Out-Null
 
 $mountedImage = $null
 $provisioned = $false

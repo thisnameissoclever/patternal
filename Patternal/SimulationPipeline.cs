@@ -78,7 +78,7 @@ public static class SimulationPipeline
     private const string CurrentWarpPrefitSchema = "patterna.warp-prefit-report/2.6";
     private const string CurrentStyle3DReportSchema = "patterna.newton-style3d-report/1.0";
     private const double SimulationMeshResolutionCm = 0.25;
-    private const string PipelineRevisionSalt = "patterna-simulation-pipeline/5.0:newton-style3d:mesh=0.25cm:antonia:body-aware-warm-start:three-stage";
+    private const string PipelineRevisionSalt = "patterna-simulation-pipeline/6.0:newton-style3d:mesh=0.25cm:antonia:body-aware-warm-start:three-stage:avatar-anatomy";
     private const string ProductAvatarBackend = "CharMorph Antonia";
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -307,7 +307,12 @@ public static class SimulationPipeline
                     !TryGetString(display, "licenseSha256", out string licenseManifestHash) ||
                     !display.TryGetProperty("measurementFit", out JsonElement measurementFit) ||
                     !measurementFit.TryGetProperty("accepted", out JsonElement measurementFitAccepted) ||
-                    measurementFitAccepted.ValueKind is not JsonValueKind.True)
+                    measurementFitAccepted.ValueKind is not JsonValueKind.True ||
+                    !display.TryGetProperty("anatomy", out JsonElement anatomy) ||
+                    !TryGetString(anatomy, "schemaVersion", out string anatomySchema) ||
+                    !string.Equals(anatomySchema, "patterna.avatar-anatomy/1.0", StringComparison.Ordinal) ||
+                    !anatomy.TryGetProperty("accepted", out JsonElement anatomyAccepted) ||
+                    anatomyAccepted.ValueKind is not JsonValueKind.True)
                 {
                     return false;
                 }
