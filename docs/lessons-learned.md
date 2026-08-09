@@ -3199,6 +3199,24 @@ For disposable host smoke tests, redirect both paths into the artifact root. Use
 
 Run a forced fresh session, require its reported path to live under the selected artifact directory, and assert that no `local` directory appears under the immutable PPF version root. Remove any state created by an earlier invalid run.
 
+## Anatomical deformation membership needs more than one coordinate
+
+### What happened
+
+The first MHR local correction selected upper-arm vertices mainly by absolute X position. Wide hip and thigh vertices occupy the same X range, so the arm shrink also deformed the lower body, drove hip circumference to 149 cm, displaced vertices by more than 21 cm, and flipped 406 triangles. After adding a hard height cutoff, measurements passed but five-view inspection exposed a visible notch at each shoulder root.
+
+### Root cause
+
+One coordinate identified a spatial slab, not an anatomical region. The hard replacement cutoff then fixed membership numerically while introducing a discontinuous deformation field.
+
+### Prevention rule
+
+Combine side, lateral position, and anatomical height for limb membership. Taper deformation smoothly from zero at the shoulder root to full strength at the measured upper-arm plane, and taper distally along the limb centerline. Numerical section targets never waive surface review.
+
+### How to verify
+
+Require lower-body vertices at the same absolute X to receive zero arm weight. Then require all measurement tolerances, finite output, positive triangle areas, zero orientation flips, bounded displacement, and fresh front, rear, both side, and oblique review of the exact output mesh.
+
 ### How to verify
 
 Install one payload, leave Patternal open, and sync a guest-tool-only change with the same payload identity. Require `appxReused: true`, `registrationReused: true`, and an uninterrupted app process. Then change one packaged byte in a disposable fixture and require orderly unregister, owned-layout replacement, identity verification, and registration without access-denied retries.

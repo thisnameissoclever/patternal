@@ -32,6 +32,28 @@ Successful installation proves archive identity, offline dependency identity, li
 
 The installed MHR manifest SHA-256 is `099c2820523f28dd16c7542f0ae47d00f8b3f7d41c5b4da39f8209332af60765`. The installed PPF manifest SHA-256 is `d573eee78e85be5c745de1163201257dd97466e2c19bad1e725c0f6d4a7ba44a`. These values identify the current machine-local installations; rebuilding a manifest at a different installation time will intentionally produce a different manifest hash while retaining the same archive and entry-point hashes.
 
+The repeatable MHR measurement sequence is:
+
+```powershell
+$mhr = Join-Path $env:LOCALAPPDATA 'Patterna\ChallengerRuntimes\MHR\v1.0.1-py312-torch2.12.1-cpu'
+$python = Join-Path $mhr '.venv\Scripts\python.exe'
+$model = Join-Path $mhr 'assets\mhr_model.pt'
+$profile = '.\PatternaUnreal\SourceAssets\Avatar\PatternaFullBustDefault.avatar-profile.json'
+
+& $python .\tools\fit_mhr_identity.py `
+    --profile $profile `
+    --model $model `
+    --output-directory .\artifacts\mhr-avatar-fitted-v1
+
+& $python .\tools\fit_mhr_local_profile.py `
+    --profile $profile `
+    --model $model `
+    --identity-json .\artifacts\mhr-avatar-fitted-v1\identity-coefficients.json `
+    --output-directory .\artifacts\mhr-avatar-local-fit-v1
+```
+
+The first command keeps the best bounded statistical identity stage and truthfully reports rejection when MHR's native coefficient space misses the measurement tolerances. The second applies smooth section corrections to that exact identity without changing vertex or triangle topology. Its accepted geometry report still does not prove rig preservation, appearance, garment collision, or packaged product quality.
+
 The first separate host-GPU gate is:
 
 ```powershell
