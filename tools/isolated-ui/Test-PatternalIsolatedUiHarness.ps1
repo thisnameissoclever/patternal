@@ -193,6 +193,8 @@ foreach ($persistenceContract in @(
     "'SavePatternProjectAsButton'",
     "'OpenPatternProjectButton'",
     "'pattern-round-trip.patterna'",
+    "'complete packaged Patterna project file'",
+    '$candidate.schemaVersion',
     "'Local snapshot save and startup restore round trip'",
     "'SavePatternSnapshotButton'",
     "'15-local-snapshot-restored.png'"

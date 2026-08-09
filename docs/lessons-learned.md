@@ -2966,3 +2966,21 @@ Apply the built-in Windows `.theme` file before packaged launch, verify both the
 ### How to verify
 
 Run the packaged persistence workflow under all six themes and the complete 2D and 3D workflow under at least one high-contrast theme. Inspect every screenshot for readable geometry, text, control state, focus, status, and camera chrome. Require the result bundle to record the requested theme, original theme, restored theme, and restored high-contrast state. Confirm host input injection and VMConnect use remain false.
+
+## File existence is not proof that an asynchronous Save As finished
+
+### What happened
+
+The packaged project round-trip copied its Save As target as soon as Windows created the destination path. On one full run, the picker had created a zero-byte file while Patterna was still serializing the project. The harness copied that empty placeholder into evidence and then reported a missing `schemaVersion` property.
+
+### Root cause
+
+The test treated path creation as transaction completion. Windows pickers may materialize a file before the application finishes writing and closes it. The product had already exposed a `Project saved` completion state, but the harness copied the file before waiting for that state or validating its contents.
+
+### Prevention rule
+
+For asynchronous file workflows, wait for the product's success state and then require a non-empty, parseable file with the expected schema before copying or inspecting evidence. Never use `Test-Path` alone as a write-completion barrier.
+
+### How to verify
+
+Save a uniquely named `.patterna` project through the packaged Windows picker. Require the `Project saved` status, then poll until the file parses and reports `patterna.project/1.0`. Copy it only after both checks pass, disturb the live state, open the saved file, and require the scalar and editable-construction values to restore exactly.

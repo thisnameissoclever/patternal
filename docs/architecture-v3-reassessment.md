@@ -41,6 +41,8 @@ Packaged run `20260809-124751-67e8517b` used payload `f260ae82d66f2570db88ca224f
 
 Focused packaged runs now cover the actual Windows Light, Dark, High Contrast Black, High Contrast White, High Contrast 1, and High Contrast 2 themes. Each run passed keyboard toggle and slider interaction, accessible-name, SVG export, named-project, and local-recovery checks; manual screenshot review confirmed readable pattern geometry, panels, focus, controls, and status messages. Full High Contrast 2 run `20260809-131811-0ced925b` passed every 2D and 3D interaction check and failed only the independent current-cloth freshness gate. The guest restored its exact original theme after every run. This closes the packaged theme-contrast gate, not the Narrator, avatar-quality, cloth-quality, or physical-GPU gates.
 
+Packaged run `20260809-135415-0bfa3de5` used payload `18e435691da6fa9f0f6892fbbcf5054a3f472f23e0b96b049057b29d0f08ccdf` and proved the replacement stale-cloth presentation in all six semantic cameras. The status is now one accessible, single-line row above the viewport with a fixed regeneration action. Manual review confirmed that it no longer hides the body or floor. The run also reconfirmed that the fitted avatar, editable fallback, pose, anatomy, and placeholder garment remain visually rejected. Its named-project failure was isolated to a harness race against an asynchronous Save As; focused run `20260809-140321-bfcc5128` used the unchanged application payload and passed all 10 persistence actions after the harness required product success plus a complete schema-valid file. Host input injection and VMConnect use remained false.
+
 Remaining accessibility gate:
 
 1. Verify actual screen-reader announcements and task completion with Windows Narrator. UI Automation names are now proven, but that is not evidence of what Narrator speaks or whether its reading order is useful.
@@ -50,7 +52,7 @@ Remaining accessibility gate:
 Observed problems:
 
 1. The package opens to a stale cloth revision, so the six camera buttons only orbit an undressed avatar.
-2. The stale notice covers a large portion of the lower body and competes with camera inspection.
+2. The stale notice previously covered a large portion of the lower body and competed with camera inspection. Run `20260809-135415-0bfa3de5` closed this interface defect by moving the state above the viewport.
 3. The 130 MB raw garment OBJ makes the mixed XAML and WebView2 accessibility tree slow enough to interfere with UI Automation discovery.
 4. The current display avatar is recognizably human but has exaggerated hands, feet, shoulder mass, calf mass, and an awkward presentation pose.
 5. Texture and hair help the old body, but they cannot repair its silhouette and anatomy.
@@ -62,7 +64,7 @@ Observed problems:
 Required correction:
 
 1. Do not package any baseline unless its complete current revision has accepted cloth.
-2. Move stale status into a compact non-modal evidence bar that does not cover the inspected body.
+2. Keep stale status in the compact non-modal evidence row above the viewport. This correction is implemented and packaged-review proven.
 3. Use modest presentation clothing or underwear by default. A nude technical body may remain an explicit inspection mode.
 4. Load a compact indexed GLB with PBR textures, normals, and optional level of detail. Keep the collision mesh out of the render payload.
 5. Add anatomy, pose, material, silhouette, and fold-quality gates to the same multi-angle evidence required for release.

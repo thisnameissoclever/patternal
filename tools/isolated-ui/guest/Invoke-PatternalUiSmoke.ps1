@@ -2557,11 +2557,23 @@ try {
             [System.Windows.Forms.SendKeys]::SendWait($pickerFileName)
             Start-Sleep -Milliseconds 150
             Invoke-GuestPointerElement -Window $saveDialog -Element (Find-UiElement -Root $saveDialog -Name 'Save')
-            Wait-ForCondition -Description 'packaged Patterna project file' -TimeoutSeconds 30 -Condition {
-                Test-Path -LiteralPath $pickerPath
+            Find-UiElement -Root $activeWindow -Name 'Project saved' | Out-Null
+            Wait-ForCondition -Description 'complete packaged Patterna project file' -TimeoutSeconds 30 -Condition {
+                if (-not (Test-Path -LiteralPath $pickerPath -PathType Leaf)) {
+                    return $null
+                }
+                try {
+                    $candidate = Get-Content -LiteralPath $pickerPath -Raw | ConvertFrom-Json
+                    if ((Get-Item -LiteralPath $pickerPath).Length -gt 0 -and
+                        $candidate.schemaVersion -eq 'patterna.project/1.0') {
+                        return $true
+                    }
+                }
+                catch {
+                }
+                return $null
             } | Out-Null
             Copy-Item -LiteralPath $pickerPath -Destination $projectEvidencePath
-            Find-UiElement -Root $activeWindow -Name 'Project saved' | Out-Null
 
             $project = Get-Content -LiteralPath $projectEvidencePath -Raw | ConvertFrom-Json
             if ($project.schemaVersion -ne 'patterna.project/1.0' -or

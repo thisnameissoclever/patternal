@@ -759,7 +759,54 @@
                         VerticalContentAlignment="Stretch"
                         Header="3D DRAPE"
                         IsClosable="False">
-                        <Grid x:Name="DrapeSurfaceGrid" Background="#0B0C10">
+                        <Grid Background="#0B0C10">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <Border
+                                x:Name="StaleSimulationNotice"
+                                Grid.Row="0"
+                                Padding="12,8"
+                                AutomationProperties.Name="3D cloth is out of date"
+                                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                                BorderThickness="0,0,0,1"
+                                Visibility="Collapsed">
+                                <Grid ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        FontWeight="SemiBold"
+                                        Text="3D cloth is out of date" />
+                                    <TextBlock
+                                        x:Name="StaleSimulationDetailText"
+                                        Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        AutomationProperties.AutomationId="DrapeStaleSimulationState"
+                                        AutomationProperties.LiveSetting="Polite"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        MaxLines="1"
+                                        Text="This body and 2D pattern have no matching accepted cloth. The old result is hidden."
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="NoWrap" />
+                                    <Button
+                                        Grid.Column="2"
+                                        AutomationProperties.Name="Regenerate current cloth simulation"
+                                        Click="OnRunSimulationClicked"
+                                        Content="Regenerate cloth" />
+                                </Grid>
+                            </Border>
+
+                            <Grid
+                                x:Name="DrapeSurfaceGrid"
+                                Grid.Row="1"
+                                Background="#0B0C10">
                             <Image
                                 x:Name="HighFidelityPreviewImage"
                                 AutomationProperties.Name="High fidelity Patternal cloth preview"
@@ -796,47 +843,6 @@
                                         Text="This pattern remains editable in 2D, but its current bodice continuity and initial strain fail the 3D quality gate. Patternal will not present the shirt simulation as if it were this dress."
                                         TextWrapping="Wrap" />
                                 </StackPanel>
-                            </Border>
-
-                            <Border
-                                x:Name="StaleSimulationNotice"
-                                Margin="20"
-                                Padding="12"
-                                HorizontalAlignment="Stretch"
-                                VerticalAlignment="Bottom"
-                                Background="#F2191A21"
-                                BorderBrush="#8056C7FF"
-                                BorderThickness="1"
-                                CornerRadius="8"
-                                Visibility="Collapsed">
-                                <Grid ColumnSpacing="16">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel Spacing="4">
-                                        <TextBlock
-                                            AutomationProperties.AutomationId="DrapeStaleSimulationState"
-                                            FontFamily="Segoe UI Variable Display"
-                                            FontSize="16"
-                                            FontWeight="SemiBold"
-                                            Foreground="White"
-                                            Text="3D cloth is out of date" />
-                                        <TextBlock
-                                            x:Name="StaleSimulationDetailText"
-                                            Foreground="#D8FFFFFF"
-                                            MaxLines="2"
-                                            Text="This body and 2D pattern have no matching accepted cloth. The old result is hidden."
-                                            TextTrimming="CharacterEllipsis"
-                                            TextWrapping="Wrap" />
-                                    </StackPanel>
-                                    <Button
-                                        Grid.Column="1"
-                                        VerticalAlignment="Center"
-                                        AutomationProperties.Name="Regenerate current cloth simulation"
-                                        Click="OnRunSimulationClicked"
-                                        Content="Regenerate current cloth" />
-                                </Grid>
                             </Border>
 
                             <StackPanel
@@ -958,6 +964,7 @@
                                         Text="Body-aware fitted preview · open interactive 3D for orbit inspection" />
                                 </StackPanel>
                             </Border>
+                            </Grid>
                         </Grid>
                     </TabViewItem>
                 </TabView>

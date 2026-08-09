@@ -1113,12 +1113,20 @@ Assert(
     "Undo and redo no longer commit the restored assembly-toggle state after WinUI finishes the current input event.");
 Assert(
     mainPageXaml.Contains("x:Name=\"StaleSimulationNotice\"", StringComparison.Ordinal) &&
+        mainPageXaml.Contains("AutomationProperties.AutomationId=\"DrapeStaleSimulationState\"", StringComparison.Ordinal) &&
+        mainPageXaml.Contains("AutomationProperties.LiveSetting=\"Polite\"", StringComparison.Ordinal) &&
+        mainPageXaml.IndexOf("x:Name=\"StaleSimulationNotice\"", StringComparison.Ordinal) <
+            mainPageXaml.IndexOf("x:Name=\"DrapeSurfaceGrid\"", StringComparison.Ordinal) &&
+        mainPageXaml.Contains("x:Name=\"DrapeSurfaceGrid\"", StringComparison.Ordinal) &&
+        mainPageXaml.Contains("Grid.Row=\"1\"", StringComparison.Ordinal) &&
+        mainPageXaml.Contains("x:Name=\"StaleSimulationDetailText\"", StringComparison.Ordinal) &&
+        mainPageXaml.Contains("MaxLines=\"1\"", StringComparison.Ordinal) &&
+        mainPageXaml.Contains("Grid.Column=\"2\"", StringComparison.Ordinal) &&
         mainPageXaml.Contains("x:Name=\"SimulationStatusBorder\"", StringComparison.Ordinal) &&
-        mainPageXaml.Contains("HorizontalAlignment=\"Stretch\"", StringComparison.Ordinal) &&
-        mainPageXaml.Contains("MaxLines=\"2\"", StringComparison.Ordinal) &&
+        mainPageCode.Contains("StaleSimulationDetailText.Text =", StringComparison.Ordinal) &&
         mainPageCode.Contains("No matching accepted cloth:", StringComparison.Ordinal) &&
         mainPageCode.Contains("SimulationStatusBorder.Visibility = isCurrent", StringComparison.Ordinal),
-    "The stale-cloth notice again obscures a large part of the 3D inspection surface.");
+    "The stale-cloth state must remain an accessible, one-line status row outside the 3D inspection viewport.");
 Assert(
     mainPageCode.Contains("await LoadBundledSimulationFitEvidenceAsync();", StringComparison.Ordinal) &&
         mainPageCode.Contains("Assets/Production/patterna-production-crew-neck.fit.json", StringComparison.Ordinal),
