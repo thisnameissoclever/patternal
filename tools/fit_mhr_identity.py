@@ -6,9 +6,14 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import sys
 
 import numpy as np
 import torch
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 from tools.mhr_anthropometry import (
     SectionTopology,
@@ -18,7 +23,6 @@ from tools.mhr_anthropometry import (
 )
 
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MODEL = REPO_ROOT / ".runtime/mhr-v1.0.1/assets/mhr_model.pt"
 DEFAULT_OUTPUT = REPO_ROOT / "artifacts/mhr-avatar-fitted-v1"
 SECTION_SPECS = (
@@ -29,6 +33,39 @@ SECTION_SPECS = (
     ("bust", 0.74, "chest", "chestDepth"),
 )
 UPPER_ARM_SECTION_RATIO = 0.74
+
+
+def measurement_tolerance_cm(name: str) -> float:
+    return 1.0 if name.endswith("Circumference") else 0.75
+
+
+def measurement_acceptance(
+    predictions: dict[str, torch.Tensor | float], targets: dict[str, float]
+) -> dict[str, object]:
+    residuals: dict[str, dict[str, float | bool]] = {}
+    for name, target in targets.items():
+        prediction_value = predictions[name]
+        actual = (
+            float(prediction_value.item())
+            if isinstance(prediction_value, torch.Tensor)
+            else float(prediction_value)
+        )
+        tolerance = measurement_tolerance_cm(name)
+        absolute_error = abs(actual - target)
+        residuals[name] = {
+            "targetCm": target,
+            "actualCm": actual,
+            "signedErrorCm": actual - target,
+            "absoluteErrorCm": absolute_error,
+            "toleranceCm": tolerance,
+            "accepted": absolute_error <= tolerance,
+        }
+    rejected = [name for name, result in residuals.items() if not result["accepted"]]
+    return {
+        "status": "accepted" if not rejected else "rejected",
+        "rejectedMeasurements": rejected,
+        "measurements": residuals,
+    }
 
 
 def parse_args() -> argparse.Namespace:
@@ -114,7 +151,7 @@ def loss_for_predictions(
 ) -> torch.Tensor:
     measurement_losses = []
     for name, target in targets.items():
-        tolerance = 1.0 if name.endswith("Circumference") else 0.75
+        tolerance = measurement_tolerance_cm(name)
         measurement_losses.append(((predictions[name] - target) / tolerance).square())
     measurement_loss = torch.stack(measurement_losses).mean()
     return measurement_loss + regularization * body_coefficients.square().mean()
@@ -148,6 +185,10 @@ def fit(
     expressions = torch.zeros((1, 72), dtype=torch.float32)
     history: list[dict[str, object]] = []
     topologies: list[SectionTopology] = []
+    best_loss = float("inf")
+    best_stage = 0
+    best_body_coefficients = body_coefficients.detach().clone()
+    best_predictions: dict[str, float] = {}
 
     for stage in range(stages):
         with torch.no_grad():
@@ -180,21 +221,44 @@ def fit(
             stage_loss = loss_for_predictions(
                 predictions, targets, body_coefficients, regularization
             )
+            stage_loss_value = float(stage_loss.item())
+            stage_predictions = {
+                name: float(value.item()) for name, value in predictions.items()
+            }
+            if stage_loss_value < best_loss:
+                best_loss = stage_loss_value
+                best_stage = stage + 1
+                best_body_coefficients = body_coefficients.detach().clone()
+                best_predictions = stage_predictions
             history.append(
                 {
                     "stage": stage + 1,
-                    "loss": float(stage_loss.item()),
+                    "loss": stage_loss_value,
                     "coefficientMinimum": float(body_coefficients.min().item()),
                     "coefficientMaximum": float(body_coefficients.max().item()),
-                    "predictionsCm": {
-                        name: float(value.item()) for name, value in predictions.items()
-                    },
+                    "predictionsCm": stage_predictions,
+                    "acceptance": measurement_acceptance(stage_predictions, targets),
                 }
             )
             print(json.dumps(history[-1]))
 
-    identity = torch.cat((body_coefficients, zeros_head_and_hands), dim=1)
-    return identity[0].detach().cpu().numpy(), {"history": history}
+    identity = torch.cat((best_body_coefficients, zeros_head_and_hands), dim=1)
+    saturated = [
+        index
+        for index, value in enumerate(best_body_coefficients[0].tolist())
+        if abs(value) >= 2.999
+    ]
+    acceptance = measurement_acceptance(best_predictions, targets)
+    return identity[0].detach().cpu().numpy(), {
+        "status": acceptance["status"],
+        "selectedStage": best_stage,
+        "bestLoss": best_loss,
+        "finalLoss": history[-1]["loss"],
+        "selectedPredictionsCm": best_predictions,
+        "saturatedBodyCoefficientIndices": saturated,
+        "acceptance": acceptance,
+        "history": history,
+    }
 
 
 def main() -> None:

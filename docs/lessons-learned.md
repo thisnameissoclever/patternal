@@ -3145,6 +3145,60 @@ The installer treated every tooling sync as a package replacement. It deleted fi
 
 Make payload installation idempotent. Reuse a complete AppX directory whose hash identity and registered install location already match. For a changed payload, stop the exact application with a bounded wait, unregister it before deleting its owned layout, verify the replacement directory identity, and then register the new manifest.
 
+## Validate a bundled interpreter instead of trusting notebook metadata
+
+### What happened
+
+The first PPF challenger installer required Python 3.12 because the bundled fitting notebook recorded Python 3.12.3 in its authoring metadata. The pinned Windows distribution actually ships its own Python 3.11.9 interpreter, so the installer correctly refused promotion even though the runtime itself was intact.
+
+### Root cause
+
+Notebook metadata was treated as distribution identity. It describes the environment that last saved the notebook, not necessarily the self-contained runtime shipped beside it.
+
+### Prevention rule
+
+Execute and record the bundled interpreter during preflight. Pin the version actually present in the hash-pinned distribution, and treat notebook kernels, README examples, and development environments as non-authoritative hints.
+
+### How to verify
+
+Run the embedded `python.exe` directly, require the exact expected version and a successful `frontend` import, then confirm a failed preflight leaves no promoted PPF version or staging residue. Rerun the installer and require the already accepted MHR runtime to be reused unchanged.
+
+## Test Python tools through their documented file entrypoint
+
+### What happened
+
+The MHR fitting unit tests passed when invoked as Python modules, but the documented `python tools\fit_mhr_identity.py` command failed immediately because the script imported `tools.mhr_anthropometry` without adding the repository root to Python's module search path.
+
+### Root cause
+
+Module-mode tests supplied the repository root implicitly. They did not exercise the same import environment as direct file execution.
+
+### Prevention rule
+
+When a repository tool imports through the repository package namespace, make its root bootstrap explicit and cover the documented file invocation in a subprocess test.
+
+### How to verify
+
+Run the tool's `--help` through its exact file path and require exit code zero before starting the expensive model fit. Keep the focused function tests as a separate layer.
+
+## A PPF mesh cache path does not redirect session state
+
+### What happened
+
+The first native PPF smoke supplied an external `cache_dir`, but PPF still wrote application and session state beneath the versioned runtime's `local\share\ppf-cts` directory.
+
+### Root cause
+
+PPF resolves mesh cache and application data through separate paths. `App.create(..., cache_dir=...)` changes only the former; `App.get_data_dirpath()` still selected the distribution-relative Windows data root.
+
+### Prevention rule
+
+For disposable host smoke tests, redirect both paths into the artifact root. Use the process-local, explicitly patchable `App.get_data_dirpath` seam and retain PPF's real GPU and driver checks. Do not set its test-rig environment variable because that deliberately disables those checks.
+
+### How to verify
+
+Run a forced fresh session, require its reported path to live under the selected artifact directory, and assert that no `local` directory appears under the immutable PPF version root. Remove any state created by an earlier invalid run.
+
 ### How to verify
 
 Install one payload, leave Patternal open, and sync a guest-tool-only change with the same payload identity. Require `appxReused: true`, `registrationReused: true`, and an uninterrupted app process. Then change one packaged byte in a disposable fixture and require orderly unregister, owned-layout replacement, identity verification, and registration without access-denied retries.

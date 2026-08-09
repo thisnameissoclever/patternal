@@ -44,7 +44,7 @@ The 0.50 cm material surface is the current useful control resolution. It reduce
 1. Keep Newton as the reproducible control and regression backend.
 2. Keep rigid source placement, explicit sewing, semantic seam phases, and the common bundle as backend-neutral inputs.
 3. Do not spend another full control run on the rejected C# initial arrangement.
-4. Evaluate ZOZO PPF Contact Solver next in a separate versioned runtime after explicit dependency approval. Give it this same 0.50 cm bundle, body, fabric, seam graph, cameras, and gates.
+4. Continue with the installed ZOZO PPF Contact Solver in its separate versioned runtime. Its pinned native executable passes a real RTX 4090 contact smoke with 20 frames, 221 nonzero contact samples, and 118 peak contacts. The next gate is the Patterna adapter using this same 0.50 cm bundle, body, fabric, seam graph, cameras, and gates.
    PPF's current Snap and Merge contract supports cross-object soft stitches with barycentric anchor evidence and an exact fetched-surface post-snap. The adapter must create anchors from authored seam correspondence and prove raw soft-stitch closure before post-snap; post-processing cannot turn a rejected solve into accepted cloth.
 5. Use IPC Toolkit only as an offline contact oracle if Newton and PPF disagree about a difficult collision case.
 6. Do not use XRTailor as the first challenger. Its documented custom-garment workflow starts with Marvelous Designer sewing and draping and imports a welded template, so it does not test Patterna's panel-assembly problem independently.
@@ -52,6 +52,6 @@ The 0.50 cm material surface is the current useful control resolution. It reduce
 
 ## Evidence boundary
 
-All named runs and renders are local ignored artifacts under `artifacts/cloth-bakeoff-antonia/control`. They prove the decisions above on this machine. They are not packaged release evidence, and none is accepted cloth. The next promotion attempt must generate a new hash-bound report and a fresh six-view set.
+All named runs and renders are local ignored artifacts under `artifacts/cloth-bakeoff-antonia/control`. The separate PPF runtime smoke is under `artifacts/ppf-runtime-smoke-v1`. They prove the decisions above on this machine. They are not packaged release evidence, and none is accepted cloth. The next promotion attempt must adapt the exact common garment bundle, generate a new hash-bound report, and produce a fresh six-view set.
 
 The exact Antonia live-contract render under `artifacts/antonia-live-contract/product-render` adds a separate rejected control. It uses the existing production crew-neck OBJ rather than a new solver output. Bounds-based `patterna.product-registration/2.0` accepted it, but exact six-view review found large breast and abdominal holes, an open rear neckline, detached-looking sleeves, and severe side distortion. The recorded visual rejection proves registration is only a coordinate sanity check. It is not garment-quality acceptance.
