@@ -1591,14 +1591,14 @@ public sealed partial class MainPage : Page
             AddPatternPointHandle(
                 holder,
                 piece,
-                new PatternPointHandle(piece.Id, curve.Id, PatternPointRole.End, $"{curve.Id} endpoint"),
+                new PatternPointHandle(piece.Id, curve.Id, PatternPointRole.End, $"{piece.Name} {curve.Id} endpoint"),
                 curve.End);
             if (curve.Control1 is not null)
             {
                 AddPatternPointHandle(
                     holder,
                     piece,
-                    new PatternPointHandle(piece.Id, curve.Id, PatternPointRole.Control1, $"{curve.Id} first Bezier control"),
+                    new PatternPointHandle(piece.Id, curve.Id, PatternPointRole.Control1, $"{piece.Name} {curve.Id} first Bezier control"),
                     curve.Control1);
             }
 
@@ -1607,7 +1607,7 @@ public sealed partial class MainPage : Page
                 AddPatternPointHandle(
                     holder,
                     piece,
-                    new PatternPointHandle(piece.Id, curve.Id, PatternPointRole.Control2, $"{curve.Id} second Bezier control"),
+                    new PatternPointHandle(piece.Id, curve.Id, PatternPointRole.Control2, $"{piece.Name} {curve.Id} second Bezier control"),
                     curve.Control2);
             }
         }

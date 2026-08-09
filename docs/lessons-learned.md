@@ -2646,3 +2646,21 @@ After either history direction restores a snapshot, refresh workspace metadata b
 ### How to verify
 
 In the packaged guest, enter four coordinate-defined corners, finish the polygon, and require the count to change from 14 to 15. Invoke Undo and require 14, invoke Redo and require 15, then invoke Undo again and require 14. Review the drafting screenshot and confirm the final UI Automation tree also reports 14 pieces.
+
+## Repeated canvas controls need owner-qualified accessible names
+
+### What happened
+
+Every boundary endpoint exposed names such as `edge-1 endpoint`. Those names were locally meaningful but duplicated across nearly every pattern piece, so keyboard automation could not reliably choose an edge on a specific piece for free sewing.
+
+### Root cause
+
+The accessible identity copied the curve ID without its owning piece name. Curve IDs are stable only inside a piece; treating them as garment-wide identities made a valid document ambiguous at the user interface boundary.
+
+### Prevention rule
+
+Accessible names for repeated geometry must include both the human-readable owner and the local stable ID. Apply the same rule to endpoints and Bezier controls, while retaining the local curve ID in the underlying edit handle.
+
+### How to verify
+
+Create `Canvas polygon 15`, enter point-edit mode, and independently invoke `Canvas polygon 15 edge-1 endpoint` and `Canvas polygon 15 edge-3 endpoint`. Sew them, require the Assembly summary to increase from 38 to 39 permanent seams, prove Undo and Redo, and remove the temporary piece. Confirm the final UI Automation tree returns to 14 pieces and 38 seams.

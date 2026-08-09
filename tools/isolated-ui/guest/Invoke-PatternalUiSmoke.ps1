@@ -941,6 +941,87 @@ try {
         }
     }
 
+    Invoke-UiCheck -Name '2D free sewing creation undo and redo' -Check {
+        $fit = Find-UiElementByAutomationId -Root $window -AutomationId 'PatternFitButton'
+        Invoke-UiElement -Element $fit
+        Invoke-UiElement -Element (Find-UiElement -Root $window -Name 'Draw a polygon pattern piece directly on the canvas')
+        $xCoordinate = Find-UiElement -Root $window -Name 'Canvas polygon point X coordinate in centimeters'
+        $yCoordinate = Find-UiElement -Root $window -Name 'Canvas polygon point Y coordinate in centimeters'
+        $addPoint = Find-UiElement -Root $window -Name 'Add the entered point to the canvas polygon'
+        $finish = Find-UiElement -Root $window -Name 'Finish the polygon pattern piece'
+        $xRange = Get-UiPattern -Element $xCoordinate -Pattern ([System.Windows.Automation.RangeValuePattern]::Pattern) -PatternName 'RangeValuePattern'
+        $yRange = Get-UiPattern -Element $yCoordinate -Pattern ([System.Windows.Automation.RangeValuePattern]::Pattern) -PatternName 'RangeValuePattern'
+        $coordinates = @(
+            @(105.0, 125.0),
+            @(115.0, 125.0),
+            @(115.0, 135.0),
+            @(105.0, 135.0)
+        )
+        foreach ($coordinate in $coordinates) {
+            $xRange.SetValue([double]$coordinate[0])
+            $yRange.SetValue([double]$coordinate[1])
+            Wait-ForCondition -Description 'free sewing polygon coordinates to commit' -Condition {
+                ([math]::Abs([double]$xRange.Current.Value - [double]$coordinate[0]) -lt 0.001) -and
+                ([math]::Abs([double]$yRange.Current.Value - [double]$coordinate[1]) -lt 0.001)
+            } | Out-Null
+            Invoke-UiElement -Element $addPoint
+        }
+        Invoke-UiElement -Element $finish
+        Wait-ForCondition -Description 'temporary free sewing polygon to be created' -Condition {
+            (Find-UiElementByAutomationId -Root $window -AutomationId 'PatternPieceCountText').Current.Name -eq '15 pieces'
+        } | Out-Null
+
+        $editMode = Find-UiElement -Root $window -Name 'Edit pattern points'
+        $editOriginal = Get-ToggleState -Element $editMode
+        Set-ToggleState -Element $editMode -State 'On'
+        Invoke-UiElement -Element (Find-UiElement -Root $window -Name 'Canvas polygon 15 edge-1 endpoint')
+        Invoke-UiElement -Element (Find-UiElement -Root $window -Name 'Mark selected edge as the first free sewing side')
+        Invoke-UiElement -Element (Find-UiElement -Root $window -Name 'Canvas polygon 15 edge-3 endpoint')
+        Invoke-UiElement -Element (Find-UiElement -Root $window -Name 'Sew the marked edge to the selected edge')
+
+        $assemblyMode = Find-UiElement -Root $window -Name 'Inspect garment seam graph'
+        $assemblyOriginal = Get-ToggleState -Element $assemblyMode
+        Set-ToggleState -Element $assemblyMode -State 'On'
+        $summary = Find-UiElementByAutomationId -Root $window -AutomationId 'AssemblySummaryText'
+        if ($summary.Current.Name -notmatch '^(\d+) permanent seams') {
+            throw "Cannot read the assembly seam count from '$($summary.Current.Name)'."
+        }
+        $createdSeamCount = [int]$Matches[1]
+        $seamShotPath = Join-Path $evidenceDirectory '14-2d-free-sewing.png'
+        Save-WindowScreenshot -Window $window -Path $seamShotPath
+        $script:screenshots.Add([pscustomobject]@{ name = '2d-free-sewing'; file = [IO.Path]::GetFileName($seamShotPath) })
+
+        $undo = Find-UiElement -Root $window -Name 'Undo pattern geometry edit'
+        Invoke-UiElement -Element $undo
+        Wait-ForCondition -Description 'Undo to remove the free sewing seam' -Condition {
+            (Find-UiElementByAutomationId -Root $window -AutomationId 'AssemblySummaryText').Current.Name -like "$($createdSeamCount - 1) permanent seams*"
+        } | Out-Null
+        $redo = Find-UiElement -Root $window -Name 'Redo pattern geometry edit'
+        Invoke-UiElement -Element $redo
+        Wait-ForCondition -Description 'Redo to restore the free sewing seam' -Condition {
+            (Find-UiElementByAutomationId -Root $window -AutomationId 'AssemblySummaryText').Current.Name -like "$createdSeamCount permanent seams*"
+        } | Out-Null
+        $undo = Find-UiElement -Root $window -Name 'Undo pattern geometry edit'
+        Invoke-UiElement -Element $undo
+        Wait-ForCondition -Description 'final seam Undo before removing the temporary piece' -Condition {
+            (Find-UiElementByAutomationId -Root $window -AutomationId 'AssemblySummaryText').Current.Name -like "$($createdSeamCount - 1) permanent seams*"
+        } | Out-Null
+        Invoke-UiElement -Element $undo
+        Wait-ForCondition -Description 'Undo to remove the temporary free sewing polygon' -Condition {
+            (Find-UiElementByAutomationId -Root $window -AutomationId 'PatternPieceCountText').Current.Name -eq '14 pieces'
+        } | Out-Null
+        Set-ToggleState -Element $assemblyMode -State $assemblyOriginal
+        Set-ToggleState -Element $editMode -State $editOriginal
+
+        [ordered]@{
+            piece = 'Canvas polygon 15'
+            sewnEdges = @('edge-1', 'edge-3')
+            createdSeamCount = $createdSeamCount
+            restoredPieceCount = 14
+            screenshot = [IO.Path]::GetFileName($seamShotPath)
+        }
+    }
+
     foreach ($toggleName in @(
         'Show pattern pieces panel',
         'Show avatar and material inspector',
