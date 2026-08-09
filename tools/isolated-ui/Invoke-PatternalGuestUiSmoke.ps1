@@ -27,6 +27,7 @@ if ($vm.State -ne 'Running') {
 
 $runId = [DateTimeOffset]::UtcNow.ToString('yyyyMMdd-HHmmss') + '-' + [Guid]::NewGuid().ToString('N').Substring(0, 8)
 $guestRequestPath = 'C:\PatternalTest\run-request.json'
+$guestStagedRequestPath = "C:\PatternalTest\run-request-$runId.json"
 $guestEvidenceRoot = 'C:\PatternalTest\Evidence'
 $localEvidenceParent = Join-Path $repositoryRoot 'artifacts\isolated-ui\runs'
 $localRequestPath = Join-Path $env:TEMP "Patternal-$runId-request.json"
@@ -50,14 +51,18 @@ $request | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $localRequestPath 
 $credential = Get-PatternalGuestCredential -VmName $VmName
 $session = New-PatternalVmSession -VmName $VmName -Credential $credential
 try {
-    Copy-Item -ToSession $session -LiteralPath $localRequestPath -Destination $guestRequestPath
+    Copy-Item -ToSession $session -LiteralPath $localRequestPath -Destination $guestStagedRequestPath
     Invoke-Command -Session $session -ScriptBlock {
+        param($StagedRequestPath, $RequestPath)
         $task = Get-ScheduledTask -TaskName 'Patternal Guest UI Smoke' -ErrorAction Stop
         if ($task.State -eq 'Running') {
+            Remove-Item -LiteralPath $StagedRequestPath -Force -ErrorAction SilentlyContinue
             throw 'The guest UI smoke task is already running.'
         }
+
+        Move-Item -LiteralPath $StagedRequestPath -Destination $RequestPath -Force
         Start-ScheduledTask -TaskName 'Patternal Guest UI Smoke'
-    }
+    } -ArgumentList $guestStagedRequestPath, $guestRequestPath
 
     $deadline = [DateTimeOffset]::UtcNow.AddSeconds($TimeoutSeconds)
     $taskStartRequestedAt = Get-Date

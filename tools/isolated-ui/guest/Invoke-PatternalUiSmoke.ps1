@@ -367,6 +367,75 @@ function Invoke-UiElement {
     $invoke.Invoke()
 }
 
+function Send-GuestKeys {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Keys,
+        [ValidateRange(50, 5000)]
+        [int]$SettleMilliseconds = 250
+    )
+
+    [System.Windows.Forms.SendKeys]::SendWait($Keys)
+    Start-Sleep -Milliseconds $SettleMilliseconds
+}
+
+function Get-FocusedUiElement {
+    $focused = [System.Windows.Automation.AutomationElement]::FocusedElement
+    if (-not $focused) {
+        throw 'Windows UI Automation did not report a focused element.'
+    }
+    return $focused
+}
+
+function Assert-KeyboardFocus {
+    param(
+        [string]$AutomationId,
+        [string]$Name
+    )
+
+    $focusDescription = if ([string]::IsNullOrWhiteSpace($AutomationId)) { $Name } else { $AutomationId }
+    return Wait-ForCondition -Description "keyboard focus on '$focusDescription'" -Condition {
+        $focused = Get-FocusedUiElement
+        $idMatches = [string]::IsNullOrWhiteSpace($AutomationId) -or
+            $focused.Current.AutomationId -eq $AutomationId
+        $nameMatches = [string]::IsNullOrWhiteSpace($Name) -or
+            $focused.Current.Name -eq $Name
+        if ($idMatches -and $nameMatches) {
+            $focused
+        }
+        else {
+            $null
+        }
+    }
+}
+
+function Get-KeyboardFocusableSummary {
+    param(
+        [Parameter(Mandatory)]
+        [System.Windows.Automation.AutomationElement]$Root
+    )
+
+    $condition = [System.Windows.Automation.PropertyCondition]::new(
+        [System.Windows.Automation.AutomationElement]::IsKeyboardFocusableProperty,
+        $true)
+    $elements = $Root.FindAll([System.Windows.Automation.TreeScope]::Descendants, $condition)
+    $unnamed = [System.Collections.Generic.List[object]]::new()
+    foreach ($element in $elements) {
+        if ([string]::IsNullOrWhiteSpace($element.Current.Name)) {
+            $unnamed.Add([pscustomobject]@{
+                automationId = $element.Current.AutomationId
+                controlType = $element.Current.ControlType.ProgrammaticName
+                offscreen = $element.Current.IsOffscreen
+            })
+        }
+    }
+    return [pscustomobject]@{
+        focusableCount = $elements.Count
+        unnamedCount = $unnamed.Count
+        unnamed = @($unnamed)
+    }
+}
+
 function Set-UiTextValue {
     param(
         [Parameter(Mandatory)]
@@ -686,6 +755,9 @@ function Convert-UiTreeNode {
             controlType = $Element.Current.ControlType.ProgrammaticName
             enabled = $Element.Current.IsEnabled
             offscreen = $Element.Current.IsOffscreen
+            keyboardFocusable = $Element.Current.IsKeyboardFocusable
+            hasKeyboardFocus = $Element.Current.HasKeyboardFocus
+            helpText = $Element.Current.HelpText
             children = @()
         }
         if ($Depth -ge $MaxDepth) {
@@ -868,6 +940,17 @@ function Invoke-ThreeDimensionalChecks {
     $script:uiTreeNodeCount = 0
     Convert-UiTreeNode -Element $Window | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath (Join-Path $EvidenceDirectory 'ui-tree-3d.json') -Encoding utf8
 
+    Invoke-UiCheck -Name 'Focusable 3D controls expose accessible names' -Check {
+        $summary = Get-KeyboardFocusableSummary -Root $Window
+        if ($summary.unnamedCount -ne 0) {
+            throw "$($summary.unnamedCount) keyboard-focusable 3D controls have no accessible name."
+        }
+        [ordered]@{
+            focusableControls = $summary.focusableCount
+            unnamedControls = $summary.unnamedCount
+        }
+    }
+
     $tab2d = Find-UiElement -Root $Window -Name '2D FLAT'
     Invoke-UiElement -Element $tab2d
     Find-UiElement -Root $Window -Name 'Interactive two dimensional pattern layout' | Out-Null
@@ -1020,6 +1103,180 @@ try {
             deliberatelyDisturbedHeight = $disturbedHeight
             restoredHeight = [double]$baselineHeightRange.Current.Value
             linkedProportions = Get-ToggleState -Element $baselineLink
+        }
+    }
+
+    Invoke-UiCheck -Name 'Keyboard-only primary workspace navigation' -Check {
+        [void][PatternalGuestPointerInput]::BringToFront($window.Current.NativeWindowHandle)
+        Start-Sleep -Milliseconds 200
+
+        $newPattern = Find-UiElementByAutomationId -Root $window -AutomationId 'NewPatternButton'
+        $newPattern.SetFocus()
+        Assert-KeyboardFocus -AutomationId 'NewPatternButton' | Out-Null
+        Send-GuestKeys -Keys '{TAB}'
+        Assert-KeyboardFocus -AutomationId 'OpenPatternProjectButton' | Out-Null
+        Send-GuestKeys -Keys '{TAB}'
+        Assert-KeyboardFocus -AutomationId 'SavePatternProjectAsButton' | Out-Null
+        Send-GuestKeys -Keys '{TAB}'
+        Assert-KeyboardFocus -AutomationId 'SavePatternSnapshotButton' | Out-Null
+
+        $saveProject = Find-UiElementByAutomationId -Root $window -AutomationId 'SavePatternProjectAsButton'
+        $saveProject.SetFocus()
+        Send-GuestKeys -Keys '{ENTER}' -SettleMilliseconds 500
+        $saveDialog = Find-UiElement -Root $automationRoot -Name 'Save As' -TimeoutSeconds 30
+        Send-GuestKeys -Keys '{ESC}' -SettleMilliseconds 300
+        Wait-ForCondition -Description 'keyboard-dismissed Save As dialog' -TimeoutSeconds 15 -Condition {
+            -not (Find-UiElementOnce -Root $automationRoot -Name 'Save As')
+        } | Out-Null
+
+        $openProject = Find-UiElementByAutomationId -Root $window -AutomationId 'OpenPatternProjectButton'
+        $openProject.SetFocus()
+        Send-GuestKeys -Keys '{ENTER}' -SettleMilliseconds 500
+        $openDialog = Find-UiElement -Root $automationRoot -Name 'Open' -TimeoutSeconds 30
+        Send-GuestKeys -Keys '{ESC}' -SettleMilliseconds 300
+        Wait-ForCondition -Description 'keyboard-dismissed Open dialog' -TimeoutSeconds 15 -Condition {
+            -not (Find-UiElementOnce -Root $automationRoot -Name 'Open')
+        } | Out-Null
+
+        $piecesToggle = Find-UiElementByAutomationId -Root $window -AutomationId 'PiecesToggleButton'
+        $piecesOriginal = Get-ToggleState -Element $piecesToggle
+        $piecesChanged = if ($piecesOriginal -eq 'On') { 'Off' } else { 'On' }
+        $piecesToggle.SetFocus()
+        Send-GuestKeys -Keys ' '
+        Wait-ForCondition -Description 'Pieces command keyboard toggle' -Condition {
+            (Get-ToggleState -Element $piecesToggle) -eq $piecesChanged
+        } | Out-Null
+        Send-GuestKeys -Keys ' '
+        Wait-ForCondition -Description 'Pieces command keyboard restore' -Condition {
+            (Get-ToggleState -Element $piecesToggle) -eq $piecesOriginal
+        } | Out-Null
+
+        $inspectorToggle = Find-UiElementByAutomationId -Root $window -AutomationId 'InspectorToggleButton'
+        $inspectorOriginal = Get-ToggleState -Element $inspectorToggle
+        $inspectorChanged = if ($inspectorOriginal -eq 'On') { 'Off' } else { 'On' }
+        $inspectorToggle.SetFocus()
+        Send-GuestKeys -Keys ' '
+        Wait-ForCondition -Description 'Inspector command keyboard toggle' -Condition {
+            (Get-ToggleState -Element $inspectorToggle) -eq $inspectorChanged
+        } | Out-Null
+        Send-GuestKeys -Keys ' '
+        Wait-ForCondition -Description 'Inspector command keyboard restore' -Condition {
+            (Get-ToggleState -Element $inspectorToggle) -eq $inspectorOriginal
+        } | Out-Null
+
+        $workspace2dTab = Find-UiElementByAutomationId -Root $window -AutomationId 'Workspace2DTab'
+        $workspace3dTab = Find-UiElementByAutomationId -Root $window -AutomationId 'Workspace3DTab'
+        $workspace2dTab.SetFocus()
+        Assert-KeyboardFocus -AutomationId 'Workspace2DTab' | Out-Null
+        Send-GuestKeys -Keys '{RIGHT}' -SettleMilliseconds 300
+        Assert-KeyboardFocus -AutomationId 'Workspace3DTab' | Out-Null
+        Send-GuestKeys -Keys '{ENTER}' -SettleMilliseconds 600
+        $workspace3dSelection = Get-UiPattern -Element $workspace3dTab -Pattern ([System.Windows.Automation.SelectionItemPattern]::Pattern) -PatternName 'SelectionItemPattern'
+        Wait-ForCondition -Description 'Enter to select focused 3D workspace tab' -Condition {
+            $workspace3dSelection.Current.IsSelected
+        } | Out-Null
+        Send-GuestKeys -Keys '{LEFT}' -SettleMilliseconds 300
+        Assert-KeyboardFocus -AutomationId 'Workspace2DTab' | Out-Null
+        Send-GuestKeys -Keys '{ENTER}' -SettleMilliseconds 500
+        $workspace2dSelection = Get-UiPattern -Element $workspace2dTab -Pattern ([System.Windows.Automation.SelectionItemPattern]::Pattern) -PatternName 'SelectionItemPattern'
+        Wait-ForCondition -Description 'Enter to restore focused 2D workspace tab' -Condition {
+            $workspace2dSelection.Current.IsSelected
+        } | Out-Null
+
+        $seamAllowance = Find-UiElementByAutomationId -Root $window -AutomationId 'SeamAllowanceToggle'
+        $seamOriginal = Get-ToggleState -Element $seamAllowance
+        $seamChanged = if ($seamOriginal -eq 'On') { 'Off' } else { 'On' }
+        $seamAllowance.SetFocus()
+        Send-GuestKeys -Keys ' '
+        Wait-ForCondition -Description 'Seam allowance keyboard toggle' -Condition {
+            (Get-ToggleState -Element $seamAllowance) -eq $seamChanged
+        } | Out-Null
+        Send-GuestKeys -Keys ' '
+        Wait-ForCondition -Description 'Seam allowance keyboard restore' -Condition {
+            (Get-ToggleState -Element $seamAllowance) -eq $seamOriginal
+        } | Out-Null
+
+        $grainlines = Find-UiElementByAutomationId -Root $window -AutomationId 'GrainlinesToggle'
+        $grainlinesOriginal = Get-ToggleState -Element $grainlines
+        $grainlinesChanged = if ($grainlinesOriginal -eq 'On') { 'Off' } else { 'On' }
+        $grainlines.SetFocus()
+        Send-GuestKeys -Keys ' '
+        Wait-ForCondition -Description 'Grainlines keyboard toggle' -Condition {
+            (Get-ToggleState -Element $grainlines) -eq $grainlinesChanged
+        } | Out-Null
+        Send-GuestKeys -Keys ' '
+        Wait-ForCondition -Description 'Grainlines keyboard restore' -Condition {
+            (Get-ToggleState -Element $grainlines) -eq $grainlinesOriginal
+        } | Out-Null
+
+        $fabricWeight = Find-UiElement -Root $window -Name 'Fabric weight in grams per square meter'
+        $fabricWeightRange = Get-UiPattern -Element $fabricWeight -Pattern ([System.Windows.Automation.RangeValuePattern]::Pattern) -PatternName 'RangeValuePattern'
+        $fabricWeightOriginal = [double]$fabricWeightRange.Current.Value
+        $fabricWeightChanged = $fabricWeightOriginal
+        try {
+            $fabricWeight.SetFocus()
+            Send-GuestKeys -Keys '{RIGHT}' -SettleMilliseconds 350
+            $fabricWeightChanged = [double]$fabricWeightRange.Current.Value
+            if ($fabricWeightChanged -le $fabricWeightOriginal) {
+                throw 'Right Arrow did not increase the focused Fabric weight slider.'
+            }
+            Send-GuestKeys -Keys '{LEFT}' -SettleMilliseconds 500
+            Wait-ForCondition -Description 'Fabric weight slider keyboard restore' -Condition {
+                [math]::Abs([double]$fabricWeightRange.Current.Value - $fabricWeightOriginal) -lt 0.001
+            } | Out-Null
+            $workspace3dTab.SetFocus()
+            Send-GuestKeys -Keys '{ENTER}' -SettleMilliseconds 600
+            Wait-ForCondition -Description 'keyboard Fabric cleanup to enter 3D' -Condition {
+                $workspace3dSelection.Current.IsSelected
+            } | Out-Null
+            $avatarPreviewState = Find-UiElementByAutomationId -Root $window -AutomationId 'DrapeAvatarPreviewState'
+            Wait-ForCondition -Description 'keyboard Fabric restore to settle the fitted avatar state' -TimeoutSeconds 30 -Condition {
+                if ($avatarPreviewState.Current.Name -like 'Avatar preview: fitted Antonia candidate*') {
+                    $avatarPreviewState.Current.Name
+                }
+                else {
+                    $null
+                }
+            } | Out-Null
+        }
+        finally {
+            if ([math]::Abs([double]$fabricWeightRange.Current.Value - $fabricWeightOriginal) -ge 0.001) {
+                $fabricWeightRange.SetValue($fabricWeightOriginal)
+            }
+            if (-not $workspace2dSelection.Current.IsSelected) {
+                Invoke-UiElement -Element $workspace2dTab
+            }
+            Wait-ForCondition -Description 'keyboard Fabric cleanup to restore 2D' -Condition {
+                $workspace2dSelection.Current.IsSelected
+            } | Out-Null
+        }
+
+        $grainlines.SetFocus()
+        Assert-KeyboardFocus -AutomationId 'GrainlinesToggle' | Out-Null
+        Start-Sleep -Milliseconds 350
+        $keyboardShotPath = Join-Path $evidenceDirectory '01-keyboard-focus-2d.png'
+        Save-WindowScreenshot -Window $window -Path $keyboardShotPath
+        $script:screenshots.Add([pscustomobject]@{ name = 'keyboard-focus-2d'; file = [IO.Path]::GetFileName($keyboardShotPath) })
+        [ordered]@{
+            tabOrder = @('NewPatternButton', 'OpenPatternProjectButton', 'SavePatternProjectAsButton', 'SavePatternSnapshotButton')
+            keyboardDialogs = @('Save As', 'Open')
+            keyboardToggles = @('Pieces', 'Inspector', 'Seam allowance', 'Grainlines')
+            workspaceTabs = @('2D', '3D', '2D')
+            fabricWeightOriginal = $fabricWeightOriginal
+            fabricWeightChanged = $fabricWeightChanged
+            focusedControl = 'GrainlinesToggle'
+            screenshot = [IO.Path]::GetFileName($keyboardShotPath)
+        }
+    }
+
+    Invoke-UiCheck -Name 'Focusable 2D controls expose accessible names' -Check {
+        $summary = Get-KeyboardFocusableSummary -Root $window
+        if ($summary.unnamedCount -ne 0) {
+            throw "$($summary.unnamedCount) keyboard-focusable 2D controls have no accessible name."
+        }
+        [ordered]@{
+            focusableControls = $summary.focusableCount
+            unnamedControls = $summary.unnamedCount
         }
     }
 

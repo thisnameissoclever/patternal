@@ -37,9 +37,11 @@ The preserved reviewed run is `artifacts/isolated-ui/runs/20260809-113435-c2c13a
 
 The packaged 1920 by 1080 workspace now uses geometry-aware deterministic packing, separate label headers, a scrollable canvas, and visible Zoom out, Zoom in, Fit, and Frame selected controls. Reviewed isolated run `20260809-041233-0852a5fd` shows all 14 exact pieces without overlap or clipping. Its automation sequence proved Zoom in and Fit against committed `ScrollViewer` state, restored the full layout at 89 percent, selected `Back Torso` through UI Automation, and framed that exact piece at 223 percent without host input injection.
 
-Remaining gates:
+Packaged run `20260809-124751-67e8517b` used payload `f260ae82d66f2570db88ca224f5ae656040a5ca586d3d2922e37db874717c126`, ran 46 checks, captured 23 screenshots, passed 45 checks, and failed only the truthful current-cloth freshness gate. Keyboard-only coverage proved toolbar focus order, Enter and Escape behavior in the real Save As and Open dialogs, Space activation for the four primary display toggles, 2D and 3D tab selection, a reversible Fabric weight edit, and visible focus. The UI Automation audit found 126 keyboard-focusable 2D controls and 39 keyboard-focusable 3D controls with zero missing accessible names. Manual review confirmed the complete 2D authoring sequence remained usable. Host input injection and VMConnect use remained false.
 
-1. Verify keyboard navigation, focus order, automation names, and screen-reader labels across the complete authoring workflow. Focused packaged runs now pass with reviewed screenshots at 1280 by 720, 1600 by 900, 1920 by 1080, and 200 percent Windows text scaling.
+Remaining accessibility gate:
+
+1. Verify actual screen-reader announcements and task completion with Windows Narrator. UI Automation names are now proven, but that is not evidence of what Narrator speaks or whether its reading order is useful.
 
 ### 3D interface review
 

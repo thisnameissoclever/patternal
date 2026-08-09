@@ -215,6 +215,38 @@ foreach ($persistenceAutomationId in @(
         throw "MainPage.xaml no longer exposes persistence automation ID '$persistenceAutomationId'."
     }
 }
+foreach ($keyboardContract in @(
+    "'Keyboard-only primary workspace navigation'",
+    "'Focusable 2D controls expose accessible names'",
+    "'Focusable 3D controls expose accessible names'",
+    'Send-GuestKeys',
+    "'{TAB}'",
+    "'{ENTER}'",
+    "'{ESC}'",
+    "'{RIGHT}'",
+    "'{LEFT}'",
+    "'01-keyboard-focus-2d.png'"
+)) {
+    if (-not $guestRunner.Contains($keyboardContract)) {
+        throw "Guest runner no longer proves keyboard accessibility contract $keyboardContract."
+    }
+}
+foreach ($keyboardAutomationId in @(
+    'EditPatternPointsButton',
+    'EditAssemblyButton',
+    'PiecesToggleButton',
+    'InspectorToggleButton',
+    'SimulateCommandButton',
+    'SeamAllowanceToggle',
+    'GrainlinesToggle',
+    'WorkspaceTabs',
+    'Workspace2DTab',
+    'Workspace3DTab'
+)) {
+    if (-not $xaml.Contains(('AutomationProperties.AutomationId="{0}"' -f $keyboardAutomationId))) {
+        throw "MainPage.xaml no longer exposes keyboard automation ID '$keyboardAutomationId'."
+    }
+}
 foreach ($dialogLifecycleContract in @(
     'Select a new or existing straight internal line',
     'PatternInternalPathUpdateCommand',
@@ -245,6 +277,15 @@ if (-not $guestRunner.Contains('fatalScriptStackTrace = $fatalScriptStackTrace')
     throw 'Guest runner no longer preserves the failing PowerShell script line with failed UI evidence.'
 }
 $hostRunner = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'Invoke-PatternalGuestUiSmoke.ps1') -Raw
+foreach ($stagedRequestContract in @(
+    'run-request-$runId.json',
+    'Move-Item -LiteralPath $StagedRequestPath -Destination $RequestPath -Force',
+    'Remove-Item -LiteralPath $StagedRequestPath -Force -ErrorAction SilentlyContinue'
+)) {
+    if (-not $hostRunner.Contains($stagedRequestContract)) {
+        throw "Host runner no longer protects an active guest run from request overwrite: '$stagedRequestContract'."
+    }
+}
 foreach ($earlyExitContract in @(
     'LastTaskResult',
     'exited before writing result.json'

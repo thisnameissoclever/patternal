@@ -2894,3 +2894,57 @@ Place neighboring overlay controls in one shared layout container with explicit 
 ### How to verify
 
 Request exact 1280 by 720, 1600 by 900, and 1920 by 1080 guest modes. Run the packaged persistence workflow at each size and inspect the startup and named-project screenshots. Require the footer text and every zoom command to remain distinct and readable, and keep 200 percent text scaling as a separate unproved gate.
+
+## Keyboard focus movement is not tab activation
+
+### What happened
+
+The keyboard test sent an arrow key to the workspace tabs and assumed the newly focused tab had become selected. WinUI moved keyboard focus but did not activate the tab until Enter was pressed.
+
+### Root cause
+
+The test treated focus, selection, and activation as one state. They are separate accessibility contracts, and controls are allowed to require an explicit activation command after focus moves.
+
+### Prevention rule
+
+Assert focus movement first, activate with the control's supported keyboard command, and then assert selection or visible content. Keep a screenshot with a deliberate final focus target so the focus-ring evidence agrees with the recorded control identity.
+
+### How to verify
+
+Focus the 2D tab, press Right Arrow, require keyboard focus on the 3D tab, press Enter, and require 3D content. Repeat with Left Arrow and Enter to restore 2D, then capture a named control with a visible focus ring.
+
+## Coupled measurements are not reversible one-field probes
+
+### What happened
+
+The keyboard workflow changed Height while linked proportions were enabled, then moved Height back and expected the complete avatar revision to match the original. Height drives 151 dependent estimates, so restoring one visible value did not restore the prior body state. A failed assertion also left 3D visible and caused unrelated later checks to fail.
+
+### Root cause
+
+The test chose a value with intentional fan-out as though it were an isolated slider. Its cleanup ran only on the success path, so one local failure poisoned the remaining workflow.
+
+### Prevention rule
+
+Use an independent, exactly reversible value such as Fabric weight for a generic keyboard range probe. Test linked body recalculation separately as a state transition. Put value and workspace restoration in `finally` so every later check starts from its documented precondition.
+
+### How to verify
+
+Record Fabric weight, increase it by one keyboard step, require the visible value to change, decrease it by one step, and require exact restoration. Enter 3D and require the fitted candidate, then restore 2D in `finally` even when any assertion fails.
+
+## Active guest requests must be promoted atomically
+
+### What happened
+
+A host launcher timed out while the scheduled guest smoke task kept running. A second invocation copied a new request over the shared `run-request.json` before checking task state. The first task completed successfully under its original run ID, while the second host process waited for evidence under the overwritten ID.
+
+### Root cause
+
+The launcher published shared mutable state before acquiring the guest task's idle precondition. The running-state guard existed, but it ran one destructive line too late.
+
+### Prevention rule
+
+Copy each request to a run-ID-specific staging path. Inside one guest command, check that the task is idle, delete the staged file on rejection, promote it to the canonical request path, and only then start the task. Never overwrite the canonical request of an active run.
+
+### How to verify
+
+Start one guest smoke task, invoke the host launcher again, and require the second call to reject without changing the canonical run ID. Confirm the first run writes evidence under its original ID and the rejected staging file is removed.

@@ -79,6 +79,7 @@
             <AppBarSeparator />
             <AppBarToggleButton
                 x:Name="EditPatternPointsButton"
+                AutomationProperties.AutomationId="EditPatternPointsButton"
                 AutomationProperties.HelpText="Show draggable pattern anchors and curve controls"
                 AutomationProperties.Name="Edit pattern points"
                 Click="OnEditPatternPointsClicked"
@@ -86,6 +87,7 @@
                 Label="Edit points" />
             <AppBarToggleButton
                 x:Name="EditAssemblyButton"
+                AutomationProperties.AutomationId="EditAssemblyButton"
                 AutomationProperties.HelpText="Inspect permanent seams and temporary garment closures on the authoritative pattern"
                 AutomationProperties.Name="Inspect garment seam graph"
                 Click="OnEditAssemblyClicked"
@@ -120,6 +122,7 @@
             <AppBarSeparator />
             <AppBarToggleButton
                 x:Name="PiecesToggleButton"
+                AutomationProperties.AutomationId="PiecesToggleButton"
                 AutomationProperties.Name="Show pattern pieces panel"
                 Click="OnTogglePiecesClicked"
                 IsChecked="True"
@@ -130,6 +133,7 @@
             </AppBarToggleButton>
             <AppBarToggleButton
                 x:Name="InspectorToggleButton"
+                AutomationProperties.AutomationId="InspectorToggleButton"
                 AutomationProperties.Name="Show avatar and material inspector"
                 Click="OnToggleInspectorClicked"
                 IsChecked="True"
@@ -140,6 +144,7 @@
             </AppBarToggleButton>
             <AppBarButton
                 x:Name="SimulateCommandButton"
+                AutomationProperties.AutomationId="SimulateCommandButton"
                 AutomationProperties.HelpText="Recalculate the current garment drape"
                 AutomationProperties.Name="Run drape simulation"
                 Click="OnRunSimulationClicked"
@@ -257,12 +262,14 @@
                     <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
                     <ToggleSwitch
                         x:Name="SeamAllowanceToggle"
+                        AutomationProperties.AutomationId="SeamAllowanceToggle"
                         AutomationProperties.Name="Show seam allowance"
                         Header="Seam allowance"
                         IsOn="True"
                         Toggled="OnPatternDisplayOptionChanged" />
                     <ToggleSwitch
                         x:Name="GrainlinesToggle"
+                        AutomationProperties.AutomationId="GrainlinesToggle"
                         AutomationProperties.Name="Show grainlines"
                         Header="Grainlines and notches"
                         IsOn="True"
@@ -292,6 +299,7 @@
             <Grid Grid.Column="1" Padding="10,0,10,10">
                 <TabView
                     x:Name="WorkspaceTabs"
+                    AutomationProperties.AutomationId="WorkspaceTabs"
                     AutomationProperties.Name="Pattern workspace views"
                     HorizontalContentAlignment="Stretch"
                     IsAddTabButtonVisible="False"
@@ -300,6 +308,7 @@
                     TabWidthMode="Equal"
                     VerticalContentAlignment="Stretch">
                     <TabViewItem
+                        AutomationProperties.AutomationId="Workspace2DTab"
                         HorizontalContentAlignment="Stretch"
                         VerticalContentAlignment="Stretch"
                         Header="2D FLAT"
@@ -745,6 +754,7 @@
                     </TabViewItem>
 
                     <TabViewItem
+                        AutomationProperties.AutomationId="Workspace3DTab"
                         HorizontalContentAlignment="Stretch"
                         VerticalContentAlignment="Stretch"
                         Header="3D DRAPE"
