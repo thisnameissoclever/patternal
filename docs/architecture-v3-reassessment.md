@@ -25,11 +25,13 @@ The recommended target is:
 
 ### Packaged application
 
-The isolated Windows 11 guest launched the registered AppX as a real responsive top-level window. Reviewed run `20260809-104940-3155254b` used payload `0965eb4d83d85486264006498870a08f1d8c92045da294732692ed044c470bf9`, ran 41 checks, captured 21 screenshots, passed 40 checks, and correctly failed only the current-cloth freshness gate. It covered the six semantic cameras, the complete current 2D authoring lifecycle, body and fabric sliders, panel and drawing toggles, fitted-bra availability, assembly direction editing, real SVG Save As, and a local snapshot across two full process restarts. Host input injection and VMConnect use remained false.
+The isolated Windows 11 guest launched the registered AppX as a real responsive top-level window. Reviewed run `20260809-113435-c2c13a96` used payload `aa0885fc8f1dd486e078c5129a8a0dcc4097d570dacf0ef95a1df5a34e74d013`, ran 42 checks, captured 22 screenshots, passed 41 checks, and correctly failed only the current-cloth freshness gate. It covered the six semantic cameras, the complete current 2D authoring lifecycle, body and fabric sliders, panel and drawing toggles, fitted-bra availability, assembly direction editing, real SVG Save As, named project Save As and Open, and a local snapshot across two full process restarts. Host input injection and VMConnect use remained false.
+
+Focused packaged run `20260809-113015-a9372bba` used payload `aa0885fc8f1dd486e078c5129a8a0dcc4097d570dacf0ef95a1df5a34e74d013` and passed all six persistence checks. It saved a 10,590-byte `patterna.project/1.0` file through the real Windows Save As picker, disturbed Height, linked proportions, and custom fabric weight, opened the named file through the real Windows Open picker, and restored Height 167.5 cm, linked proportions Off, and fabric weight 185 g/m² exactly. The separate local recovery snapshot still passed two process restarts. Host input injection and VMConnect use remained false.
 
 The current package does not have current accepted cloth at startup. Its 3D surface reports that the bundled neckline, shoulder, armscye, sleeve cap, width distribution, or balance differs from the bundled simulation. Hiding that old cloth is correct. Shipping a baseline that immediately hides its only accepted garment is not.
 
-The preserved reviewed run is `artifacts/isolated-ui/runs/20260809-104940-3155254b`. It is local evidence and is not a release artifact.
+The preserved reviewed run is `artifacts/isolated-ui/runs/20260809-113435-c2c13a96`. It is local evidence and is not a release artifact.
 
 ### 2D interface review
 
@@ -37,9 +39,8 @@ The packaged 1920 by 1080 workspace now uses geometry-aware deterministic packin
 
 Remaining gates:
 
-1. Add an explicit named project-file Save As and Open round trip. Local snapshot save and restore across process restarts plus SVG export now pass in reviewed run `20260809-104940-3155254b`, but a private automatic snapshot is not a user-selectable project format and SVG export alone does not prove reimport.
-2. Add screenshot gates at 1280 by 720, 1600 by 900, 1920 by 1080, and 200 percent text scaling.
-3. Verify keyboard navigation, focus order, automation names, and screen-reader labels across the complete authoring workflow.
+1. Add screenshot gates at 1280 by 720, 1600 by 900, 1920 by 1080, and 200 percent text scaling.
+2. Verify keyboard navigation, focus order, automation names, and screen-reader labels across the complete authoring workflow.
 
 ### 3D interface review
 
@@ -52,7 +53,7 @@ Observed problems:
 5. Texture and hair help the old body, but they cannot repair its silhouette and anatomy.
 6. The camera labels were initially reversed for Front and Rear. Packaged screenshot review caught and corrected the production-avatar yaw mapping; interaction success alone had not proved camera semantics.
 7. Existing collision, seam, strain, hash, and equilibrium gates all passed for an asset that still fails an ordinary visual review.
-8. Returning to 3D after a long 2D authoring session initially left the WebGL canvas white while XAML state labels continued to update. The packaged renderer now starts one generation-owned render loop whenever 3D becomes visible, invalidates any suspended hidden-tab loop, reloads only after a reported WebGL context loss, and rejects blank late screenshots. Run `20260809-104940-3155254b` recorded a 1.0 non-white sample ratio for both edited and restored avatar views.
+8. Returning to 3D after a long 2D authoring session initially left the WebGL canvas white while XAML state labels continued to update. The packaged renderer now starts one generation-owned render loop whenever 3D becomes visible, invalidates any suspended hidden-tab loop, reloads only after a reported WebGL context loss, and rejects blank late screenshots. Run `20260809-113435-c2c13a96` recorded a 1.0 non-white sample ratio for both edited and restored avatar views.
 
 Required correction:
 

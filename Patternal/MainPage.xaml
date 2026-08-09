@@ -55,12 +55,27 @@
                 Icon="Add"
                 Label="New" />
             <AppBarButton
+                x:Name="OpenPatternProjectButton"
+                AutomationProperties.AutomationId="OpenPatternProjectButton"
+                AutomationProperties.Name="Open a Patterna project"
+                Click="OnOpenPatternProjectClicked"
+                Icon="OpenFile"
+                Label="Open" />
+            <AppBarButton
+                x:Name="SavePatternProjectAsButton"
+                AutomationProperties.AutomationId="SavePatternProjectAsButton"
+                AutomationProperties.Name="Save a named Patterna project"
+                Click="OnSavePatternProjectAsClicked"
+                Icon="SaveLocal"
+                Label="Save As" />
+            <AppBarButton
                 x:Name="SavePatternSnapshotButton"
                 AutomationProperties.AutomationId="SavePatternSnapshotButton"
-                AutomationProperties.Name="Save pattern snapshot"
+                AutomationProperties.HelpText="Store an automatic recovery snapshot inside this Windows account"
+                AutomationProperties.Name="Save a local recovery snapshot"
                 Click="OnSavePatternClicked"
                 Icon="Save"
-                Label="Save" />
+                Label="Quick save" />
             <AppBarSeparator />
             <AppBarToggleButton
                 x:Name="EditPatternPointsButton"

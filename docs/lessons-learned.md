@@ -2858,3 +2858,21 @@ Own render-loop generations explicitly. When 3D becomes visible, invalidate the 
 ### How to verify
 
 Enter 3D and capture the six semantic cameras, spend a full authoring sequence in 2D, change a measurement, return to 3D, activate Fit, and capture the editable avatar. Restore the measurement and repeat for the fitted candidate. Sample the central WebView region and reject fewer than 5 percent non-white pixels, then manually inspect both images for an actual body, correct state, and usable framing.
+
+## Nested project payloads must retain their serializer contract
+
+### What happened
+
+Patterna saved a valid named `.patterna` project, selected it through the packaged Windows Open picker, and then rejected its own file as invalid measurement, geometry, or assembly state. The custom-measurement payload was valid and retained the casing used by the existing local snapshot format.
+
+### Root cause
+
+The new project validator applied the garment document's camel-case serializer options to every nested JSON string. Custom measurements intentionally used the older default serializer contract. Deserialization silently produced null record fields, so validation rejected data that the established restore path could read.
+
+### Prevention rule
+
+Treat each nested serialized value as a versioned boundary with its own serializer options. A container format does not erase the contracts of payloads embedded inside it. Reuse the exact reader used by restoration, or perform an explicit migration before validation. Never validate with one serializer and restore with another.
+
+### How to verify
+
+Save a named project through the packaged Save As picker with one custom measurement present. Parse the file, disturb scalar state, select the file in the packaged Open picker, and require the project to restore without an error InfoBar. Verify the exact Height, linked-proportion state, and non-preset fabric weight, then inspect the restored 2D workspace screenshot.

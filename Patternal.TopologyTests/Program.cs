@@ -1094,8 +1094,9 @@ Assert(
         mainPageXaml.Contains("without changing the supported body or collision shape", StringComparison.Ordinal) &&
         mainPageXaml.Contains("The supported bust shape and cloth collision body stay identical", StringComparison.Ordinal) &&
         mainPageCode.Contains("[\"showBra\"] = ShowBraToggle.IsOn", StringComparison.Ordinal) &&
-        mainPageCode.Contains("settings.Values[\"ShowFittedBra\"] = ShowBraToggle.IsOn", StringComparison.Ordinal) &&
+        mainPageCode.Contains("settings.Values[\"ShowFittedBra\"] = project.ShowFittedBra", StringComparison.Ordinal) &&
         mainPageCode.Contains("settings.Values[\"ShowFittedBra\"] is not bool showFittedBra || showFittedBra", StringComparison.Ordinal) &&
+        mainPageCode.Contains("ShowBraToggle.IsOn = project.ShowFittedBra", StringComparison.Ordinal) &&
         mainPageCode.Contains("window.patterna.updateAvatar({{showBra:", StringComparison.Ordinal) &&
         mainPageCode.Contains("SetBraDisplayAvailability(available)", StringComparison.Ordinal) &&
         mainPageCode.Contains("No fitted bra asset matches this edited avatar", StringComparison.Ordinal) &&

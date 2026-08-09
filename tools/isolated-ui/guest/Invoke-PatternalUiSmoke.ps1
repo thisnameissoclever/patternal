@@ -2040,6 +2040,201 @@ try {
         }
     }
 
+    Invoke-UiCheck -Name 'Named project Save As and Open round trip' -Check {
+        $projectEvidencePath = Join-Path $evidenceDirectory 'pattern-round-trip.patterna'
+        $documentsDirectory = [Environment]::GetFolderPath([Environment+SpecialFolder]::MyDocuments)
+        $pickerFileName = "pattern-round-trip-$($request.runId).patterna"
+        $pickerPath = Join-Path $documentsDirectory $pickerFileName
+        if (Test-Path -LiteralPath $projectEvidencePath) {
+            throw "Refusing to overwrite existing project evidence: $projectEvidencePath"
+        }
+        if (Test-Path -LiteralPath $pickerPath) {
+            throw "Refusing to overwrite existing picker project: $pickerPath"
+        }
+
+        $activeWindow = Wait-ForCondition -Description 'Patternal window before named project round trip' -TimeoutSeconds 30 -Condition {
+            $nameCondition = [System.Windows.Automation.PropertyCondition]::new(
+                [System.Windows.Automation.AutomationElement]::NameProperty,
+                [string]$request.expectedWindowTitle)
+            $automationRoot.FindFirst([System.Windows.Automation.TreeScope]::Children, $nameCondition)
+        }
+        $height = Find-UiElement -Root $activeWindow -Name 'Height in centimeters'
+        $heightRange = Get-UiPattern -Element $height -Pattern ([System.Windows.Automation.RangeValuePattern]::Pattern) -PatternName 'RangeValuePattern'
+        $link = Find-UiElement -Root $activeWindow -Name 'Link proportional measurements'
+        $fabricWeight = Find-UiElement -Root $activeWindow -Name 'Fabric weight in grams per square meter'
+        $fabricWeightRange = Get-UiPattern -Element $fabricWeight -Pattern ([System.Windows.Automation.RangeValuePattern]::Pattern) -PatternName 'RangeValuePattern'
+        $originalHeight = [double]$heightRange.Current.Value
+        $originalLink = Get-ToggleState -Element $link
+        $originalFabricWeight = [double]$fabricWeightRange.Current.Value
+        $savedHeight = if ($originalHeight + 0.5 -le [double]$heightRange.Current.Maximum) {
+            $originalHeight + 0.5
+        }
+        else {
+            $originalHeight - 0.5
+        }
+        $savedFabricWeight = if ($originalFabricWeight + 5 -le [double]$fabricWeightRange.Current.Maximum) {
+            $originalFabricWeight + 5
+        }
+        else {
+            $originalFabricWeight - 5
+        }
+        $disturbedHeight = if ($savedHeight + 0.5 -le [double]$heightRange.Current.Maximum) {
+            $savedHeight + 0.5
+        }
+        else {
+            $savedHeight - 0.5
+        }
+        $disturbedFabricWeight = if ($savedFabricWeight + 5 -le [double]$fabricWeightRange.Current.Maximum) {
+            $savedFabricWeight + 5
+        }
+        else {
+            $savedFabricWeight - 5
+        }
+
+        $saveDialog = $null
+        $openDialog = $null
+        try {
+            Set-ToggleState -Element $link -State 'Off'
+            $heightRange.SetValue($savedHeight)
+            $fabricWeightRange.SetValue($savedFabricWeight)
+            Wait-ForCondition -Description 'named project values before Save As' -Condition {
+                if ([math]::Abs([double]$heightRange.Current.Value - $savedHeight) -lt 0.001 -and
+                    [math]::Abs([double]$fabricWeightRange.Current.Value - $savedFabricWeight) -lt 0.001) {
+                    $true
+                }
+                else {
+                    $null
+                }
+            } | Out-Null
+
+            $saveProjectButton = Find-UiElementByAutomationId -Root $activeWindow -AutomationId 'SavePatternProjectAsButton'
+            Invoke-GuestPointerElement -Window $activeWindow -Element $saveProjectButton
+            $saveDialog = Find-UiElement -Root $automationRoot -Name 'Save As' -TimeoutSeconds 30
+            $fileNameHost = Find-UiDescendantByAutomationId -Root $saveDialog -AutomationId 'FileNameControlHost'
+            if (-not $fileNameHost) {
+                throw 'The packaged project Save As picker did not expose its file-name field.'
+            }
+            $fileNameEdit = [System.Windows.Automation.TreeWalker]::ControlViewWalker.GetFirstChild($fileNameHost)
+            if (-not $fileNameEdit) {
+                throw 'The packaged project Save As picker file-name host did not expose its editable child.'
+            }
+            $fileNameEdit.SetFocus()
+            Start-Sleep -Milliseconds 100
+            [System.Windows.Forms.SendKeys]::SendWait('^a')
+            [System.Windows.Forms.SendKeys]::SendWait($pickerFileName)
+            Start-Sleep -Milliseconds 150
+            Invoke-GuestPointerElement -Window $saveDialog -Element (Find-UiElement -Root $saveDialog -Name 'Save')
+            Wait-ForCondition -Description 'packaged Patterna project file' -TimeoutSeconds 30 -Condition {
+                Test-Path -LiteralPath $pickerPath
+            } | Out-Null
+            Copy-Item -LiteralPath $pickerPath -Destination $projectEvidencePath
+            Find-UiElement -Root $activeWindow -Name 'Project saved' | Out-Null
+
+            $project = Get-Content -LiteralPath $projectEvidencePath -Raw | ConvertFrom-Json
+            if ($project.schemaVersion -ne 'patterna.project/1.0' -or
+                [math]::Abs([double]$project.height - $savedHeight) -ge 0.001 -or
+                [math]::Abs([double]$project.fabricWeight - $savedFabricWeight) -ge 0.001 -or
+                [bool]$project.linkedProportions -or
+                -not $project.values.patternStructuralEdits -or
+                -not $project.values.seamSideBReverseOverrides -or
+                -not $project.values.closureStateOverrides) {
+                throw 'The named project file is missing its schema, exact scalar state, or editable construction payload.'
+            }
+
+            $heightRange.SetValue($disturbedHeight)
+            $fabricWeightRange.SetValue($disturbedFabricWeight)
+            Set-ToggleState -Element $link -State 'On'
+            Wait-ForCondition -Description 'disturbed values before project Open' -Condition {
+                if ([math]::Abs([double]$heightRange.Current.Value - $disturbedHeight) -lt 0.001 -and
+                    [math]::Abs([double]$fabricWeightRange.Current.Value - $disturbedFabricWeight) -lt 0.001 -and
+                    (Get-ToggleState -Element $link) -eq 'On') {
+                    $true
+                }
+                else {
+                    $null
+                }
+            } | Out-Null
+
+            $openProjectButton = Find-UiElementByAutomationId -Root $activeWindow -AutomationId 'OpenPatternProjectButton'
+            Invoke-GuestPointerElement -Window $activeWindow -Element $openProjectButton
+            $openDialog = Find-UiElement -Root $automationRoot -Name 'Open' -TimeoutSeconds 30
+            $projectListItem = Find-UiElement -Root $openDialog -Name $pickerFileName -TimeoutSeconds 30
+            Invoke-UiElement -Element $projectListItem
+            Invoke-GuestPointerElement -Window $openDialog -Element (Find-UiElement -Root $openDialog -Name 'Open')
+            try {
+                Wait-ForCondition -Description 'named project values to restore after Open' -TimeoutSeconds 30 -Condition {
+                    if ([math]::Abs([double]$heightRange.Current.Value - $savedHeight) -lt 0.001 -and
+                        [math]::Abs([double]$fabricWeightRange.Current.Value - $savedFabricWeight) -lt 0.001 -and
+                        (Get-ToggleState -Element $link) -eq 'Off') {
+                        $true
+                    }
+                    else {
+                        $null
+                    }
+                } | Out-Null
+            }
+            catch {
+                $script:uiTreeNodeCount = 0
+                Convert-UiTreeNode -Element $activeWindow |
+                    ConvertTo-Json -Depth 20 |
+                    Set-Content -LiteralPath (Join-Path $evidenceDirectory 'ui-tree-project-open-failure.json') -Encoding utf8
+                $failureShotPath = Join-Path $evidenceDirectory '15-named-project-open-failure.png'
+                Save-WindowScreenshot -Window $activeWindow -Path $failureShotPath
+                $script:screenshots.Add([pscustomobject]@{ name = 'named-project-open-failure'; file = [IO.Path]::GetFileName($failureShotPath) })
+                $errorNotice = Find-UiElementOnce -Root $activeWindow -Name 'Project could not be opened'
+                if ($errorNotice) {
+                    throw 'Patterna rejected the named project file. See ui-tree-project-open-failure.json for the product message.'
+                }
+                throw
+            }
+            Find-UiElement -Root $activeWindow -Name 'Project opened' | Out-Null
+
+            $projectShotPath = Join-Path $evidenceDirectory '15-named-project-restored.png'
+            Save-WindowScreenshot -Window $activeWindow -Path $projectShotPath
+            $script:screenshots.Add([pscustomobject]@{ name = 'named-project-restored'; file = [IO.Path]::GetFileName($projectShotPath) })
+            [ordered]@{
+                file = [IO.Path]::GetFileName($projectEvidencePath)
+                bytes = (Get-Item -LiteralPath $projectEvidencePath).Length
+                schema = [string]$project.schemaVersion
+                savedHeight = $savedHeight
+                restoredHeight = [double]$heightRange.Current.Value
+                savedFabricWeight = $savedFabricWeight
+                restoredFabricWeight = [double]$fabricWeightRange.Current.Value
+                linkedProportions = Get-ToggleState -Element $link
+                screenshot = [IO.Path]::GetFileName($projectShotPath)
+            }
+        }
+        finally {
+            foreach ($dialog in @($saveDialog, $openDialog)) {
+                if ($dialog) {
+                    try {
+                        $dialogWindowPattern = Get-UiPattern -Element $dialog -Pattern ([System.Windows.Automation.WindowPattern]::Pattern) -PatternName 'WindowPattern'
+                        $dialogWindowPattern.Close()
+                    }
+                    catch {
+                    }
+                }
+            }
+            if ($activeWindow) {
+                try {
+                    $cleanupHeight = Find-UiElement -Root $activeWindow -Name 'Height in centimeters' -TimeoutSeconds 5
+                    $cleanupHeightRange = Get-UiPattern -Element $cleanupHeight -Pattern ([System.Windows.Automation.RangeValuePattern]::Pattern) -PatternName 'RangeValuePattern'
+                    $cleanupHeightRange.SetValue($originalHeight)
+                    $cleanupLink = Find-UiElement -Root $activeWindow -Name 'Link proportional measurements' -TimeoutSeconds 5
+                    Set-ToggleState -Element $cleanupLink -State $originalLink
+                    $cleanupFabricWeight = Find-UiElement -Root $activeWindow -Name 'Fabric weight in grams per square meter' -TimeoutSeconds 5
+                    $cleanupFabricWeightRange = Get-UiPattern -Element $cleanupFabricWeight -Pattern ([System.Windows.Automation.RangeValuePattern]::Pattern) -PatternName 'RangeValuePattern'
+                    $cleanupFabricWeightRange.SetValue($originalFabricWeight)
+                }
+                catch {
+                }
+            }
+            if (Test-Path -LiteralPath $pickerPath) {
+                Remove-Item -LiteralPath $pickerPath -Force
+            }
+        }
+    }
+
     Invoke-UiCheck -Name 'Local snapshot save and startup restore round trip' -Check {
         $activeWindow = Wait-ForCondition -Description 'Patternal window after SVG picker' -TimeoutSeconds 30 -Condition {
             $nameCondition = [System.Windows.Automation.PropertyCondition]::new(

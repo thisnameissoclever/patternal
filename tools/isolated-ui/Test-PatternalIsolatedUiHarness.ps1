@@ -189,6 +189,10 @@ foreach ($persistenceContract in @(
     "'SVG export through packaged file picker'",
     "'ExportPatternButton'",
     "'pattern-round-trip.svg'",
+    "'Named project Save As and Open round trip'",
+    "'SavePatternProjectAsButton'",
+    "'OpenPatternProjectButton'",
+    "'pattern-round-trip.patterna'",
     "'Local snapshot save and startup restore round trip'",
     "'SavePatternSnapshotButton'",
     "'15-local-snapshot-restored.png'"
@@ -200,7 +204,13 @@ foreach ($persistenceContract in @(
 if (-not $guestRunner.Contains('Assert-RenderedScreenshotRegion')) {
     throw 'Guest runner no longer rejects visually blank avatar proof screenshots.'
 }
-foreach ($persistenceAutomationId in @('NewPatternButton', 'ExportPatternButton', 'SavePatternSnapshotButton')) {
+foreach ($persistenceAutomationId in @(
+    'NewPatternButton',
+    'OpenPatternProjectButton',
+    'SavePatternProjectAsButton',
+    'ExportPatternButton',
+    'SavePatternSnapshotButton'
+)) {
     if (-not $xaml.Contains(('AutomationProperties.AutomationId="{0}"' -f $persistenceAutomationId))) {
         throw "MainPage.xaml no longer exposes persistence automation ID '$persistenceAutomationId'."
     }
