@@ -89,6 +89,7 @@ $python = Join-Path $ppf 'python\python.exe'
     --body-override .\artifacts\ppf-patterna-common-bundle-1cm-v1\collision-proxy\antonia-collision-10000f.obj `
     --body-override-report .\artifacts\ppf-patterna-common-bundle-1cm-v1\collision-proxy\antonia-collision-10000f.report.json `
     --output-directory .\artifacts\ppf-patterna-common-bundle-1cm-proxy-v1 `
+    --maximum-seam-phase 0 `
     --frames 20 `
     --preflight-only
 
@@ -97,8 +98,11 @@ $python = Join-Path $ppf 'python\python.exe'
     --source-report .\artifacts\ppf-patterna-common-bundle-1cm-v1\source\patterna-style3d-source-1.000cm.report.json `
     --body-override .\artifacts\ppf-patterna-common-bundle-1cm-v1\collision-proxy\antonia-collision-10000f.obj `
     --body-override-report .\artifacts\ppf-patterna-common-bundle-1cm-v1\collision-proxy\antonia-collision-10000f.report.json `
-    --output-directory .\artifacts\ppf-patterna-common-bundle-1cm-proxy-v1 `
+    --output-directory .\artifacts\ppf-patterna-internal-shaping-v1 `
+    --maximum-seam-phase 0 `
     --frames 20
 ```
 
-`run_ppf_patterna_bundle.py` verifies the immutable runtime manifest and every input hash. Before launching the native child, it independently recomputes triangle area, initial strain, garment self-intersection, body intersection, and `0.25 cm` body-clearance gates. Its bounded rigid stage may move only violating panels radially outward, records every transform, and must recheck to zero violations without changing material shape. Run `--preflight-only` first; it writes the same gate report without creating a native session. The normal path redirects cache and session state into the artifact, records the native requested frame count after configuring dynamic release parameters, and never labels a completed solve as accepted. If a host wrapper ends before the native child, let the solver finish and use `collect_ppf_patterna_session.py` against the exact session directory. The collector verifies runtime identity, restores PPF's object vertex map, reads the native TOML frame count, grades every saved snapshot, and writes a fresh hash-bound rejection or remaining-acceptance report.
+`run_ppf_patterna_bundle.py` verifies the immutable runtime manifest and every input hash. Before launching the native child, it independently recomputes triangle area, initial strain, garment self-intersection, body intersection, `0.25 cm` body clearance, semantic construction phases, and active seam-capture distance. The direct all-seam route now rejects the current `55.519 cm` spread instead of launching a known-invalid solve. `--maximum-seam-phase 0` is the bounded supported diagnostic shown above. Later-phase runs require a hash-bound prior PPF output through `--garment-override` and `--garment-override-report`. `--allow-spread-panel-research` is explicit research evidence, never product acceptance.
+
+`build_ppf_dressing_body.py` can derive a temporary reduced collider only from an accepted collision proxy. It records every scale and blend parameter, preserves height and topology, and rejects any changed face orientation. These temporary bodies are challenger diagnostics, not display avatars or accepted product colliders. The completed phased experiment is visually rejected, so there is no standard command that promotes its result. The normal adapter path redirects cache and session state into the artifact, records the native requested frame count after configuring dynamic release parameters, and never labels a completed solve as accepted. If a host wrapper ends before the native child, let the solver finish and use `collect_ppf_patterna_session.py` against the exact session directory. The collector verifies runtime identity, restores PPF's object vertex map, reads the native TOML frame count, grades every saved snapshot, and writes a fresh hash-bound rejection or remaining-acceptance report.

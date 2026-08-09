@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 from pathlib import Path
 import tempfile
 import unittest
@@ -7,6 +9,8 @@ import unittest
 import numpy as np
 
 from tools.run_ppf_patterna_bundle import (
+    active_seam_links_for_phase,
+    classify_seam_phase,
     cross_pair_details,
     cross_group_pairs,
     final_frame_indices,
@@ -14,7 +18,9 @@ from tools.run_ppf_patterna_bundle import (
     mapped_object_vertices,
     read_obj,
     resolve_body_mesh,
+    resolve_garment_mesh,
     seam_metrics,
+    seam_assembly_plan,
     stage_body_clearance,
     stage_cross_panel_intersections,
     stitch_arrays,
@@ -24,6 +30,132 @@ from tools.run_ppf_patterna_bundle import (
 
 
 class RunPpfPatternaBundleTests(unittest.TestCase):
+    def test_garment_override_requires_hash_bound_completed_ppf_phase(self) -> None:
+        with tempfile.TemporaryDirectory() as raw_directory:
+            root = Path(raw_directory)
+            canonical = root / "canonical.obj"
+            canonical.write_text("v 0 0 0\n", encoding="utf-8")
+            source_report_path = root / "source.json"
+            source_report = {
+                "physical_mesh_path": str(canonical),
+                "physical_mesh_sha256": hashlib.sha256(canonical.read_bytes()).hexdigest(),
+            }
+            source_report_path.write_text(
+                json.dumps(source_report),
+                encoding="utf-8",
+            )
+            override = root / "phase.obj"
+            override.write_text("v 1 0 0\n", encoding="utf-8")
+            override_hash = hashlib.sha256(override.read_bytes()).hexdigest()
+            phase_report = root / "phase.json"
+            phase_report.write_text(
+                json.dumps(
+                    {
+                        "schemaVersion": "patterna.ppf-common-bundle/1.0",
+                        "status": "completed-requires-acceptance-grading",
+                        "inputs": {
+                            "sourceReportSha256": hashlib.sha256(
+                                source_report_path.read_bytes()
+                            ).hexdigest()
+                        },
+                        "outputs": {"finalObjSha256": override_hash},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            resolved, identity = resolve_garment_mesh(
+                source_report,
+                source_report_path,
+                override,
+                phase_report,
+            )
+            self.assertEqual(override, resolved)
+            self.assertTrue(identity["simulationGarmentOverride"])
+            override.write_text("v 2 0 0\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "hash does not match"):
+                resolve_garment_mesh(
+                    source_report,
+                    source_report_path,
+                    override,
+                    phase_report,
+                )
+
+    def test_active_seams_are_cumulative_by_phase(self) -> None:
+        links = [
+            ("dart", 0, 1),
+            ("side", 2, 3),
+            ("cap", 4, 5),
+        ]
+        owners = [
+            "front_torso",
+            "front_torso",
+            "front_torso",
+            "back_torso",
+            "left_sleeve_f",
+            "front_torso",
+        ]
+        self.assertEqual([links[0]], active_seam_links_for_phase(links, owners, 0))
+        self.assertEqual(links[:2], active_seam_links_for_phase(links, owners, 2))
+        self.assertEqual(links, active_seam_links_for_phase(links, owners, 5))
+
+    def test_seam_phases_follow_semantic_construction_order(self) -> None:
+        self.assertEqual(
+            "internal-shaping",
+            classify_seam_phase("front_torso", "front_torso"),
+        )
+        self.assertEqual(
+            "detached-shells",
+            classify_seam_phase("left_sleeve_f", "left_sleeve_b"),
+        )
+        self.assertEqual(
+            "detached-shells",
+            classify_seam_phase("left_collar_front", "left_collar_back"),
+        )
+        self.assertEqual(
+            "torso-shell",
+            classify_seam_phase("front_torso", "back_torso"),
+        )
+        self.assertEqual(
+            "finishing-bands",
+            classify_seam_phase("left_sleeve_f", "sl_left_cuff_f"),
+        )
+        self.assertEqual(
+            "neckline",
+            classify_seam_phase("left_collar_front", "front_torso"),
+        )
+        self.assertEqual(
+            "sleeve-caps",
+            classify_seam_phase("left_sleeve_f", "front_torso"),
+        )
+
+    def test_seam_assembly_plan_is_cumulative_and_complete(self) -> None:
+        vertices = np.asarray(
+            [
+                [0.0, 0.0, 0.0],
+                [0.01, 0.0, 0.0],
+                [0.0, 0.0, 0.0],
+                [0.0, 0.02, 0.0],
+            ]
+        )
+        plan = seam_assembly_plan(
+            vertices,
+            [("dart", 0, 1), ("side", 2, 3)],
+            ["front_torso", "front_torso", "front_torso", "back_torso"],
+        )
+        self.assertEqual(2, plan["authoredLinkCount"])
+        self.assertEqual(
+            [1, 1, 2, 2, 2, 2],
+            [phase["cumulativeLinkCount"] for phase in plan["phases"]],
+        )
+        self.assertAlmostEqual(
+            2.0,
+            plan["phases"][2]["maximumInitialSeparationCm"],
+        )
+
+    def test_unknown_seam_roles_are_rejected(self) -> None:
+        with self.assertRaisesRegex(ValueError, "no supported construction phase"):
+            classify_seam_phase("mystery_a", "mystery_b")
+
     def test_cross_pair_details_restore_garment_and_body_roles(self) -> None:
         details = cross_pair_details(
             [(1, 4), (5, 0)],

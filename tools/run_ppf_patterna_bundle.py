@@ -20,6 +20,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--runtime-root", required=True, type=Path)
     parser.add_argument("--source-report", required=True, type=Path)
+    parser.add_argument("--garment-override", type=Path)
+    parser.add_argument("--garment-override-report", type=Path)
     parser.add_argument("--body-override", type=Path)
     parser.add_argument("--body-override-report", type=Path)
     parser.add_argument("--output-directory", required=True, type=Path)
@@ -29,6 +31,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dt", type=float, default=0.005)
     parser.add_argument("--stitch-stiffness", type=float, default=1.0)
     parser.add_argument("--stitch-length-factor", type=float, default=10.0)
+    parser.add_argument("--direct-seam-capture-cm", type=float, default=5.0)
+    parser.add_argument("--allow-spread-panel-research", action="store_true")
+    parser.add_argument("--maximum-seam-phase", type=int, default=5)
+    parser.add_argument("--body-contact-start-phase", type=int, default=0)
     return parser.parse_args()
 
 
@@ -295,6 +301,129 @@ def stitch_arrays(seam_links: list[tuple[str, int, int]]):
     return indices, weights
 
 
+SEAM_PHASE_ORDER = (
+    "internal-shaping",
+    "detached-shells",
+    "torso-shell",
+    "finishing-bands",
+    "neckline",
+    "sleeve-caps",
+)
+
+
+def classify_seam_phase(first_panel: str, second_panel: str) -> str:
+    """Return the construction phase for one authored seam link.
+
+    The classification is deliberately based on semantic panel roles instead
+    of generated seam-link numbers. The generated labels preserve identity,
+    but they do not describe whether a link closes a dart, torso, cuff,
+    neckline, or sleeve cap.
+    """
+    panels = (first_panel.lower(), second_panel.lower())
+    if panels[0] == panels[1]:
+        return "internal-shaping"
+
+    has_torso = tuple("torso" in panel for panel in panels)
+    has_sleeve = tuple("sleeve" in panel for panel in panels)
+    has_cuff = tuple("cuff" in panel for panel in panels)
+    has_collar = tuple("collar" in panel for panel in panels)
+
+    if all(has_torso):
+        return "torso-shell"
+    if all(has_sleeve) or all(has_cuff) or all(has_collar):
+        return "detached-shells"
+    if any(has_sleeve) and any(has_cuff):
+        return "finishing-bands"
+    if any(has_collar) and any(has_torso):
+        return "neckline"
+    if any(has_sleeve) and any(has_torso):
+        return "sleeve-caps"
+    raise ValueError(
+        "Authored seam link has no supported construction phase: "
+        f"{first_panel} <-> {second_panel}"
+    )
+
+
+def seam_assembly_plan(
+    vertices_m,
+    seam_links: list[tuple[str, int, int]],
+    panel_owners: list[str],
+) -> dict[str, object]:
+    """Summarize cumulative seam phases and their initial capture distances."""
+    import numpy as np
+
+    grouped: dict[str, list[tuple[str, int, int]]] = {
+        phase: [] for phase in SEAM_PHASE_ORDER
+    }
+    for link in seam_links:
+        _, first, second = link
+        grouped[
+            classify_seam_phase(panel_owners[first], panel_owners[second])
+        ].append(link)
+
+    vertices = np.asarray(vertices_m, dtype=np.float64)
+    phases = []
+    cumulative_count = 0
+    for index, phase in enumerate(SEAM_PHASE_ORDER):
+        links = grouped[phase]
+        cumulative_count += len(links)
+        distances_cm = np.asarray(
+            [
+                100.0 * np.linalg.norm(vertices[first] - vertices[second])
+                for _, first, second in links
+            ],
+            dtype=np.float64,
+        )
+        phases.append(
+            {
+                "index": index,
+                "name": phase,
+                "linkCount": len(links),
+                "cumulativeLinkCount": cumulative_count,
+                "maximumInitialSeparationCm": (
+                    float(distances_cm.max()) if len(distances_cm) else 0.0
+                ),
+                "meanInitialSeparationCm": (
+                    float(distances_cm.mean()) if len(distances_cm) else 0.0
+                ),
+                "p95InitialSeparationCm": (
+                    float(np.percentile(distances_cm, 95.0))
+                    if len(distances_cm)
+                    else 0.0
+                ),
+            }
+        )
+    if cumulative_count != len(seam_links):
+        raise RuntimeError("Seam assembly plan did not classify every authored link.")
+    return {
+        "method": "cumulative-semantic-construction-phases",
+        "phaseCount": len(phases),
+        "authoredLinkCount": len(seam_links),
+        "phases": phases,
+    }
+
+
+def active_seam_links_for_phase(
+    seam_links: list[tuple[str, int, int]],
+    panel_owners: list[str],
+    maximum_phase_index: int,
+) -> list[tuple[str, int, int]]:
+    if maximum_phase_index < 0 or maximum_phase_index >= len(SEAM_PHASE_ORDER):
+        raise ValueError(
+            f"Maximum seam phase must be between 0 and {len(SEAM_PHASE_ORDER) - 1}."
+        )
+    allowed = set(SEAM_PHASE_ORDER[: maximum_phase_index + 1])
+    return [
+        link
+        for link in seam_links
+        if classify_seam_phase(
+            panel_owners[link[1]],
+            panel_owners[link[2]],
+        )
+        in allowed
+    ]
+
+
 def load_rest_lengths(path: Path, vertex_count: int) -> dict[tuple[int, int], float]:
     import numpy as np
 
@@ -529,14 +658,28 @@ def resolve_body_mesh(
     if not proxy_path.is_file() or not proxy_report_path.is_file():
         raise FileNotFoundError("Collision-body override or its report is missing.")
     proxy_report = json.loads(proxy_report_path.read_text(encoding="utf-8"))
-    if proxy_report.get("schemaVersion") != "patterna.body-collision-proxy/1.0":
+    proxy_schema = proxy_report.get("schemaVersion")
+    if proxy_schema not in {
+        "patterna.body-collision-proxy/1.0",
+        "patterna.ppf-dressing-body/1.0",
+    }:
         raise ValueError("Collision-body override report schema is not supported.")
     if proxy_report.get("accepted") is not True:
         raise ValueError("Collision-body override report is not accepted.")
-    if proxy_report.get("inputs", {}).get("sourceMeshSha256") != canonical_hash:
+    lineage_key = (
+        "sourceMeshSha256"
+        if proxy_schema == "patterna.body-collision-proxy/1.0"
+        else "canonicalBodySha256"
+    )
+    if proxy_report.get("inputs", {}).get(lineage_key) != canonical_hash:
         raise ValueError("Collision-body override was not derived from the canonical body.")
     proxy_hash = sha256(proxy_path)
-    if proxy_report.get("outputs", {}).get("proxyMeshSha256") != proxy_hash:
+    output_key = (
+        "proxyMeshSha256"
+        if proxy_schema == "patterna.body-collision-proxy/1.0"
+        else "dressingBodySha256"
+    )
+    if proxy_report.get("outputs", {}).get(output_key) != proxy_hash:
         raise ValueError("Collision-body override hash does not match its report.")
     return proxy_path, {
         "canonicalBody": str(canonical_body),
@@ -544,8 +687,70 @@ def resolve_body_mesh(
         "collisionBody": str(proxy_path),
         "collisionBodySha256": proxy_hash,
         "collisionBodyOverride": True,
+        "collisionBodyRole": (
+            "accepted-full-size-proxy"
+            if proxy_schema == "patterna.body-collision-proxy/1.0"
+            else "temporary-reduced-dressing-body"
+        ),
         "collisionBodyReport": str(proxy_report_path),
         "collisionBodyReportSha256": sha256(proxy_report_path),
+    }
+
+
+def resolve_garment_mesh(
+    source_report: dict[str, object],
+    source_report_path: Path,
+    garment_override: Path | None,
+    garment_override_report: Path | None,
+) -> tuple[Path, dict[str, object]]:
+    """Resolve a canonical source garment or one hash-bound prior PPF phase."""
+    canonical_garment = require_source_path(source_report, "physical_mesh_path")
+    canonical_hash = sha256(canonical_garment)
+    if (garment_override is None) != (garment_override_report is None):
+        raise ValueError(
+            "--garment-override and --garment-override-report must be supplied "
+            "together."
+        )
+    if garment_override is None or garment_override_report is None:
+        return canonical_garment, {
+            "canonicalGarment": str(canonical_garment),
+            "canonicalGarmentSha256": canonical_hash,
+            "simulationGarment": str(canonical_garment),
+            "simulationGarmentSha256": canonical_hash,
+            "simulationGarmentOverride": False,
+        }
+
+    override_path = garment_override.resolve()
+    override_report_path = garment_override_report.resolve()
+    if not override_path.is_file() or not override_report_path.is_file():
+        raise FileNotFoundError("Garment override or its PPF report is missing.")
+    override_report = json.loads(override_report_path.read_text(encoding="utf-8"))
+    if override_report.get("schemaVersion") != "patterna.ppf-common-bundle/1.0":
+        raise ValueError("Garment override report schema is not supported.")
+    if override_report.get("status") != "completed-requires-acceptance-grading":
+        raise ValueError("Garment override report does not describe a completed phase.")
+    if (
+        override_report.get("inputs", {}).get("sourceReportSha256")
+        != sha256(source_report_path)
+    ):
+        raise ValueError("Garment override was not derived from this source report.")
+    override_hash = sha256(override_path)
+    if override_report.get("outputs", {}).get("finalObjSha256") != override_hash:
+        raise ValueError("Garment override hash does not match its PPF report.")
+    return override_path, {
+        "canonicalGarment": str(canonical_garment),
+        "canonicalGarmentSha256": canonical_hash,
+        "simulationGarment": str(override_path),
+        "simulationGarmentSha256": override_hash,
+        "simulationGarmentOverride": True,
+        "simulationGarmentReport": str(override_report_path),
+        "simulationGarmentReportSha256": sha256(override_report_path),
+        "previousCollisionBodySha256": override_report.get("inputs", {}).get(
+            "collisionBodySha256"
+        ),
+        "previousBodyContactActive": bool(
+            override_report.get("topology", {}).get("bodyContactActive")
+        ),
     }
 
 
@@ -555,11 +760,25 @@ def main() -> None:
     args = parse_args()
     if args.frames < 2:
         raise ValueError("--frames must be at least 2.")
+    if args.maximum_seam_phase < 0 or args.maximum_seam_phase >= len(
+        SEAM_PHASE_ORDER
+    ):
+        raise ValueError(
+            f"--maximum-seam-phase must be between 0 and {len(SEAM_PHASE_ORDER) - 1}."
+        )
+    if args.body_contact_start_phase < 0 or args.body_contact_start_phase >= len(
+        SEAM_PHASE_ORDER
+    ):
+        raise ValueError(
+            "--body-contact-start-phase must be between 0 and "
+            f"{len(SEAM_PHASE_ORDER) - 1}."
+        )
     if (
         args.dt <= 0.0
         or args.release_time_seconds < 0.0
         or args.stitch_stiffness <= 0.0
         or args.stitch_length_factor <= 0.0
+        or args.direct_seam_capture_cm <= 0.0
     ):
         raise ValueError("PPF time and stiffness parameters must be positive.")
     runtime_root = args.runtime_root.resolve()
@@ -582,7 +801,12 @@ def main() -> None:
     manifest, manifest_path = prepare_runtime(runtime_root)
     source_report_path = args.source_report.resolve()
     source_report = json.loads(source_report_path.read_text(encoding="utf-8"))
-    garment_path = require_source_path(source_report, "physical_mesh_path")
+    garment_path, garment_identity = resolve_garment_mesh(
+        source_report,
+        source_report_path,
+        args.garment_override,
+        args.garment_override_report,
+    )
     body_path, body_identity = resolve_body_mesh(
         source_report,
         args.body_override,
@@ -595,9 +819,26 @@ def main() -> None:
 
     garment_vertices_cm, garment_faces = read_obj(garment_path)
     body_vertices_m, body_faces = read_obj(body_path)
+    body_contact_active = args.maximum_seam_phase >= args.body_contact_start_phase
+    continuing_same_body_contact = bool(
+        body_contact_active
+        and garment_identity.get("simulationGarmentOverride")
+        and garment_identity.get("previousBodyContactActive")
+        and garment_identity.get("previousCollisionBodySha256") == sha256(body_path)
+    )
     seam_links = load_seam_links(segmentation_path, len(garment_vertices_cm))
     panel_owners = load_panel_owners(panel_index_map_path, len(garment_vertices_cm))
-    stitch_indices, stitch_weights = stitch_arrays(seam_links)
+    assembly_plan = seam_assembly_plan(
+        garment_vertices_cm * 0.01,
+        seam_links,
+        panel_owners,
+    )
+    active_seam_links = active_seam_links_for_phase(
+        seam_links,
+        panel_owners,
+        args.maximum_seam_phase,
+    )
+    stitch_indices, stitch_weights = stitch_arrays(active_seam_links)
     rest_lengths_cm = load_rest_lengths(rest_lengths_path, len(garment_vertices_cm))
     material = np.load(material_coordinates_path)
     panel_vertices_cm = np.asarray(material["panel_vertices_cm"], dtype=np.float64)
@@ -647,14 +888,35 @@ def main() -> None:
             for first, second in pairs
         ]
 
-    staged_vertices_m, clearance_staging = stage_body_clearance(
-        staged_vertices_m,
-        garment_faces,
-        panel_owners,
-        body_vertices_m,
-        find_body_clearance_violating_faces,
-        check_self_intersection,
-    )
+    if continuing_same_body_contact:
+        clearance_staging = {
+            "method": "trusted-native-same-collider-continuation",
+            "active": True,
+            "initialViolationCount": None,
+            "finalViolationCount": None,
+            "panelTranslationsCm": {},
+        }
+    elif body_contact_active:
+        staged_vertices_m, clearance_staging = stage_body_clearance(
+            staged_vertices_m,
+            garment_faces,
+            panel_owners,
+            body_vertices_m,
+            find_body_clearance_violating_faces,
+            check_self_intersection,
+        )
+    else:
+        clearance_staging = {
+            "method": "inactive-before-configured-seam-phase",
+            "bodyContactStartPhaseIndex": args.body_contact_start_phase,
+            "bodyContactStartPhaseName": SEAM_PHASE_ORDER[
+                args.body_contact_start_phase
+            ],
+            "active": False,
+            "initialViolationCount": 0,
+            "finalViolationCount": 0,
+            "panelTranslationsCm": {},
+        }
     staging = {
         "panelIntersection": intersection_staging,
         "bodyClearance": clearance_staging,
@@ -663,34 +925,37 @@ def main() -> None:
     geometry_areas = triangle_area_metrics_cm2(staged_vertices_m * 100.0, garment_faces)
     material_areas = triangle_area_metrics_cm2(panel_vertices_cm, panel_faces)
     initial_strain = strain_metrics(staged_vertices_m, rest_lengths_cm)
-    combined_vertices = np.vstack((staged_vertices_m, body_vertices_m))
-    combined_faces = np.vstack(
-        (garment_faces, body_faces + len(staged_vertices_m))
-    ).astype(np.int32)
-    collider_faces = np.concatenate(
-        (
-            np.zeros(len(garment_faces), dtype=bool),
-            np.ones(len(body_faces), dtype=bool),
+    body_intersections = []
+    body_clearance_violations = []
+    if body_contact_active:
+        combined_vertices = np.vstack((staged_vertices_m, body_vertices_m))
+        combined_faces = np.vstack(
+            (garment_faces, body_faces + len(staged_vertices_m))
+        ).astype(np.int32)
+        collider_faces = np.concatenate(
+            (
+                np.zeros(len(garment_faces), dtype=bool),
+                np.ones(len(body_faces), dtype=bool),
+            )
         )
-    )
-    body_intersections = cross_group_pairs(
-        check_self_intersection(
-            combined_vertices,
-            combined_faces,
-            is_collider=collider_faces,
-        ),
-        len(garment_faces),
-    )
-    clearance_offsets_m = np.full(len(combined_faces), 0.00125, dtype=np.float64)
-    body_clearance_violations = cross_group_pairs(
-        check_contact_offset_violation(
-            combined_vertices,
-            F=combined_faces,
-            is_collider=collider_faces,
-            contact_offset=clearance_offsets_m,
-        ),
-        len(garment_faces),
-    )
+        body_intersections = cross_group_pairs(
+            check_self_intersection(
+                combined_vertices,
+                combined_faces,
+                is_collider=collider_faces,
+            ),
+            len(garment_faces),
+        )
+        clearance_offsets_m = np.full(len(combined_faces), 0.00125, dtype=np.float64)
+        body_clearance_violations = cross_group_pairs(
+            check_contact_offset_violation(
+                combined_vertices,
+                F=combined_faces,
+                is_collider=collider_faces,
+                contact_offset=clearance_offsets_m,
+            ),
+            len(garment_faces),
+        )
     input_rejections: list[str] = []
     if source_report.get("schema_version") != "patterna.style3d-source/1.0":
         input_rejections.append("source report schema is not supported")
@@ -709,8 +974,19 @@ def main() -> None:
         input_rejections.append("initial 95th-percentile edge strain exceeds 0.25")
     if body_intersections:
         input_rejections.append("staged garment intersects the collision body")
-    if body_clearance_violations:
+    if body_clearance_violations and not continuing_same_body_contact:
         input_rejections.append("staged garment clearance is below 0.25 cm")
+    maximum_direct_seam_cm = max(
+        float(phase["maximumInitialSeparationCm"])
+        for phase in assembly_plan["phases"]
+        if int(phase["index"]) <= args.maximum_seam_phase
+    )
+    spread_panel_research = maximum_direct_seam_cm > args.direct_seam_capture_cm
+    if spread_panel_research and not args.allow_spread_panel_research:
+        input_rejections.append(
+            "authored seams exceed the direct solver capture distance and require "
+            "cumulative seam-aware dressing"
+        )
     input_gate = {
         "schemaVersion": "patterna.ppf-input-gate/1.0",
         "accepted": not input_rejections,
@@ -719,6 +995,24 @@ def main() -> None:
         "materialTriangleAreas": material_areas,
         "initialStrain": initial_strain,
         "initialStaging": staging,
+        "bodyContactActive": body_contact_active,
+        "continuingSameBodyContact": continuing_same_body_contact,
+        "bodyContactStartPhaseIndex": args.body_contact_start_phase,
+        "bodyContactStartPhaseName": SEAM_PHASE_ORDER[
+            args.body_contact_start_phase
+        ],
+        "seamAssemblyPlan": {
+            **assembly_plan,
+            "activeThroughPhaseIndex": args.maximum_seam_phase,
+            "activeThroughPhaseName": SEAM_PHASE_ORDER[args.maximum_seam_phase],
+            "activeLinkCount": len(active_seam_links),
+            "directCaptureThresholdCm": args.direct_seam_capture_cm,
+            "maximumDirectSeamSeparationCm": maximum_direct_seam_cm,
+            "requiresCumulativeDressing": spread_panel_research,
+            "researchOverride": bool(
+                spread_panel_research and args.allow_spread_panel_research
+            ),
+        },
         "bodyIntersectionCount": len(body_intersections),
         "bodyIntersectionSamples": cross_pair_details(
             body_intersections[:32],
@@ -756,7 +1050,8 @@ def main() -> None:
     )
     app.asset.add.tri("patterna-garment", garment_asset, garment_faces)
     app.asset.add.stitch("patterna-authored-seams", (stitch_indices, stitch_weights))
-    app.asset.add.tri("patterna-body", body_vertices_m, body_faces)
+    if body_contact_active:
+        app.asset.add.tri("patterna-body", body_vertices_m, body_faces)
 
     scene = app.scene.create()
     garment = scene.add("patterna-garment")
@@ -770,14 +1065,15 @@ def main() -> None:
     garment.param.set("bending-damping", 0.0005)
     garment.param.set("stitch-stiffness", args.stitch_stiffness)
 
-    body = scene.add("patterna-body").as_pdrd()
-    body.param.set("friction", 0.45)
-    body.param.set("contact-gap", 0.004).set("contact-offset", 0.0)
-    body.pin().move_by(
-        [0.0, 0.0, 0.0],
-        t_start=0.0,
-        t_end=max(args.frames * args.dt, 0.01),
-    )
+    if body_contact_active:
+        body = scene.add("patterna-body").as_pdrd()
+        body.param.set("friction", 0.45)
+        body.param.set("contact-gap", 0.004).set("contact-offset", 0.0)
+        body.pin().move_by(
+            [0.0, 0.0, 0.0],
+            t_start=0.0,
+            t_end=max(args.frames * args.dt, 0.01),
+        )
     try:
         fixed_scene = scene.build()
     except ValidationError as error:
@@ -792,6 +1088,7 @@ def main() -> None:
                         "garmentSha256": sha256(garment_path),
                         "bodySha256": sha256(body_path),
                         "authoredSeamLinkCount": len(seam_links),
+                        "activeSeamLinkCount": len(active_seam_links),
                     },
                 },
                 indent=2,
@@ -874,6 +1171,7 @@ def main() -> None:
             "patternSpecificationSha256": source_report["pattern_specification_sha256"],
             "garment": str(garment_path),
             "garmentSha256": sha256(garment_path),
+            **garment_identity,
             **body_identity,
             "segmentationSha256": sha256(segmentation_path),
             "restLengthsSha256": sha256(rest_lengths_path),
@@ -885,7 +1183,13 @@ def main() -> None:
             "garmentFaceCount": len(garment_faces),
             "bodyVertexCount": len(body_vertices_m),
             "bodyFaceCount": len(body_faces),
+            "bodyContactActive": body_contact_active,
             "authoredSeamLinkCount": len(seam_links),
+            "activeSeamLinkCount": len(active_seam_links),
+            "activeThroughSeamPhaseIndex": args.maximum_seam_phase,
+            "activeThroughSeamPhaseName": SEAM_PHASE_ORDER[
+                args.maximum_seam_phase
+            ],
             "weldedVertexReduction": 0,
         },
         "initialStaging": staging,
@@ -924,6 +1228,7 @@ def main() -> None:
             "lastFrameP999DisplacementCm": float(np.percentile(displacement_cm, 99.9)),
         },
         "seams": seam_metrics(final_garment, seam_links),
+        "activeSeams": seam_metrics(final_garment, active_seam_links),
         "strain": strain_metrics(final_garment, rest_lengths_cm),
         "acceptancePending": [
             "body edge intersections",

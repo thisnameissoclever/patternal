@@ -3327,4 +3327,22 @@ Every backend adapter must independently recompute the input properties it relie
 
 ### How to verify
 
-Run the exact current 1 cm source through `--preflight-only` and require `patterna.ppf-input-gate/1.0` to record 17 initial clearance violations, rigid translations for only `left_collar_back`, `right_collar_back`, and `right_sleeve_b`, no more than `0.30 cm` maximum shift, zero final intersections, zero final clearance violations, accepted area and strain metrics, and no native solver process. Move a disposable panel into the body and require the intersection gate to fail.
+Run the exact current 1 cm source through `--preflight-only --maximum-seam-phase 0` and require `patterna.ppf-input-gate/1.0` to record 17 initial clearance violations, rigid translations for only `left_collar_back`, `right_collar_back`, and `right_sleeve_b`, no more than `0.30 cm` maximum shift, zero final intersections, zero final clearance violations, accepted area and strain metrics, 46 active internal-shaping links, and no native solver process. Run the default all-phase preflight separately and require rejection because `55.519 cm` exceeds the `5 cm` direct-capture threshold. Move a disposable panel into the body and require the intersection gate to fail.
+
+## Aggregate seam and strain metrics can hide a fabric grenade
+
+### What happened
+
+The cumulative PPF route closed internal, detached-shell, torso, and cuff phases below `0.38 cm` while keeping p95 edge strain below `0.10`. Those figures looked promising. Fresh front, rear, side, and oblique renders showed a densely crumpled cloth mass around the temporary body, laterally spread sleeves, and no credible shirt silhouette. Neckline experiments then stalled between `5.214 cm` and `10.108 cm` and pushed p99.9 strain as high as `0.486`.
+
+### Root cause
+
+Percentile summaries hid severe localized folding and the semantic arrangement of the cloth. Sequential soft stitches pulled widely separated panels through free space and around a reduced collider, but neither low aggregate strain nor near-closed seams guaranteed that the panels occupied the correct side of the body or formed the intended garment volume.
+
+### Prevention rule
+
+Every cloth phase that materially changes assembly must produce deterministic multi-angle renders before the next architectural promotion. Require semantic panel placement, silhouette, and localized fold review in addition to seam, strain, collision, and motion metrics. Stop a challenger route after one bounded construction-order and collider-shape comparison when the rendered topology remains catastrophically wrong.
+
+### How to verify
+
+Render the exact hash-bound garment and collider from front, rear, both sides, and both obliques. Reject any phase with a crumpled mass, laterally detached sleeve volume, inverted panel region, missing neckline, or body-shaped compression even when p95 strain and most seam links pass. Confirm the solver route remains isolated from the accepted Newton runtime and product asset path.

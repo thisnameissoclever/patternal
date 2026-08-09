@@ -47,8 +47,16 @@ def validate_solver_identity(
     solver_report_path: Path,
 ) -> dict[str, object]:
     report = json.loads(solver_report_path.read_text(encoding="utf-8"))
-    expected_body_sha256 = str(report.get("body_mesh_sha256", ""))
-    expected_garment_sha256 = str(report.get("output_mesh_sha256", ""))
+    if report.get("schemaVersion") == "patterna.ppf-common-bundle/1.0":
+        expected_body_sha256 = str(
+            report.get("inputs", {}).get("collisionBodySha256", "")
+        )
+        expected_garment_sha256 = str(
+            report.get("outputs", {}).get("finalObjSha256", "")
+        )
+    else:
+        expected_body_sha256 = str(report.get("body_mesh_sha256", ""))
+        expected_garment_sha256 = str(report.get("output_mesh_sha256", ""))
     body_sha256 = sha256(body_path)
     garment_sha256 = sha256(garment_path)
     if body_sha256 != expected_body_sha256:
