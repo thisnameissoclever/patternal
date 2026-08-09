@@ -123,6 +123,20 @@ function Find-UiElement {
     }
 }
 
+function Find-UiElementOnce {
+    param(
+        [Parameter(Mandatory)]
+        [System.Windows.Automation.AutomationElement]$Root,
+        [Parameter(Mandatory)]
+        [string]$Name
+    )
+
+    $condition = [System.Windows.Automation.PropertyCondition]::new(
+        [System.Windows.Automation.AutomationElement]::NameProperty,
+        $Name)
+    return $Root.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $condition)
+}
+
 function Find-UiElementByAutomationIdOnce {
     param(
         [Parameter(Mandatory)]
@@ -829,6 +843,51 @@ try {
             restoredPieceCount = $originalCount
             enteredPoints = $coordinates.Count
             screenshot = [IO.Path]::GetFileName($draftShotPath)
+        }
+    }
+
+    Invoke-UiCheck -Name '2D internal line creation undo and redo' -Check {
+        $piece = Find-UiElement -Root $window -Name 'Back Torso'
+        Invoke-UiElement -Element $piece
+        $addInternalLine = Find-UiElement -Root $window -Name 'Add a precise internal line to the selected pattern piece'
+        Invoke-UiElement -Element $addInternalLine
+        $dialogPrimary = Find-UiElement -Root $window -Name 'Add line'
+        $lineName = Find-UiElement -Root $window -Name 'Internal line name'
+        if ($lineName.Current.Name -ne 'Internal line name') {
+            throw 'The internal line dialog did not expose its named line field.'
+        }
+        Invoke-UiElement -Element $dialogPrimary
+
+        $lineAutomationName = 'Back Torso internal construction line Construction line 1'
+        Wait-ForCondition -Description 'new internal construction line to appear on Back Torso' -Condition {
+            Find-UiElementOnce -Root $window -Name $lineAutomationName
+        } | Out-Null
+        $lineShotPath = Join-Path $evidenceDirectory '12-2d-internal-line.png'
+        Save-WindowScreenshot -Window $window -Path $lineShotPath
+        $script:screenshots.Add([pscustomobject]@{ name = '2d-internal-line'; file = [IO.Path]::GetFileName($lineShotPath) })
+
+        $undo = Find-UiElement -Root $window -Name 'Undo pattern geometry edit'
+        Invoke-UiElement -Element $undo
+        Wait-ForCondition -Description 'Undo to remove the internal construction line' -Condition {
+            -not (Find-UiElementOnce -Root $window -Name $lineAutomationName)
+        } | Out-Null
+        $redo = Find-UiElement -Root $window -Name 'Redo pattern geometry edit'
+        Invoke-UiElement -Element $redo
+        Wait-ForCondition -Description 'Redo to restore the internal construction line' -Condition {
+            Find-UiElementOnce -Root $window -Name $lineAutomationName
+        } | Out-Null
+        $undo = Find-UiElement -Root $window -Name 'Undo pattern geometry edit'
+        Invoke-UiElement -Element $undo
+        Wait-ForCondition -Description 'final Undo to restore Back Torso without the internal line' -Condition {
+            -not (Find-UiElementOnce -Root $window -Name $lineAutomationName)
+        } | Out-Null
+
+        [ordered]@{
+            piece = 'Back Torso'
+            line = 'Construction line 1'
+            purpose = 'construction'
+            restored = $true
+            screenshot = [IO.Path]::GetFileName($lineShotPath)
         }
     }
 

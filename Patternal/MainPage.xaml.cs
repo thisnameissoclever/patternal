@@ -1359,7 +1359,7 @@ public sealed partial class MainPage : Page
         Brush constructionBrush = ResourceBrush("PatternDimensionBrush");
         foreach (PatternInternalPathDocument path in piece.InternalPaths)
         {
-            holder.Children.Add(new Microsoft.UI.Xaml.Shapes.Path
+            Microsoft.UI.Xaml.Shapes.Path pathVisual = new()
             {
                 Data = BuildInternalPathGeometry(piece, path),
                 Fill = null,
@@ -1368,7 +1368,11 @@ public sealed partial class MainPage : Page
                 StrokeDashArray = path.Kind is PatternInternalPathKinds.Construction or PatternInternalPathKinds.Fold
                     ? new DoubleCollection { 4, 3 }
                     : null
-            });
+            };
+            string pathLabel = path.Label ?? path.Id;
+            AutomationProperties.SetName(pathVisual, $"{piece.Name} internal {path.Kind} line {pathLabel}");
+            AutomationProperties.SetHelpText(pathVisual, $"Non-interactive internal {path.Kind} geometry on {piece.Name}.");
+            holder.Children.Add(pathVisual);
         }
 
         foreach (PatternDartDocument dart in piece.Darts)
