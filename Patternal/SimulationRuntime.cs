@@ -52,6 +52,7 @@ public static class SimulationRuntimeLocator
         "charmorph_collision.py",
         "charmorph_character.py",
         "charmorph_anatomy.py",
+        "charmorph_pose.py",
         "charmorph_glb.py",
         "verify_charmorph_glb.py",
         "charmorph_morphs.py",

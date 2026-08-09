@@ -3007,7 +3007,7 @@ Run the Blender registration tests with a display box and a differently triangul
 
 ### What happened
 
-Six-view review ranked Antonia above the other local bodies, and its exact fitted display and collision surfaces passed regional registration. The first weighted-rig anatomy audit measured horizontal fingertip width at 0.886443 times stature and upper-arm length at 0.153202 times stature. Diff review caught that the fingertip metric was really measuring Antonia's asymmetric raised-arm pose. The corrected pose-independent segment-chain estimate is 0.949553 and passes; upper-arm length remains below its deliberately broad human-data rejection envelope.
+Six-view review ranked Antonia above the other local bodies, and its exact fitted display and collision surfaces passed regional registration. The first weighted-rig anatomy audit measured horizontal fingertip width at 0.886443 times stature and upper-arm length at 0.153202 times stature. Diff review caught that the fingertip metric was really measuring Antonia's symmetric arms-up pose. The corrected pose-independent segment-chain estimate is 0.949553 and passes; upper-arm length remains below its deliberately broad human-data rejection envelope.
 
 ### Root cause
 
@@ -3038,3 +3038,57 @@ Pass absolute paths across repository and installed-runtime boundaries. Invoke B
 ### How to verify
 
 Run the installed generator with absolute profile, fitted-vertex, and fit-report paths plus `--python-exit-code 1`. Require exit code 0, a manifest write time from the current invocation, matching source, installed, and runtime-manifest hashes for the evaluator, and the expected current anatomy result. Deliberately pass a missing profile once and require a nonzero Blender exit instead of accepting an older manifest.
+
+## Do not type a VM password without proving the guest is at the password field
+
+### What happened
+
+A user-opened VMConnect window appeared to be waiting for guest login. By the time a synthetic Enter, password, and Enter sequence arrived, unattended AutoLogon had already reached the guest desktop. Windows Search received part of the disposable password, remained over the application, and stole focus from the observed run's initial New and keyboard-navigation checks.
+
+### Root cause
+
+The login helper inferred guest UI state from an earlier human observation. PowerShell Direct proved that the guest was reachable but did not prove which interactive control held focus when the synthetic keyboard input arrived.
+
+### Prevention rule
+
+For user-visible VMConnect sessions, give the user the machine-local credential note and let them log in manually. Never send a blind password through the synthetic keyboard. Keep unattended runs on AutoLogon and limit host synthetic-keyboard use to the documented boot Enter key.
+
+### How to verify
+
+Open VMConnect only with explicit user permission, log in manually if required, and confirm the desktop has no Search, Start, sign-in, or other overlay before starting an observed run. Treat any run with an unexpected foreground overlay or manual console connection as informational, not unattended acceptance evidence.
+
+## Symmetric anatomy can still be the wrong garment-inspection pose
+
+### What happened
+
+Antonia's fitted surface and 108 paired rig landmarks are symmetric, yet six-view review still showed an implausible arms-up presentation for clothing inspection. The exact surface endpoints confirmed both arms were elevated 12.452430 degrees above horizontal and swept 16.429742 degrees backward. Symmetry passed because the problem was a symmetric pose choice, not left-right corruption.
+
+### Root cause
+
+The anatomy gate intentionally measured pose-independent segment lengths, and landmark mirroring only proved bilateral consistency. Neither contract constrained the neutral pose used for pattern fit inspection. Perspective in the oblique packaged camera made the symmetric elevation look asymmetric, which further demonstrated why pose must be measured in body coordinates rather than inferred from one screenshot.
+
+### Prevention rule
+
+Keep anatomy, symmetry, inspection pose, and visual review separate. Require the symmetric product preset to use a shallow A-pose with arm elevation between -55 and -10 degrees, no more than 8 degrees left-right elevation or forward-sweep difference, and no more than 3 percent stature endpoint mirror error. Give authored asymmetric poses their own target contract instead of weakening the symmetric preset.
+
+### How to verify
+
+Run the five pose fixtures and require a symmetric shallow A-pose to pass while one raised arm, symmetric overhead arms, excessive forward sweep, and non-finite geometry fail. Generate the exact fitted Antonia and require `patterna.avatar-pose/1.0` to reject only `meanArmElevation` at 12.452430 degrees. Require product visual proof to reject a missing or non-accepted pose report.
+
+## GLB vertex splitting must preserve the exact fitted surface
+
+### What happened
+
+A fresh Antonia GLB import contained 39,330 body vertices even though the fitted source contains 36,030. The extra vertices came from material and attribute splits, not new geometry. Comparing unique rounded positions proved that all 36,030 source positions survived with zero missing or unexpected values.
+
+### Root cause
+
+Vertex count was treated as though it were a surface identity. glTF primitives may duplicate a position at material, normal, tangent, or texture-coordinate boundaries while preserving the exact geometric surface.
+
+### Prevention rule
+
+For round-trip display verification, compare the unique world-space position set and bounds to the exact fitted source instead of requiring equal vertex counts or index order. Keep the GLB hash and six-view render hashes attached to the same verification report.
+
+### How to verify
+
+Import the exact hashed GLB in a fresh Blender scene with the expected fitted vertex array. Require 36,030 expected unique positions, 36,030 round-tripped unique positions, zero missing positions, zero unexpected positions, matching bounds, 167 cm height, and six new renders. Deliberately perturb one GLB position and require verification to fail.

@@ -10,6 +10,7 @@ import sys
 
 import bpy
 from mathutils import Vector
+import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from charmorph_glb import render_candidate_views, sha256
@@ -24,6 +25,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--glb", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--render-output-dir", type=Path, required=True)
+    parser.add_argument("--expected-vertices", type=Path)
     return parser.parse_args(blender_arguments())
 
 
@@ -59,6 +61,37 @@ def main() -> None:
         raise ValueError(
             f"Round-tripped Antonia body height is {body_height_m:.6f} m instead of 1.670 m"
         )
+    position_set_verification = None
+    if args.expected_vertices is not None:
+        expected_vertices_path = args.expected_vertices.resolve()
+        expected_vertices = np.load(expected_vertices_path).astype(np.float64)
+        actual_vertices = np.asarray(
+            [tuple(body.matrix_world @ vertex.co) for vertex in body.data.vertices],
+            dtype=np.float64,
+        )
+        if expected_vertices.ndim != 2 or expected_vertices.shape[1] != 3:
+            raise ValueError("Expected fitted vertices are not an N by 3 array")
+        actual_positions = set(map(tuple, np.round(actual_vertices, 7)))
+        expected_positions = set(map(tuple, np.round(expected_vertices, 7)))
+        unexpected_positions = actual_positions.difference(expected_positions)
+        missing_positions = expected_positions.difference(actual_positions)
+        if unexpected_positions or missing_positions:
+            raise ValueError(
+                "Round-tripped GLB position set differs from the exact fitted source: "
+                f"{len(unexpected_positions)} unexpected, {len(missing_positions)} missing"
+            )
+        position_set_verification = {
+            "accepted": True,
+            "expectedVertices": str(expected_vertices_path),
+            "expectedVerticesSha256": sha256(expected_vertices_path),
+            "expectedVertexCount": len(expected_vertices),
+            "roundTrippedVertexCount": len(actual_vertices),
+            "expectedUniquePositionCount": len(expected_positions),
+            "roundTrippedUniquePositionCount": len(actual_positions),
+            "precisionDecimals": 7,
+            "unexpectedPositionCount": 0,
+            "missingPositionCount": 0,
+        }
     render_evidence = render_candidate_views(
         meshes,
         render_output_directory,
@@ -76,6 +109,7 @@ def main() -> None:
         "imageCount": len(bpy.data.images),
         "bodyMaterialCount": len(body.material_slots),
         "bodyHeightCm": body_height_m * 100.0,
+        "positionSetVerification": position_set_verification,
         "components": {
             obj.name: {
                 "vertexCount": len(obj.data.vertices),

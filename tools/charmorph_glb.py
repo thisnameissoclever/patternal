@@ -19,6 +19,7 @@ import numpy as np
 
 from charmorph_anatomy import evaluate_avatar_anatomy, load_charmorph_landmarks
 from charmorph_character import CharacterDescriptor
+from charmorph_pose import evaluate_avatar_pose
 
 
 SKIN_REGIONS = {
@@ -649,6 +650,11 @@ def export_glb_candidate(
         vertex_regions,
         anatomy_landmarks,
     )
+    pose = evaluate_avatar_pose(
+        anatomy_vertices,
+        vertex_regions,
+        anatomy_landmarks,
+    )
     components = [body]
     for name in character.underwear_names:
         if name == "bra":
@@ -694,6 +700,8 @@ def export_glb_candidate(
         open_gates.insert(0, "primary circumference fit is not yet accepted for Antonia")
     if not anatomy["accepted"]:
         open_gates.insert(0, "gross avatar anatomy ratios are not accepted")
+    if not pose["accepted"]:
+        open_gates.insert(0, "avatar inspection pose is not accepted")
     resolved_manifest_path = manifest_path or output_path.with_suffix(".manifest.json")
     resolved_manifest_path.parent.mkdir(parents=True, exist_ok=True)
     license_output_path = resolved_manifest_path.parent / "license.txt"
@@ -756,6 +764,7 @@ def export_glb_candidate(
         },
         "registration": registration,
         "anatomy": anatomy,
+        "pose": pose,
         "renders": render_evidence,
         "openGates": open_gates,
     }

@@ -2,7 +2,7 @@
 param(
     [string]$SourceRoot = (Split-Path -Parent $PSScriptRoot),
     [string]$DestinationRoot = (Join-Path $env:LOCALAPPDATA 'Patterna\SimulationRuntime'),
-    [string]$RuntimeVersion = '2026.08.09-style3d-antonia-v6',
+    [string]$RuntimeVersion = '2026.08.09-style3d-antonia-v7',
     [switch]$Replace
 )
 
@@ -207,6 +207,7 @@ $requiredScripts = @(
     'charmorph_collision.py',
     'charmorph_character.py',
     'charmorph_anatomy.py',
+    'charmorph_pose.py',
     'charmorph_glb.py',
     'verify_charmorph_glb.py',
     'charmorph_morphs.py',
