@@ -971,12 +971,14 @@ string candidateAvatarLicensePath = Path.GetFullPath(Path.Combine(
 string simulationPipelinePath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "Patternal", "SimulationPipeline.cs"));
 string simulationRuntimePath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "Patternal", "SimulationRuntime.cs"));
 string simulationRuntimeInstallerPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "tools", "install_patterna_simulation_runtime.ps1"));
+string charmorphGlbPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "tools", "charmorph_glb.py"));
 string mainPageXaml = File.ReadAllText(mainPageXamlPath);
 string mainPageCode = File.ReadAllText(mainPageCodePath);
 string viewportSource = File.ReadAllText(viewportPath);
 string simulationPipelineSource = File.ReadAllText(simulationPipelinePath);
 string simulationRuntimeSource = File.ReadAllText(simulationRuntimePath);
 string simulationRuntimeInstallerSource = File.ReadAllText(simulationRuntimeInstallerPath);
+string charmorphGlbSource = File.ReadAllText(charmorphGlbPath);
 using JsonDocument candidateAvatarManifest = JsonDocument.Parse(File.ReadAllText(candidateAvatarManifestPath));
 JsonElement candidateAvatarRoot = candidateAvatarManifest.RootElement;
 Assert(candidateAvatarRoot.GetProperty("accepted").ValueKind == JsonValueKind.False, "The Antonia candidate crossed the production acceptance boundary.");
@@ -1180,9 +1182,23 @@ Assert(
 Assert(
     simulationRuntimeSource.Contains("\"patterna_style3d_sewing.py\"", StringComparison.Ordinal) &&
         simulationRuntimeInstallerSource.Contains("'patterna_style3d_sewing.py'", StringComparison.Ordinal) &&
-        simulationRuntimeInstallerSource.Contains("2026.08.09-style3d-antonia-v3", StringComparison.Ordinal) &&
+        simulationRuntimeInstallerSource.Contains("2026.08.09-style3d-antonia-v5", StringComparison.Ordinal) &&
         simulationRuntimeInstallerSource.Contains("avatarCharacterDirectory = 'third_party/CharMorph-db/characters/antonia'", StringComparison.Ordinal),
     "The project-owned Style3D sewing solver is no longer a required, versioned runtime entry point.");
+Assert(
+    charmorphGlbSource.Contains(
+        "patterna.avatar-surface-registration/1.0",
+        StringComparison.Ordinal) &&
+        charmorphGlbSource.Contains(
+            "bidirectional nearest-surface comparison with display-material anatomical regions",
+            StringComparison.Ordinal) &&
+        charmorphGlbSource.Contains(
+            "collision simplification is not implemented",
+            StringComparison.Ordinal) &&
+        !charmorphGlbSource.Contains(
+            "collision simplification and regional registration are not implemented",
+            StringComparison.Ordinal),
+    "The display avatar no longer enforces regional bidirectional display-to-collider registration.");
 Assert(
     simulationPipelineSource.Contains("patterna.newton-style3d-report/1.0", StringComparison.Ordinal) &&
     simulationPipelineSource.Contains("SimulationMeshResolutionCm = 0.25", StringComparison.Ordinal) &&

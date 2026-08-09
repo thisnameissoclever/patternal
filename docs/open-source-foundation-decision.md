@@ -94,6 +94,8 @@ The MHR bake-off boundary, after dependency approval, is:
 7. Render front, rear, both sides, and both obliques in Blender, then package the exact accepted hashes and repeat the six semantic cameras in the VM.
 8. Keep Antonia if MHR fails measurement coverage, surface quality, runtime latency, license packaging, or multi-view review. A newer model is a challenger, not an automatic promotion.
 
+The backend-neutral regional registration gate is already implemented in runtime `2026.08.09-style3d-antonia-v5`. It compares display and collision surfaces bidirectionally by head, torso, arms, and legs without requiring identical topology, rejects non-finite input, and enforces a shared floor datum. The MHR bake-off must emit compatible display-material region labels or an explicit equivalent mapping, then pass this same gate before cloth simulation. A low-detail collider is not allowed to drift away from the human it claims to represent merely because decimation completed successfully.
+
 The generated avatar report uses `accepted` only for its measurement-fit and geometry-export stage because the simulation pipeline must consume that exact result before it can construct a collider. The report also carries `acceptanceScope`, `productAccepted: false`, and a pending product status. Numerical body fit must never be presented as packaged visual or cloth acceptance.
 
 ### Interactive customization architecture

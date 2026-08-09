@@ -14,6 +14,7 @@ from typing import Any
 
 import bpy
 from mathutils import Vector
+from mathutils.bvhtree import BVHTree
 
 from charmorph_character import CharacterDescriptor
 
@@ -24,6 +25,15 @@ SKIN_REGIONS = {
     "cm_antonia_head": "head",
     "cm_antonia_legs": "legs",
 }
+
+REGISTRATION_THRESHOLDS_M = {
+    "head": {"maximum": 0.005, "p95": 0.0025},
+    "torso": {"maximum": 0.005, "p95": 0.0025},
+    "arms": {"maximum": 0.010, "p95": 0.0040},
+    "legs": {"maximum": 0.010, "p95": 0.0040},
+    "other": {"maximum": 0.010, "p95": 0.0040},
+}
+FLOOR_DATUM_LIMIT_M = 0.001
 
 
 def sha256(path: Path) -> str:
@@ -369,42 +379,241 @@ def render_candidate_views(
     return evidence
 
 
-def obj_vertices(path: Path) -> list[Vector]:
+def obj_mesh(path: Path) -> tuple[list[Vector], list[tuple[int, ...]]]:
     vertices: list[Vector] = []
+    faces: list[tuple[int, ...]] = []
     with path.open("r", encoding="utf-8") as source:
         for line in source:
             if line.startswith("v "):
                 _, x, y, z = line.split()
                 vertices.append(Vector((float(x), float(y), float(z))))
-    return vertices
+            elif line.startswith("f "):
+                indices: list[int] = []
+                for reference in line.split()[1:]:
+                    raw_index = int(reference.split("/", 1)[0])
+                    index = raw_index - 1 if raw_index > 0 else len(vertices) + raw_index
+                    if index < 0 or index >= len(vertices):
+                        raise ValueError(f"OBJ face index {raw_index} is outside the vertex array")
+                    indices.append(index)
+                if len(indices) < 3:
+                    raise ValueError("OBJ collision faces must have at least three vertices")
+                faces.append(tuple(indices))
+    if not vertices or not faces:
+        raise ValueError(f"Collision OBJ has no usable surface: {path}")
+    return vertices, faces
+
+
+def material_region(material_name: str) -> str:
+    lowered = material_name.lower().split(".", 1)[0]
+    if any(token in lowered for token in ("head", "cornea", "iris", "mouth", "pupil", "sclera", "eyelash")):
+        return "head"
+    if "arms" in lowered or "nails" in lowered:
+        return "arms"
+    if "body" in lowered or "torso" in lowered:
+        return "torso"
+    if "legs" in lowered:
+        return "legs"
+    return "other"
+
+
+def body_polygon_regions(body: bpy.types.Object) -> list[str]:
+    material_names = [
+        material.name if material is not None else ""
+        for material in body.data.materials
+    ]
+    return [
+        material_region(
+            material_names[polygon.material_index]
+            if polygon.material_index < len(material_names)
+            else ""
+        )
+        for polygon in body.data.polygons
+    ]
+
+
+def body_vertex_regions(
+    body: bpy.types.Object,
+    polygon_regions: list[str],
+) -> list[str]:
+    votes = [Counter() for _ in body.data.vertices]
+    for polygon, region in zip(body.data.polygons, polygon_regions):
+        for vertex_index in polygon.vertices:
+            votes[vertex_index][region] += 1
+    order = {name: index for index, name in enumerate(REGISTRATION_THRESHOLDS_M)}
+    return [
+        max(
+            counts,
+            key=lambda region: (counts[region], -order.get(region, len(order))),
+        )
+        if counts
+        else "other"
+        for counts in votes
+    ]
+
+
+def percentile(values: list[float], fraction: float) -> float:
+    if not values:
+        raise ValueError("Cannot calculate a percentile without samples")
+    ordered = sorted(values)
+    index = max(0, min(len(ordered) - 1, math.ceil(fraction * len(ordered)) - 1))
+    return ordered[index]
+
+
+def distance_metrics(values: list[float]) -> dict[str, Any]:
+    if not values:
+        return {
+            "sampleCount": 0,
+            "maximumDistanceM": None,
+            "meanDistanceM": None,
+            "rootMeanSquareDistanceM": None,
+            "p95DistanceM": None,
+            "p99DistanceM": None,
+        }
+    return {
+        "sampleCount": len(values),
+        "maximumDistanceM": max(values),
+        "meanDistanceM": sum(values) / len(values),
+        "rootMeanSquareDistanceM": math.sqrt(sum(value * value for value in values) / len(values)),
+        "p95DistanceM": percentile(values, 0.95),
+        "p99DistanceM": percentile(values, 0.99),
+    }
+
+
+def nearest_surface_distances(
+    points: list[Vector],
+    point_regions: list[str],
+    surface: BVHTree,
+    surface_polygon_regions: list[str] | None = None,
+) -> dict[str, list[float]]:
+    distances = {region: [] for region in REGISTRATION_THRESHOLDS_M}
+    for point, point_region in zip(points, point_regions):
+        nearest = surface.find_nearest(point)
+        if nearest is None:
+            raise ValueError("Could not find the nearest point on the registration surface")
+        _, _, polygon_index, distance = nearest
+        region = (
+            surface_polygon_regions[polygon_index]
+            if surface_polygon_regions is not None
+            else point_region
+        )
+        distances.setdefault(region, []).append(float(distance))
+    return distances
+
+
+def evaluate_collision_registration(
+    body: bpy.types.Object,
+    collision_path: Path,
+) -> dict[str, Any]:
+    raw_collision_vertices, collision_faces = obj_mesh(collision_path)
+    collision_vertices = [
+        Vector((-vertex.x, -vertex.y, vertex.z))
+        for vertex in raw_collision_vertices
+    ]
+    body_vertices = [body.matrix_world @ vertex.co for vertex in body.data.vertices]
+    if any(not all(math.isfinite(value) for value in point) for point in collision_vertices):
+        raise ValueError("Collision OBJ contains a non-finite vertex")
+    if any(not all(math.isfinite(value) for value in point) for point in body_vertices):
+        raise ValueError("Display body contains a non-finite vertex")
+    body_faces = [tuple(polygon.vertices) for polygon in body.data.polygons]
+    polygon_regions = body_polygon_regions(body)
+    vertex_regions = body_vertex_regions(body, polygon_regions)
+    collision_surface = BVHTree.FromPolygons(collision_vertices, collision_faces, all_triangles=False)
+    display_surface = BVHTree.FromPolygons(body_vertices, body_faces, all_triangles=False)
+    if collision_surface is None or display_surface is None:
+        raise ValueError("Could not build the display and collision registration surfaces")
+
+    display_to_collision = nearest_surface_distances(
+        body_vertices,
+        vertex_regions,
+        collision_surface,
+    )
+    collision_to_display = nearest_surface_distances(
+        collision_vertices,
+        ["other"] * len(collision_vertices),
+        display_surface,
+        polygon_regions,
+    )
+    expected_regions = set(vertex_regions)
+    regions: dict[str, Any] = {}
+    issues: list[str] = []
+    for region, thresholds in REGISTRATION_THRESHOLDS_M.items():
+        forward = distance_metrics(display_to_collision.get(region, []))
+        reverse = distance_metrics(collision_to_display.get(region, []))
+        applicable = region in expected_regions
+        samples_present = forward["sampleCount"] > 0 and reverse["sampleCount"] > 0
+        accepted = not applicable or samples_present
+        for direction, metrics in (("displayToCollision", forward), ("collisionToDisplay", reverse)):
+            if metrics["sampleCount"] == 0:
+                continue
+            if metrics["maximumDistanceM"] > thresholds["maximum"]:
+                accepted = False
+                issues.append(
+                    f"{region} {direction} maximum {metrics['maximumDistanceM']:.6f} m "
+                    f"exceeds {thresholds['maximum']:.6f} m"
+                )
+            if metrics["p95DistanceM"] > thresholds["p95"]:
+                accepted = False
+                issues.append(
+                    f"{region} {direction} p95 {metrics['p95DistanceM']:.6f} m "
+                    f"exceeds {thresholds['p95']:.6f} m"
+                )
+        if applicable and not samples_present:
+            issues.append(f"{region} has no bidirectional registration samples")
+        regions[region] = {
+            "accepted": accepted,
+            "applicable": applicable,
+            "thresholdsM": thresholds,
+            "displayToCollision": forward,
+            "collisionToDisplay": reverse,
+        }
+
+    floor_datum_error = abs(
+        min(point.z for point in body_vertices)
+        - min(point.z for point in collision_vertices)
+    )
+    if floor_datum_error > FLOOR_DATUM_LIMIT_M:
+        issues.append(
+            f"floor datum error {floor_datum_error:.6f} m exceeds "
+            f"{FLOOR_DATUM_LIMIT_M:.6f} m"
+        )
+    direct_maximum = None
+    if len(collision_vertices) == len(body_vertices):
+        direct_maximum = max(
+            (display - collision).length
+            for display, collision in zip(body_vertices, collision_vertices)
+        )
+    all_distances = [
+        distance
+        for by_region in (display_to_collision, collision_to_display)
+        for distances in by_region.values()
+        for distance in distances
+    ]
+    return {
+        "schemaVersion": "patterna.avatar-surface-registration/1.0",
+        "accepted": not issues,
+        "method": "bidirectional nearest-surface comparison with display-material anatomical regions",
+        "objToBlenderTransform": "(-x, -y, z)",
+        "floorDatumErrorM": floor_datum_error,
+        "floorDatumLimitM": FLOOR_DATUM_LIMIT_M,
+        "maximumSurfaceDistanceM": max(all_distances),
+        "bodyAndCollisionVertexCountMatch": len(collision_vertices) == len(body_vertices),
+        "comparedDisplayVertexCount": len(body_vertices),
+        "comparedCollisionVertexCount": len(collision_vertices),
+        "maximumBodyToCollisionDistanceM": direct_maximum,
+        "directVertexOrderAccepted": direct_maximum is not None and direct_maximum <= 0.00001,
+        "regions": regions,
+        "issues": issues,
+    }
 
 
 def collision_registration(body: bpy.types.Object, collision_path: Path) -> dict[str, Any]:
-    collision_vertices = [
-        Vector((-vertex.x, -vertex.y, vertex.z))
-        for vertex in obj_vertices(collision_path)
-    ]
-    body_vertices = [body.matrix_world @ vertex.co for vertex in body.data.vertices]
-    if len(collision_vertices) != len(body_vertices):
+    registration = evaluate_collision_registration(body, collision_path)
+    if not registration["accepted"]:
         raise ValueError(
-            f"Collision OBJ has {len(collision_vertices)} vertices but the display body has "
-            f"{len(body_vertices)}"
+            "Display-to-collision regional registration failed: "
+            + "; ".join(registration["issues"])
         )
-    maximum_distance = max(
-        (display - collision).length
-        for display, collision in zip(body_vertices, collision_vertices)
-    )
-    if not math.isfinite(maximum_distance) or maximum_distance > 0.00001:
-        raise ValueError(
-            f"Collision OBJ diverges from the fitted display body by {maximum_distance:.9f} m"
-        )
-    return {
-        "method": "vertex-order comparison after OBJ negative-X and negative-Y decoding",
-        "objToBlenderTransform": "(-x, -y, z)",
-        "maximumBodyToCollisionDistanceM": maximum_distance,
-        "bodyAndCollisionVertexCountMatch": True,
-        "comparedVertexCount": len(body_vertices),
-    }
+    return registration
 
 
 def export_glb_candidate(
@@ -464,7 +673,7 @@ def export_glb_candidate(
         "underwear is body-conformed but not pattern-sized",
         "hair geometry is unavailable",
         "height maps have not been converted to tangent-space normal maps",
-        "collision simplification and regional registration are not implemented",
+        "collision simplification is not implemented",
         "cloth has not been solved on this body",
     ]
     if fit_report is None or not fit_report.get("accepted"):

@@ -64,6 +64,13 @@ class CandidateAvatarAssetTests(unittest.TestCase):
         self.assertEqual(180.0, self.manifest["displayYawDegrees"])
         self.assertIn("cloth has not been solved on this body", self.manifest["openGates"])
 
+    def test_registration_remains_explicitly_open_in_the_older_packaged_candidate(self) -> None:
+        self.assertIn(
+            "collision simplification and regional registration are not implemented",
+            self.manifest["openGates"],
+        )
+        self.assertNotIn("schemaVersion", self.manifest["registration"])
+
     def test_geometry_and_license_match_the_manifest(self) -> None:
         self.assertEqual(self.manifest["geometryBytes"], self.geometry_path.stat().st_size)
         self.assertEqual(self.manifest["geometrySha256"], sha256(self.geometry_path))

@@ -2984,3 +2984,21 @@ For asynchronous file workflows, wait for the product's success state and then r
 ### How to verify
 
 Save a uniquely named `.patterna` project through the packaged Windows picker. Require the `Project saved` status, then poll until the file parses and reports `patterna.project/1.0`. Copy it only after both checks pass, disturb the live state, open the saved file, and require the scalar and editable-construction values to restore exactly.
+
+## Avatar registration must survive different display and collision topology
+
+### What happened
+
+The Antonia exporter proved display-to-collider identity by comparing corresponding vertices in order. That was exact for the current full-resolution control, but the gate rejected any simplified collision body before measuring its surface. The architecture explicitly permits separate display and collision topology, so the proof mechanism contradicted the intended product design.
+
+### Root cause
+
+Vertex correspondence was used as both convenient evidence for the current control and the permanent registration contract. A simplified collider changes vertex count and order even when it remains on the same fitted surface. One global maximum also hid which anatomical area had drifted.
+
+### Prevention rule
+
+Measure registration bidirectionally between the actual display and collision surfaces. Report head, torso, arms, and legs separately, enforce maximum and 95th-percentile limits for every applicable region, and enforce a shared floor datum. Retain a direct vertex-order comparison only as extra evidence when topology happens to match. Keep human visual review independent because surface proximity does not prove believable anatomy.
+
+### How to verify
+
+Run the Blender registration tests with a display box and a differently triangulated collision box on the same surface; it must pass despite different vertex counts. Shift the collision box by 2 cm and require a torso-region rejection. Generate the exact 167 cm fitted Antonia through the installed runtime and require `patterna.avatar-surface-registration/1.0`, accepted head, torso, arms, and legs, no issues, floor error below 1 mm, and every regional maximum and 95th percentile within its declared threshold.
