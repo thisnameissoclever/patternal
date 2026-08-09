@@ -2628,3 +2628,21 @@ Render every editable anchor as a named button with a comfortably larger transpa
 ### How to verify
 
 In the packaged guest, frame `Back Torso`, enter point-edit mode, invoke `Back Torso start` by accessible name, change X through `RangeValuePattern`, prove Undo and Redo, and restore the original coordinate. Review the screenshot to confirm the active anchor, surrounding handles, and coordinate inspector are visible and not clipped.
+
+## Structural history must refresh derived workspace metadata
+
+### What happened
+
+Accessible polygon drafting created a fifteenth pattern piece and Undo restored the 14-piece document internally. The canvas changed, but the pieces list and count still claimed 15 pieces. Redo shared the same stale display path.
+
+### Root cause
+
+Undo and Redo restored the structural edit snapshot and rerendered the canvas without rebuilding the derived piece collection and count. Point-coordinate history had hidden the omission because it does not change document structure.
+
+### Prevention rule
+
+After either history direction restores a snapshot, refresh workspace metadata before rendering. Tests for every structural command must assert both geometry behavior and a derived public count or list, then leave the original document restored.
+
+### How to verify
+
+In the packaged guest, enter four coordinate-defined corners, finish the polygon, and require the count to change from 14 to 15. Invoke Undo and require 14, invoke Redo and require 15, then invoke Undo again and require 14. Review the drafting screenshot and confirm the final UI Automation tree also reports 14 pieces.

@@ -2513,6 +2513,7 @@ public sealed partial class MainPage : Page
         _patternRedoStack.Push(CapturePatternEditSnapshot());
         RestorePatternEditSnapshot(_patternUndoStack.Pop());
         UpdatePatternHistoryButtons();
+        RefreshPatternWorkspaceMetadata();
         RenderPattern();
         UpdatePatternPointInspector();
         RefreshAssemblyInspectorAfterHistoryChange();
@@ -2530,6 +2531,7 @@ public sealed partial class MainPage : Page
         _patternUndoStack.Push(CapturePatternEditSnapshot());
         RestorePatternEditSnapshot(_patternRedoStack.Pop());
         UpdatePatternHistoryButtons();
+        RefreshPatternWorkspaceMetadata();
         RenderPattern();
         UpdatePatternPointInspector();
         RefreshAssemblyInspectorAfterHistoryChange();
@@ -4290,11 +4292,13 @@ public sealed partial class MainPage : Page
         _canvasDraftPointer = null;
         CanvasDraftToolbar.Visibility = Visibility.Visible;
         DrawPolygonPieceButton.IsEnabled = false;
+        CanvasDraftXNumberBox.Maximum = PatternCanvas.Width / PatternPixelsPerCentimeter;
+        CanvasDraftYNumberBox.Maximum = PatternCanvas.Height / PatternPixelsPerCentimeter;
         UpdateCanvasDraftControls();
         DrawCanvasDraftPreview();
         ShowStatus(
             "Polygon drafting active",
-            "Click directly on the 2D canvas to place corners. Shift bypasses the 0.1 cm snap. Finish closes the boundary.",
+            "Click the 2D canvas or enter X and Y coordinates to place corners. Shift bypasses the 0.1 cm snap. Finish closes the boundary.",
             InfoBarSeverity.Informational);
     }
 
@@ -4322,16 +4326,7 @@ public sealed partial class MainPage : Page
             e.Handled = true;
             return;
         }
-        if (_canvasDraftPoints.Count > 0 && PatternPointDistance(point, _canvasDraftPoints[^1]) < 0.05)
-        {
-            ShowStatus("Point already placed", "Move at least 0.05 cm before placing another polygon corner.", InfoBarSeverity.Warning);
-            e.Handled = true;
-            return;
-        }
-        _canvasDraftPoints.Add(point);
-        _canvasDraftPointer = point;
-        UpdateCanvasDraftControls();
-        DrawCanvasDraftPreview();
+        AddCanvasDraftPoint(point);
         e.Handled = true;
     }
 
@@ -4343,6 +4338,40 @@ public sealed partial class MainPage : Page
             Math.Clamp(position.Y, 0, PatternCanvas.Height) / PatternPixelsPerCentimeter);
         bool bypassSnap = e.KeyModifiers.HasFlag(Windows.System.VirtualKeyModifiers.Shift);
         return SnapPatternPoint(point, bypassSnap);
+    }
+
+    private void OnAddCanvasDraftPointClicked(object sender, RoutedEventArgs e)
+    {
+        if (_canvasDraftTool != CanvasDraftTool.Polygon)
+        {
+            return;
+        }
+        double maximumX = PatternCanvas.Width / PatternPixelsPerCentimeter;
+        double maximumY = PatternCanvas.Height / PatternPixelsPerCentimeter;
+        double x = CanvasDraftXNumberBox.Value;
+        double y = CanvasDraftYNumberBox.Value;
+        if (!double.IsFinite(x) || !double.IsFinite(y) || x < 0 || y < 0 || x > maximumX || y > maximumY)
+        {
+            ShowStatus(
+                "Point is outside the canvas",
+                $"Enter X from 0 to {maximumX:0.0} cm and Y from 0 to {maximumY:0.0} cm.",
+                InfoBarSeverity.Warning);
+            return;
+        }
+        AddCanvasDraftPoint(SnapPatternPoint(new PatternPointDocument(x, y), false));
+    }
+
+    private void AddCanvasDraftPoint(PatternPointDocument point)
+    {
+        if (_canvasDraftPoints.Count > 0 && PatternPointDistance(point, _canvasDraftPoints[^1]) < 0.05)
+        {
+            ShowStatus("Point already placed", "Move at least 0.05 cm before placing another polygon corner.", InfoBarSeverity.Warning);
+            return;
+        }
+        _canvasDraftPoints.Add(point);
+        _canvasDraftPointer = point;
+        UpdateCanvasDraftControls();
+        DrawCanvasDraftPreview();
     }
 
     private void OnUndoCanvasDraftPointClicked(object sender, RoutedEventArgs e)
@@ -4419,7 +4448,7 @@ public sealed partial class MainPage : Page
         FinishCanvasDraftButton.IsEnabled = count >= 3;
         CanvasDraftStatusText.Text = count switch
         {
-            0 => "Click the first polygon corner",
+            0 => "Click or enter the first polygon corner",
             1 => "1 corner placed · continue drawing",
             2 => "2 corners placed · add at least one more",
             _ => $"{count} corners placed · click the first point or Finish piece"

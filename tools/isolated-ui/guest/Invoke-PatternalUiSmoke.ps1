@@ -754,6 +754,84 @@ try {
         }
     }
 
+    Invoke-UiCheck -Name '2D accessible polygon drafting undo and redo' -Check {
+        $fit = Find-UiElementByAutomationId -Root $window -AutomationId 'PatternFitButton'
+        Invoke-UiElement -Element $fit
+        $pieceCount = Find-UiElementByAutomationId -Root $window -AutomationId 'PatternPieceCountText'
+        $originalCountText = $pieceCount.Current.Name
+        if ($originalCountText -notmatch '^(\d+) pieces$') {
+            throw "Cannot read the original pattern piece count from '$originalCountText'."
+        }
+        $originalCount = [int]$Matches[1]
+
+        $startDraft = Find-UiElement -Root $window -Name 'Draw a polygon pattern piece directly on the canvas'
+        Invoke-UiElement -Element $startDraft
+        $xCoordinate = Find-UiElement -Root $window -Name 'Canvas polygon point X coordinate in centimeters'
+        $yCoordinate = Find-UiElement -Root $window -Name 'Canvas polygon point Y coordinate in centimeters'
+        $addPoint = Find-UiElement -Root $window -Name 'Add the entered point to the canvas polygon'
+        $finish = Find-UiElement -Root $window -Name 'Finish the polygon pattern piece'
+        $xRange = Get-UiPattern -Element $xCoordinate -Pattern ([System.Windows.Automation.RangeValuePattern]::Pattern) -PatternName 'RangeValuePattern'
+        $yRange = Get-UiPattern -Element $yCoordinate -Pattern ([System.Windows.Automation.RangeValuePattern]::Pattern) -PatternName 'RangeValuePattern'
+
+        $coordinates = @(
+            @(80.0, 125.0),
+            @(90.0, 125.0),
+            @(90.0, 135.0),
+            @(80.0, 135.0)
+        )
+        for ($coordinateIndex = 0; $coordinateIndex -lt $coordinates.Count; $coordinateIndex++) {
+            $coordinate = $coordinates[$coordinateIndex]
+            $xRange.SetValue([double]$coordinate[0])
+            $yRange.SetValue([double]$coordinate[1])
+            Wait-ForCondition -Description "polygon coordinate $($coordinateIndex + 1) to commit" -Condition {
+                ([math]::Abs([double]$xRange.Current.Value - [double]$coordinate[0]) -lt 0.001) -and
+                ([math]::Abs([double]$yRange.Current.Value - [double]$coordinate[1]) -lt 0.001)
+            } | Out-Null
+            Invoke-UiElement -Element $addPoint
+            $expectedCornerCount = $coordinateIndex + 1
+            Wait-ForCondition -Description "polygon corner $expectedCornerCount to be placed" -Condition {
+                $status = Find-UiElementByAutomationId -Root $window -AutomationId 'CanvasDraftStatusText'
+                $status.Current.Name -like "$expectedCornerCount corner*"
+            } | Out-Null
+        }
+        Wait-ForCondition -Description 'polygon Finish command to enable after four entered points' -Condition {
+            $finish.Current.IsEnabled
+        } | Out-Null
+
+        $draftShotPath = Join-Path $evidenceDirectory '11-2d-polygon-draft.png'
+        Save-WindowScreenshot -Window $window -Path $draftShotPath
+        $script:screenshots.Add([pscustomobject]@{ name = '2d-polygon-draft'; file = [IO.Path]::GetFileName($draftShotPath) })
+        Invoke-UiElement -Element $finish
+
+        $createdCount = $originalCount + 1
+        Wait-ForCondition -Description 'new canvas polygon to increase the pattern piece count' -Condition {
+            (Find-UiElementByAutomationId -Root $window -AutomationId 'PatternPieceCountText').Current.Name -eq "$createdCount pieces"
+        } | Out-Null
+        $undo = Find-UiElement -Root $window -Name 'Undo pattern geometry edit'
+        Invoke-UiElement -Element $undo
+        Wait-ForCondition -Description 'Undo to remove the canvas polygon' -Condition {
+            (Find-UiElementByAutomationId -Root $window -AutomationId 'PatternPieceCountText').Current.Name -eq "$originalCount pieces"
+        } | Out-Null
+        $redo = Find-UiElement -Root $window -Name 'Redo pattern geometry edit'
+        Invoke-UiElement -Element $redo
+        Wait-ForCondition -Description 'Redo to restore the canvas polygon' -Condition {
+            (Find-UiElementByAutomationId -Root $window -AutomationId 'PatternPieceCountText').Current.Name -eq "$createdCount pieces"
+        } | Out-Null
+        $undo = Find-UiElement -Root $window -Name 'Undo pattern geometry edit'
+        Invoke-UiElement -Element $undo
+        Wait-ForCondition -Description 'final Undo to restore the original pattern piece count' -Condition {
+            (Find-UiElementByAutomationId -Root $window -AutomationId 'PatternPieceCountText').Current.Name -eq "$originalCount pieces"
+        } | Out-Null
+
+        [ordered]@{
+            originalPieceCount = $originalCount
+            createdPieceCount = $createdCount
+            restoredPieceCount = $originalCount
+            enteredPoints = $coordinates.Count
+            screenshot = [IO.Path]::GetFileName($draftShotPath)
+        }
+    }
+
     foreach ($toggleName in @(
         'Show pattern pieces panel',
         'Show avatar and material inspector',
