@@ -2556,3 +2556,39 @@ Update viewport labels and control availability only from the final `ViewChanged
 ### How to verify
 
 In the packaged guest, run Zoom in, Zoom out, Zoom in, Fit, and Frame selected in sequence. Require the final label and screenshot to agree after every command, with Fit restoring the full 14-piece layout and Frame selected centering the named piece.
+
+## Bounding-box registration is not visual garment acceptance
+
+### What happened
+
+The exact fitted Antonia GLB and existing production crew-neck OBJ passed `patterna.product-registration/2.0`. The six-view render was nevertheless grotesquely invalid: both breasts and the abdomen protruded through large holes, the rear neckline was open, the sleeves appeared detached, and the underarm and side surfaces were badly distorted. A second render also produced different PNG hashes despite matching geometry, cameras, settings, and visible output.
+
+### Root cause
+
+The product validator treated coordinate bounds, image existence, and source hashes as sufficient visual evidence. Those checks prove registration and identity, not coverage, topology, contact, silhouette, or drape. The review workflow also assumed a separate Blender process would reproduce byte-identical PNGs, which is not a safe contract.
+
+### Prevention rule
+
+Require an explicit human visual decision for the exact front, front-oblique, left, back, back-oblique, and right render hashes. Numerical registration, collision, strain, equilibrium, or image-generation success cannot substitute for that decision. Every rerender resets visual review; never carry a decision to new PNG bytes merely because the scene inputs are unchanged.
+
+### How to verify
+
+Create a six-view proof whose registration is accepted and whose exact image hashes are recorded. Confirm production validation rejects it until `visual_quality.accepted` is true and every reviewed hash equals the current render hash. Confirm a recorded rejection remains rejected. Modify one render and confirm both the review recorder and production validator reject the proof.
+
+## Runtime installers must finish preflight before moving the working runtime
+
+### What happened
+
+The Antonia runtime installer moved `current` to a backup, then discovered that the checkout did not contain the ignored `.venv-garmentcode` directory and stopped. The backup remained intact, but the valid runtime was temporarily absent until it was restored.
+
+### Root cause
+
+Replacement and backup happened before source preflight and staging. The installer also assumed ignored Python environments existed in every checkout even though the owned installed runtime already contained valid copies.
+
+### Prevention rule
+
+Resolve and validate every source first, allow an existing installed runtime to supply ignored Python environments, and build the full staging directory while `current` remains untouched. Move `current` only immediately before promotion. If promoted-runtime validation fails, preserve the failed payload and restore the backup automatically.
+
+### How to verify
+
+Run the installer from a checkout without local virtual environments while a valid runtime exists. Confirm it selects the installed environments, completes staging before printing the backup path, promotes the new version, and passes both Python plus Blender validation. Force a validation failure in a disposable destination and confirm the prior `current` directory is restored.

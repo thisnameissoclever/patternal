@@ -7,7 +7,9 @@ from collections import Counter
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
+import shutil
 from typing import Any
 
 import bpy
@@ -415,6 +417,7 @@ def export_glb_candidate(
     target_height_cm: float,
     fit_report: dict[str, Any] | None,
     fit_report_path: Path | None,
+    manifest_path: Path | None = None,
 ) -> dict[str, Any]:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     material_evidence = assign_character_materials(body, character)
@@ -462,11 +465,15 @@ def export_glb_candidate(
         "hair geometry is unavailable",
         "height maps have not been converted to tangent-space normal maps",
         "collision simplification and regional registration are not implemented",
-        "packaged WinUI GLB loading is not implemented",
         "cloth has not been solved on this body",
     ]
     if fit_report is None or not fit_report.get("accepted"):
         open_gates.insert(0, "primary circumference fit is not yet accepted for Antonia")
+    resolved_manifest_path = manifest_path or output_path.with_suffix(".manifest.json")
+    resolved_manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    license_output_path = resolved_manifest_path.parent / "license.txt"
+    if license_output_path.resolve() != character.license_path.resolve():
+        shutil.copy2(character.license_path, license_output_path)
     manifest = {
         "schemaVersion": "patterna.display-avatar-glb/1.0",
         "accepted": False,
@@ -476,19 +483,23 @@ def export_glb_candidate(
         "additionalAuthors": character.additional_authors,
         "sourceUrl": character.source_url,
         "outputLicense": character.license_name,
-        "licenseFile": str(character.license_path),
+        "licenseFile": license_output_path.name,
         "licenseSha256": sha256(character.license_path),
         "geometry": output_path.name,
         "geometrySha256": sha256(output_path),
         "geometryBytes": output_path.stat().st_size,
-        "collisionGeometry": str(collision_path),
+        "collisionGeometry": Path(os.path.relpath(collision_path, resolved_manifest_path.parent)).as_posix(),
         "collisionGeometrySha256": sha256(collision_path),
         "heightTargetCm": target_height_cm,
         "heightMeasuredCm": height_m * 100.0,
         "heightErrorMm": abs(height_m * 100.0 - target_height_cm) * 10.0,
         "measurementFit": {
             "accepted": bool(fit_report and fit_report.get("accepted")),
-            "report": str(fit_report_path) if fit_report_path else None,
+            "report": (
+                Path(os.path.relpath(fit_report_path, resolved_manifest_path.parent)).as_posix()
+                if fit_report_path
+                else None
+            ),
             "reportSha256": sha256(fit_report_path) if fit_report_path else None,
             "maximumAbsoluteResidualCm": (
                 fit_report.get("maximumAbsoluteResidualCm") if fit_report else None
@@ -498,12 +509,19 @@ def export_glb_candidate(
             ),
         },
         "floorOffsetM": floor_offset_m,
+        "displayYawDegrees": 180.0,
         "bodyVertexCount": len(body.data.vertices),
         "bodyPolygonCount": len(body.data.polygons),
         "bodyUvLayers": [layer.name for layer in body.data.uv_layers],
         "materialSlots": list(character.material_names),
         "materialPolygonCounts": {str(index): count for index, count in sorted(polygon_counts.items())},
-        "materialSourceTextures": material_evidence,
+        "materialSourceTextures": {
+            material_name: {
+                evidence_name: Path(source_path).name
+                for evidence_name, source_path in evidence.items()
+            }
+            for material_name, evidence in material_evidence.items()
+        },
         "components": {
             component.name: {
                 "vertexCount": len(component.data.vertices),
@@ -515,6 +533,5 @@ def export_glb_candidate(
         "renders": render_evidence,
         "openGates": open_gates,
     }
-    manifest_path = output_path.with_suffix(".manifest.json")
-    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    resolved_manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     return manifest

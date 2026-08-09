@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render the exact packaged avatar and garment as a deterministic six-view proof."""
+"""Render the exact packaged avatar and garment as a six-view review proof."""
 
 from __future__ import annotations
 
@@ -164,12 +164,61 @@ def assign_material(mesh: bpy.types.Object, material: bpy.types.Material) -> Non
     mesh.data.materials.append(material)
 
 
+def configure_glb_avatar(
+    manifest_path: Path,
+    manifest: dict[str, object],
+    *,
+    show_bra: bool,
+) -> tuple[dict[str, bpy.types.Object], dict[str, str]]:
+    base = manifest_path.parent
+    geometry_path = base / str(manifest.get("geometry", ""))
+    license_path = base / str(manifest.get("licenseFile", ""))
+    if (
+        not geometry_path.is_file()
+        or geometry_path.stat().st_size != manifest.get("geometryBytes")
+        or sha256(geometry_path) != manifest.get("geometrySha256")
+    ):
+        raise RuntimeError("Display avatar GLB does not match its manifest.")
+    if not license_path.is_file() or sha256(license_path) != manifest.get("licenseSha256"):
+        raise RuntimeError("Display avatar license does not match its manifest.")
+    if manifest.get("measurementFit", {}).get("accepted") is not True:
+        raise RuntimeError("Display avatar measurement fit is not accepted.")
+
+    before = set(bpy.context.scene.objects)
+    bpy.ops.import_scene.gltf(filepath=str(geometry_path))
+    imported = [obj for obj in bpy.context.scene.objects if obj not in before]
+    meshes = [obj for obj in imported if obj.type == "MESH"]
+    if not meshes:
+        raise RuntimeError("Display avatar GLB contains no mesh objects.")
+    body = max(meshes, key=lambda obj: len(obj.data.vertices))
+    if not show_bra:
+        for mesh in list(meshes):
+            if "bandeau" in mesh.name.lower() or "bra" in mesh.name.lower():
+                bpy.data.objects.remove(mesh, do_unlink=True)
+                meshes.remove(mesh)
+    floor_offset_m = manifest.get("floorOffsetM")
+    if not isinstance(floor_offset_m, (int, float)) or not -0.5 <= float(floor_offset_m) <= 0.5:
+        raise RuntimeError(f"Display avatar floor offset is invalid: {floor_offset_m!r}")
+    for mesh in meshes:
+        mesh.location.z -= float(floor_offset_m)
+    objects = {"body": body}
+    for index, mesh in enumerate(mesh for mesh in meshes if mesh != body):
+        objects[f"component_{index}"] = mesh
+    return objects, {
+        "manifest": sha256(manifest_path),
+        "body_geometry": sha256(geometry_path),
+        "avatar_license": sha256(license_path),
+    }
+
+
 def configure_avatar(
     manifest_path: Path,
     *,
     show_bra: bool = True,
 ) -> tuple[dict[str, bpy.types.Object], dict[str, str]]:
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if manifest.get("schemaVersion") == "patterna.display-avatar-glb/1.0":
+        return configure_glb_avatar(manifest_path, manifest, show_bra=show_bra)
     if manifest.get("schema_version") != "patterna.display-avatar/1.0":
         raise RuntimeError("Unsupported display-avatar manifest schema")
     base = manifest_path.parent
@@ -295,6 +344,8 @@ def render_views(
     output_directory: Path,
     resolution_x: int,
     resolution_y: int,
+    *,
+    anatomical_front_negative_y: bool = False,
 ) -> dict[str, tuple[float, float, float]]:
     scene = bpy.context.scene
     scene.render.engine = "BLENDER_EEVEE_NEXT"
@@ -305,11 +356,19 @@ def render_views(
     scene.world.color = (0.008, 0.010, 0.015)
     scene.view_settings.look = "AgX - Medium High Contrast"
     views = {
-        "front": (0.0, 3.05, 0.97),
-        "front-oblique": (-2.15, 2.15, 1.0),
+        "front": (0.0, -3.05 if anatomical_front_negative_y else 3.05, 0.97),
+        "front-oblique": (
+            2.15 if anatomical_front_negative_y else -2.15,
+            -2.15 if anatomical_front_negative_y else 2.15,
+            1.0,
+        ),
         "left": (-3.05, 0.0, 0.97),
-        "back": (0.0, -3.05, 0.97),
-        "back-oblique": (2.15, -2.15, 1.0),
+        "back": (0.0, 3.05 if anatomical_front_negative_y else -3.05, 0.97),
+        "back-oblique": (
+            -2.15 if anatomical_front_negative_y else 2.15,
+            2.15 if anatomical_front_negative_y else -2.15,
+            1.0,
+        ),
         "right": (3.05, 0.0, 0.97),
     }
     for name, location in views.items():
@@ -332,6 +391,7 @@ def main() -> None:
     bpy.ops.object.delete(use_global=False)
 
     show_bra = not args.hide_bra
+    avatar_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     avatar_objects, hashes = configure_avatar(manifest_path, show_bra=show_bra)
     garment = import_obj(
         garment_path,
@@ -341,8 +401,10 @@ def main() -> None:
         up_axis="Z" if args.garment_z_up else "Y",
     )
     if args.garment_z_up:
-        avatar_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        floor_offset_m = avatar_manifest.get("floor_offset_m", 0.0)
+        floor_offset_m = avatar_manifest.get(
+            "floor_offset_m",
+            avatar_manifest.get("floorOffsetM", 0.0),
+        )
         if not isinstance(floor_offset_m, (int, float)):
             raise RuntimeError("The avatar floor offset must be numeric.")
         garment.location.z -= float(floor_offset_m)
@@ -350,7 +412,13 @@ def main() -> None:
     bpy.context.view_layer.update()
     registration = validate_registration(avatar_objects["body"], garment)
     camera = add_studio()
-    views = render_views(camera, output_directory, args.resolution_x, args.resolution_y)
+    views = render_views(
+        camera,
+        output_directory,
+        args.resolution_x,
+        args.resolution_y,
+        anatomical_front_negative_y=avatar_manifest.get("schemaVersion") == "patterna.display-avatar-glb/1.0",
+    )
     renders = {
         name: {
             "path": f"{name}.png",
@@ -358,6 +426,13 @@ def main() -> None:
             "byte_count": (output_directory / f"{name}.png").stat().st_size,
         }
         for name in views
+    }
+    visual_quality = {
+        "accepted": False,
+        "review_required": True,
+        "reviewed_at_utc": None,
+        "reviewed_render_sha256": {},
+        "issues": ["The exact six-view turntable has not been visually reviewed."],
     }
 
     proof = {
@@ -371,10 +446,12 @@ def main() -> None:
         "garment_sha256": sha256(garment_path),
         "fabric_sha256": sha256(fabric_path),
         "registration": registration,
+        "anatomical_front_axis": "-Y" if avatar_manifest.get("schemaVersion") == "patterna.display-avatar-glb/1.0" else "+Y",
         "render_engine": "BLENDER_EEVEE_NEXT",
         "resolution": [args.resolution_x, args.resolution_y],
         "views": {name: list(location) for name, location in views.items()},
         "renders": renders,
+        "visual_quality": visual_quality,
     }
     (output_directory / "manifest.json").write_text(
         json.dumps(proof, indent=2) + "\n",
@@ -404,5 +481,4 @@ if __name__ == "__main__":
             + "\n",
             encoding="utf-8",
         )
-        raise
         raise

@@ -12,9 +12,10 @@ public sealed record SimulationRuntime(
     string CompilerPath,
     string ToolsDirectory,
     string Origin,
-    string AvatarBackend = "CharMorph mb_female (manifest undeclared)",
-    string AvatarOutputLicense = "AGPL-3.0 (manifest undeclared)",
-    string? AvatarLicensePath = null);
+    string AvatarBackend = "CharMorph Antonia (manifest undeclared)",
+    string AvatarOutputLicense = "CC-BY 3.0 (manifest undeclared)",
+    string? AvatarLicensePath = null,
+    string? AvatarCharacterDirectory = null);
 
 internal sealed record SimulationRuntimeManifest(
     string SchemaVersion,
@@ -27,7 +28,8 @@ internal sealed record SimulationRuntimeManifest(
     Dictionary<string, string> EntrypointSha256,
     string? AvatarBackend = null,
     string? AvatarOutputLicense = null,
-    string? AvatarLicenseFile = null);
+    string? AvatarLicenseFile = null,
+    string? AvatarCharacterDirectory = null);
 
 public static class SimulationRuntimeLocator
 {
@@ -60,6 +62,7 @@ public static class SimulationRuntimeLocator
         "prefit_newton_style3d.py",
         "patterna_style3d_sewing.py",
         "render_product_acceptance.py",
+        "record_product_visual_review.py",
         "product_registration.py"
     ];
 
@@ -133,14 +136,16 @@ public static class SimulationRuntimeLocator
             bool declaresAnyAvatarMetadata =
                 !string.IsNullOrWhiteSpace(manifest.AvatarBackend) ||
                 !string.IsNullOrWhiteSpace(manifest.AvatarOutputLicense) ||
-                !string.IsNullOrWhiteSpace(manifest.AvatarLicenseFile);
+                !string.IsNullOrWhiteSpace(manifest.AvatarLicenseFile) ||
+                !string.IsNullOrWhiteSpace(manifest.AvatarCharacterDirectory);
             bool declaresCompleteAvatarMetadata =
                 !string.IsNullOrWhiteSpace(manifest.AvatarBackend) &&
                 !string.IsNullOrWhiteSpace(manifest.AvatarOutputLicense) &&
-                !string.IsNullOrWhiteSpace(manifest.AvatarLicenseFile);
+                !string.IsNullOrWhiteSpace(manifest.AvatarLicenseFile) &&
+                !string.IsNullOrWhiteSpace(manifest.AvatarCharacterDirectory);
             if (declaresAnyAvatarMetadata && !declaresCompleteAvatarMetadata)
             {
-                rejection = "Avatar runtime metadata must declare backend, output license, and license file together.";
+                rejection = "Avatar runtime metadata must declare backend, output license, license file, and character directory together.";
                 return false;
             }
 
@@ -152,6 +157,9 @@ public static class SimulationRuntimeLocator
             string? avatarLicensePath = string.IsNullOrWhiteSpace(manifest.AvatarLicenseFile)
                 ? null
                 : ResolveContainedPath(runtimeRoot, manifest.AvatarLicenseFile, false);
+            string? avatarCharacterDirectory = string.IsNullOrWhiteSpace(manifest.AvatarCharacterDirectory)
+                ? null
+                : ResolveContainedPath(runtimeRoot, manifest.AvatarCharacterDirectory, true);
             string[] requiredFiles =
             [
                 garmentCodePython,
@@ -211,12 +219,13 @@ public static class SimulationRuntimeLocator
                 toolsDirectory,
                 "installed-manifest",
                 string.IsNullOrWhiteSpace(manifest.AvatarBackend)
-                    ? "CharMorph mb_female (manifest undeclared)"
+                    ? "CharMorph Antonia (manifest undeclared)"
                     : manifest.AvatarBackend,
                 string.IsNullOrWhiteSpace(manifest.AvatarOutputLicense)
-                    ? "AGPL-3.0 (manifest undeclared)"
+                    ? "CC-BY 3.0 (manifest undeclared)"
                     : manifest.AvatarOutputLicense,
-                avatarLicensePath);
+                avatarLicensePath,
+                avatarCharacterDirectory);
             return true;
         }
         catch (Exception exception) when (
@@ -250,6 +259,7 @@ public static class SimulationRuntimeLocator
             string garmentCodePython = Path.Combine(root, ".venv-garmentcode", "Scripts", "python.exe");
             string style3DPython = Path.Combine(root, ".venv-newton", "Scripts", "python.exe");
             string toolsDirectory = Path.Combine(root, "tools");
+            string avatarCharacterDirectory = Path.Combine(root, "third_party", "CharMorph-db", "characters", "antonia");
             string? compiler = FindCurrentCompiler(root);
             string? blender = FindManagedBlender(root, localAppDataPath);
             string[] required =
@@ -258,6 +268,8 @@ public static class SimulationRuntimeLocator
                 style3DPython,
                 compiler ?? string.Empty,
                 blender ?? string.Empty,
+                Path.Combine(avatarCharacterDirectory, "char.blend"),
+                Path.Combine(avatarCharacterDirectory, "license.txt"),
                 .. RequiredScripts.Select(script => Path.Combine(toolsDirectory, script))
             ];
             if (required.Any(path => string.IsNullOrWhiteSpace(path) || !File.Exists(path)))
@@ -274,9 +286,10 @@ public static class SimulationRuntimeLocator
                 compiler!,
                 toolsDirectory,
                 "developer-checkout",
-                "CharMorph mb_female",
-                "AGPL-3.0",
-                Path.Combine(root, "third_party", "CharMorph-db", "characters", "mb_female", "license.txt"));
+                "CharMorph Antonia",
+                "CC-BY 3.0",
+                Path.Combine(avatarCharacterDirectory, "license.txt"),
+                avatarCharacterDirectory);
             return true;
         }
         return false;

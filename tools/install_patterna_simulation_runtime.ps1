@@ -2,7 +2,7 @@
 param(
     [string]$SourceRoot = (Split-Path -Parent $PSScriptRoot),
     [string]$DestinationRoot = (Join-Path $env:LOCALAPPDATA 'Patterna\SimulationRuntime'),
-    [string]$RuntimeVersion = '2026.07.23-style3d-v2',
+    [string]$RuntimeVersion = '2026.08.08-style3d-antonia-v1',
     [switch]$Replace
 )
 
@@ -97,20 +97,24 @@ $source = Require-Directory $SourceRoot 'Patterna source root'
 $destination = [System.IO.Path]::GetFullPath($DestinationRoot)
 $current = Join-Path $destination 'current'
 $staging = Join-Path $destination ('.staging-' + [Guid]::NewGuid().ToString('N'))
+$backup = $null
 
 if (Test-Path -LiteralPath $current) {
     if (-not $Replace) {
         throw "A Patterna simulation runtime already exists at $current. Use -Replace to preserve it as a backup and install a new runtime."
     }
-    $backup = Join-Path $destination ('backup-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
-    Move-Item -LiteralPath $current -Destination $backup
-    Write-Host "Preserved the previous runtime at $backup"
 }
 
-New-Item -ItemType Directory -Path $staging -Force | Out-Null
-
-$garmentVenvSource = Require-Directory (Join-Path $source '.venv-garmentcode') 'GarmentCode Python environment'
-$newtonVenvSource = Require-Directory (Join-Path $source '.venv-newton') 'Newton Style3D Python environment'
+$environmentSource = $source
+if (-not (
+    (Test-Path -LiteralPath (Join-Path $source '.venv-garmentcode') -PathType Container) -and
+    (Test-Path -LiteralPath (Join-Path $source '.venv-newton') -PathType Container)
+)) {
+    $environmentSource = Require-Directory $current 'existing installed runtime used as the Python environment source'
+    Write-Host "Using the existing installed Python environments from $environmentSource"
+}
+$garmentVenvSource = Require-Directory (Join-Path $environmentSource '.venv-garmentcode') 'GarmentCode Python environment'
+$newtonVenvSource = Require-Directory (Join-Path $environmentSource '.venv-newton') 'Newton Style3D Python environment'
 $garmentConfiguration = Require-File (Join-Path $garmentVenvSource 'pyvenv.cfg') 'GarmentCode Python configuration'
 $pythonHomeLine = Get-Content -LiteralPath $garmentConfiguration | Where-Object { $_ -match '^home\s*=' } | Select-Object -First 1
 if (-not $pythonHomeLine) {
@@ -141,6 +145,8 @@ if (-not $blenderSource) {
 }
 $blenderSource = Require-Directory $blenderSource 'managed Blender runtime'
 
+New-Item -ItemType Directory -Path $staging -Force | Out-Null
+
 Copy-RuntimeTree $pythonHomeSource (Join-Path $staging 'python-base') 'base Python runtime'
 Copy-RuntimeTree $garmentVenvSource (Join-Path $staging '.venv-garmentcode') 'GarmentCode Python environment'
 Copy-RuntimeTree $newtonVenvSource (Join-Path $staging '.venv-newton') 'Newton Style3D Python environment'
@@ -148,7 +154,7 @@ Copy-RuntimeTree (Require-Directory (Join-Path $source 'third_party\GarmentCode'
 Copy-RuntimeTree (Require-Directory (Join-Path $source 'third_party\NvidiaWarp-GarmentCode') 'GarmentCode Warp source') (Join-Path $staging 'third_party\NvidiaWarp-GarmentCode') 'GarmentCode Warp runtime'
 Copy-RuntimeTree (Require-Directory (Join-Path $source 'third_party\MPFB2') 'MPFB source') (Join-Path $staging 'third_party\MPFB2') 'MPFB body system'
 Copy-RuntimeTree (Require-Directory (Join-Path $source 'third_party\MakeHumanAssets') 'MakeHuman assets') (Join-Path $staging 'third_party\MakeHumanAssets') 'MakeHuman body and appearance assets'
-Copy-RuntimeTree (Require-Directory (Join-Path $source 'third_party\CharMorph-db\characters\mb_female') 'CharMorph female character data') (Join-Path $staging 'third_party\CharMorph-db\characters\mb_female') 'CharMorph female body system'
+Copy-RuntimeTree (Require-Directory (Join-Path $source 'third_party\CharMorph-db\characters\antonia') 'Antonia character data') (Join-Path $staging 'third_party\CharMorph-db\characters\antonia') 'Antonia body system'
 Copy-RuntimeTree $blenderSource (Join-Path $staging 'blender') 'Blender runtime'
 Copy-RuntimeTree $compilerSource (Join-Path $staging 'compiler') 'Patterna garment compiler'
 
@@ -169,6 +175,9 @@ $runtimeReferenceFiles = @(
 )
 foreach ($referenceFile in $runtimeReferenceFiles) {
     Rewrite-RuntimeReference $referenceFile.FullName $source $current
+    if (-not [string]::Equals($environmentSource, $source, [System.StringComparison]::OrdinalIgnoreCase)) {
+        Rewrite-RuntimeReference $referenceFile.FullName $environmentSource $current
+    }
 }
 
 $sourceRevisions = [ordered]@{}
@@ -208,6 +217,7 @@ $requiredScripts = @(
     'prefit_newton_style3d.py',
     'patterna_style3d_sewing.py',
     'render_product_acceptance.py',
+    'record_product_visual_review.py',
     'product_registration.py'
 )
 $integrityFiles = @(
@@ -227,8 +237,9 @@ $integrityFiles += @(
     (Join-Path $staging 'third_party\GarmentCode\pygarment\__init__.py'),
     (Join-Path $staging '.venv-newton\Lib\site-packages\newton\__init__.py'),
     (Join-Path $staging '.venv-newton\Lib\site-packages\warp\__init__.py'),
-    (Join-Path $staging 'third_party\CharMorph-db\characters\mb_female\license.txt')
+    (Join-Path $staging 'third_party\CharMorph-db\characters\antonia\license.txt')
 ) | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf }
+$integrityFiles += Get-ChildItem -LiteralPath (Join-Path $staging 'third_party\CharMorph-db\characters\antonia') -File -Recurse | Select-Object -ExpandProperty FullName
 $integrityFiles = $integrityFiles | Sort-Object -Unique
 
 $hashes = [ordered]@{}
@@ -245,9 +256,10 @@ $manifest = [ordered]@{
     blender = 'blender/blender.exe'
     compiler = 'compiler/Patternal.UnrealGarmentCompiler.exe'
     toolsDirectory = 'tools'
-    avatarBackend = 'CharMorph mb_female'
-    avatarOutputLicense = 'AGPL-3.0'
-    avatarLicenseFile = 'third_party/CharMorph-db/characters/mb_female/license.txt'
+    avatarBackend = 'CharMorph Antonia'
+    avatarOutputLicense = 'CC-BY 3.0'
+    avatarLicenseFile = 'third_party/CharMorph-db/characters/antonia/license.txt'
+    avatarCharacterDirectory = 'third_party/CharMorph-db/characters/antonia'
     entrypointSha256 = $hashes
 }
 $manifestPath = Join-Path $staging 'runtime-manifest.json'
@@ -257,9 +269,13 @@ $manifestPath = Join-Path $staging 'runtime-manifest.json'
     [System.Text.UTF8Encoding]::new($false))
 
 New-Item -ItemType Directory -Path $destination -Force | Out-Null
-Move-Item -LiteralPath $staging -Destination $current
-
 try {
+    if (Test-Path -LiteralPath $current) {
+        $backup = Join-Path $destination ('backup-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
+        Move-Item -LiteralPath $current -Destination $backup
+        Write-Host "Preserved the previous runtime at $backup"
+    }
+    Move-Item -LiteralPath $staging -Destination $current
     $env:PATTERNA_SIMULATION_RUNTIME_ROOT = $current
     & (Join-Path $current '.venv-garmentcode\Scripts\python.exe') -c 'import os, sys; sys.path.insert(0, os.path.join(os.environ["PATTERNA_SIMULATION_RUNTIME_ROOT"], "third_party", "GarmentCode")); import numpy, trimesh, pygarment; print("GarmentCode runtime accepted")'
     if ($LASTEXITCODE -ne 0) {
@@ -275,9 +291,20 @@ try {
     }
 }
 catch {
-    $failed = Join-Path $destination ('failed-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
-    Move-Item -LiteralPath $current -Destination $failed
-    throw "The staged runtime failed validation and was preserved at $failed. $($_.Exception.Message)"
+    $failureMessage = $_.Exception.Message
+    $failed = $null
+    if (Test-Path -LiteralPath $current) {
+        $failed = Join-Path $destination ('failed-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
+        Move-Item -LiteralPath $current -Destination $failed
+    }
+    if ($backup -and (Test-Path -LiteralPath $backup)) {
+        Move-Item -LiteralPath $backup -Destination $current
+        Write-Host "Restored the previous runtime after validation failure."
+    }
+    if ($failed) {
+        throw "The staged runtime failed validation and was preserved at $failed. $failureMessage"
+    }
+    throw "The staged runtime failed before promotion. $failureMessage"
 }
 finally {
     Remove-Item Env:PATTERNA_SIMULATION_RUNTIME_ROOT -ErrorAction SilentlyContinue

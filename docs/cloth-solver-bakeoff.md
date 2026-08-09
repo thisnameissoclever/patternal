@@ -15,7 +15,8 @@ This document defines the repeatable process for evaluating cloth backends witho
 7. Run the unchanged fabric and acceptance thresholds. Record backend version, adapter hash, GPU, settings, timings, all source hashes, and whether a dressing-body sequence was used.
 8. Reject numerically when any required collision, seam, strain, equilibrium, identity, or finite-position gate fails.
 9. Render the exact rejected or accepted result from six anatomical cameras. Front must show the face and chest; Back must show the back and seat. Numerical acceptance does not waive visual review.
-10. Promote only when the exact result passes both the numerical report and reviewed multi-angle appearance. Package only the promoted hashes.
+10. Record the visual decision against the SHA-256 identity of every rendered view. A rerender always requires a fresh review; do not assume Blender will emit byte-identical PNGs across separate processes.
+11. Promote only when the exact result passes both the numerical report and reviewed multi-angle appearance. Package only the promoted hashes.
 
 ## Current normalized bundle
 
@@ -49,3 +50,5 @@ The 0.50 cm material surface is the current useful control resolution. It reduce
 ## Evidence boundary
 
 All named runs and renders are local ignored artifacts under `artifacts/cloth-bakeoff-antonia/control`. They prove the decisions above on this machine. They are not packaged release evidence, and none is accepted cloth. The next promotion attempt must generate a new hash-bound report and a fresh six-view set.
+
+The exact Antonia live-contract render under `artifacts/antonia-live-contract/product-render` adds a separate rejected control. It uses the existing production crew-neck OBJ rather than a new solver output. Bounds-based `patterna.product-registration/2.0` accepted it, but exact six-view review found large breast and abdominal holes, an open rear neckline, detached-looking sleeves, and severe side distortion. The recorded visual rejection proves registration is only a coordinate sanity check. It is not garment-quality acceptance.

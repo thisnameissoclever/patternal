@@ -780,20 +780,27 @@
         };
       }
 
-      async function loadCandidateDisplayAvatar(baseUrl='Candidate/Antonia/') {
-        const manifestResponse=await fetch(`${baseUrl}manifest.json`);
-        if(!manifestResponse.ok)throw new Error(`Candidate avatar manifest HTTP ${manifestResponse.status}`);
-        const manifest=await manifestResponse.json();
-        if(manifest.schemaVersion!=='patterna.display-avatar-glb/1.0'||manifest.accepted!==false||manifest.candidateOnly!==true)throw new Error('Candidate avatar manifest crosses the production acceptance boundary.');
+      async function loadGlbDisplayAvatar(baseUrl,providedManifest=null) {
+        let manifest=providedManifest;
+        if(!manifest) {
+          const manifestResponse=await fetch(`${baseUrl}manifest.json`);
+          if(!manifestResponse.ok)throw new Error(`GLB avatar manifest HTTP ${manifestResponse.status}`);
+          manifest=await manifestResponse.json();
+        }
+        if(manifest.schemaVersion!=='patterna.display-avatar-glb/1.0'||manifest.accepted!==false||manifest.candidateOnly!==true)throw new Error('GLB avatar manifest crosses the production acceptance boundary.');
         const [geometryResponse,licenseResponse]=await Promise.all([fetch(`${baseUrl}${manifest.geometry}`),fetch(`${baseUrl}${manifest.licenseFile}`)]);
-        if(!geometryResponse.ok||!licenseResponse.ok)throw new Error(`Candidate avatar HTTP ${geometryResponse.status}/${licenseResponse.status}`);
+        if(!geometryResponse.ok||!licenseResponse.ok)throw new Error(`GLB avatar HTTP ${geometryResponse.status}/${licenseResponse.status}`);
         const [geometryBuffer,licenseBuffer]=await Promise.all([geometryResponse.arrayBuffer(),licenseResponse.arrayBuffer()]);
-        if(geometryBuffer.byteLength!==manifest.geometryBytes)throw new Error('Candidate avatar byte count does not match its manifest.');
+        if(geometryBuffer.byteLength!==manifest.geometryBytes)throw new Error('GLB avatar byte count does not match its manifest.');
         const [geometryHash,licenseHash]=await Promise.all([sha256Hex(geometryBuffer),sha256Hex(licenseBuffer)]);
-        if(geometryHash!==String(manifest.geometrySha256).toLowerCase())throw new Error('Candidate avatar geometry hash does not match its manifest.');
-        if(licenseHash!==String(manifest.licenseSha256).toLowerCase())throw new Error('Candidate avatar license hash does not match its manifest.');
-        if(manifest.measurementFit?.accepted!==true)throw new Error('Candidate avatar measurement fit is not accepted.');
+        if(geometryHash!==String(manifest.geometrySha256).toLowerCase())throw new Error('GLB avatar geometry hash does not match its manifest.');
+        if(licenseHash!==String(manifest.licenseSha256).toLowerCase())throw new Error('GLB avatar license hash does not match its manifest.');
+        if(manifest.measurementFit?.accepted!==true)throw new Error('GLB avatar measurement fit is not accepted.');
         return decodeCandidateGlb(geometryBuffer,manifest);
+      }
+
+      async function loadCandidateDisplayAvatar(baseUrl='Candidate/Antonia/') {
+        return loadGlbDisplayAvatar(baseUrl);
       }
 
       let fabricTexturePromise=null;
@@ -805,7 +812,9 @@
       async function loadDisplayAvatar(baseUrl='Production/Avatar/') {
         const manifestResponse=await fetch(`${baseUrl}manifest.json`);
         if(!manifestResponse.ok)throw new Error(`Display avatar manifest HTTP ${manifestResponse.status}`);
-        const manifest=await manifestResponse.json(),entries=Object.entries(manifest.assets||{});
+        const manifest=await manifestResponse.json();
+        if(manifest.schemaVersion==='patterna.display-avatar-glb/1.0')return loadGlbDisplayAvatar(baseUrl,manifest);
+        const entries=Object.entries(manifest.assets||{});
         if(!entries.some(([key])=>key==='body'))throw new Error('Display avatar manifest has no body.');
         const sources=await Promise.all(entries.map(async([key,asset])=>{
           const [geometryResponse,texture]=await Promise.all([fetch(`${baseUrl}${asset.geometry}`),loadTexture(`${baseUrl}${asset.texture}`)]);

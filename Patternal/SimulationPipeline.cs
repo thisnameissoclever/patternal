@@ -78,7 +78,8 @@ public static class SimulationPipeline
     private const string CurrentWarpPrefitSchema = "patterna.warp-prefit-report/2.6";
     private const string CurrentStyle3DReportSchema = "patterna.newton-style3d-report/1.0";
     private const double SimulationMeshResolutionCm = 0.25;
-    private const string PipelineRevisionSalt = "patterna-simulation-pipeline/4.1:newton-style3d:mesh=0.25cm:body-aware-warm-start:three-stage";
+    private const string PipelineRevisionSalt = "patterna-simulation-pipeline/5.0:newton-style3d:mesh=0.25cm:antonia:body-aware-warm-start:three-stage";
+    private const string ProductAvatarBackend = "CharMorph Antonia";
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -284,61 +285,90 @@ public static class SimulationPipeline
                 !proof.TryGetProperty("avatar_hashes", out JsonElement avatarHashes) ||
                 !TryGetString(avatarHashes, "manifest", out string avatarManifestHash) ||
                 !HashesEqual(avatarManifestHash, FileSha256(displayManifestPath)) ||
-                !display.TryGetProperty("assets", out JsonElement displayAssets) ||
-                displayAssets.ValueKind is not JsonValueKind.Object)
+                !proof.TryGetProperty("visual_quality", out JsonElement visualQuality) ||
+                !visualQuality.TryGetProperty("accepted", out JsonElement visualAccepted) ||
+                visualAccepted.ValueKind is not JsonValueKind.True ||
+                !visualQuality.TryGetProperty("reviewed_render_sha256", out JsonElement reviewedRenderHashes) ||
+                reviewedRenderHashes.ValueKind is not JsonValueKind.Object)
             {
                 return false;
             }
 
             string displayDirectory = Path.GetDirectoryName(displayManifestPath)!;
-            bool isCharMorph = TryGetString(display, "source", out string avatarSource) &&
-                string.Equals(avatarSource, "CharMorph mb_female", StringComparison.Ordinal);
-            string[] requiredAvatarAssets = isCharMorph
-                ? ["body", "bra"]
-                : ["body", "bra", "eyes", "teeth", "eyebrows", "eyelashes", "hair"];
-            bool expectedBraVisibility = !isCharMorph;
-            int expectedAvatarObjects = requiredAvatarAssets.Length - (expectedBraVisibility ? 0 : 1);
-            if (showBra.GetBoolean() != expectedBraVisibility ||
-                avatarObjects != expectedAvatarObjects)
+            bool isAntoniaGlb = TryGetString(display, "schemaVersion", out string displaySchema) &&
+                string.Equals(displaySchema, "patterna.display-avatar-glb/1.0", StringComparison.Ordinal);
+            if (isAntoniaGlb)
             {
-                return false;
-            }
-            if (displayAssets.EnumerateObject().Count() < requiredAvatarAssets.Length ||
-                requiredAvatarAssets.Any(assetName => !displayAssets.TryGetProperty(assetName, out _)))
-            {
-                return false;
-            }
-            foreach (JsonProperty asset in displayAssets.EnumerateObject())
-            {
-                if (!TryGetString(asset.Value, "geometry", out string geometryRelativePath) ||
-                    !TryGetString(asset.Value, "texture", out string textureRelativePath))
+                if (showBra.ValueKind is not JsonValueKind.False ||
+                    avatarObjects < 1 ||
+                    !TryGetString(display, "geometry", out string geometryRelativePath) ||
+                    !TryGetString(display, "geometrySha256", out string geometryManifestHash) ||
+                    !TryGetString(display, "licenseFile", out string licenseRelativePath) ||
+                    !TryGetString(display, "licenseSha256", out string licenseManifestHash) ||
+                    !display.TryGetProperty("measurementFit", out JsonElement measurementFit) ||
+                    !measurementFit.TryGetProperty("accepted", out JsonElement measurementFitAccepted) ||
+                    measurementFitAccepted.ValueKind is not JsonValueKind.True)
                 {
                     return false;
                 }
                 string geometryPath = ResolveContainedEvidencePath(displayDirectory, geometryRelativePath);
-                string texturePath = ResolveContainedEvidencePath(displayDirectory, textureRelativePath);
+                string licensePath = ResolveContainedEvidencePath(displayDirectory, licenseRelativePath);
                 if (!File.Exists(geometryPath) ||
-                    !File.Exists(texturePath) ||
-                    !TryGetString(avatarHashes, $"{asset.Name}_geometry", out string geometryHash) ||
-                    !TryGetString(avatarHashes, $"{asset.Name}_texture", out string textureHash) ||
-                    !HashesEqual(geometryHash, FileSha256(geometryPath)) ||
-                    !HashesEqual(textureHash, FileSha256(texturePath)))
+                    !File.Exists(licensePath) ||
+                    !TryGetString(avatarHashes, "body_geometry", out string geometryProofHash) ||
+                    !TryGetString(avatarHashes, "avatar_license", out string licenseProofHash) ||
+                    !HashesEqual(geometryManifestHash, FileSha256(geometryPath)) ||
+                    !HashesEqual(licenseManifestHash, FileSha256(licensePath)) ||
+                    !HashesEqual(geometryProofHash, FileSha256(geometryPath)) ||
+                    !HashesEqual(licenseProofHash, FileSha256(licensePath)))
                 {
                     return false;
                 }
-                if (string.Equals(asset.Name, "bra", StringComparison.Ordinal) &&
-                    (!asset.Value.TryGetProperty("display_optional", out JsonElement displayOptional) ||
-                        displayOptional.ValueKind is not JsonValueKind.True ||
-                        !asset.Value.TryGetProperty("maximum_surface_offset_m", out JsonElement offset) ||
-                        !offset.TryGetDouble(out double offsetMeters) ||
-                        !double.IsFinite(offsetMeters) ||
-                        offsetMeters < 0 ||
-                        offsetMeters > (isCharMorph ? 0.003 : 0.0001) ||
-                        (isCharMorph &&
-                            (!asset.Value.TryGetProperty("default_visible", out JsonElement defaultVisible) ||
-                                defaultVisible.ValueKind is not JsonValueKind.False))))
+            }
+            else
+            {
+                if (!display.TryGetProperty("assets", out JsonElement displayAssets) ||
+                    displayAssets.ValueKind is not JsonValueKind.Object)
                 {
                     return false;
+                }
+                string[] requiredAvatarAssets = ["body", "bra", "eyes", "teeth", "eyebrows", "eyelashes", "hair"];
+                if (showBra.ValueKind is not JsonValueKind.True ||
+                    avatarObjects != requiredAvatarAssets.Length ||
+                    displayAssets.EnumerateObject().Count() < requiredAvatarAssets.Length ||
+                    requiredAvatarAssets.Any(assetName => !displayAssets.TryGetProperty(assetName, out _)))
+                {
+                    return false;
+                }
+                foreach (JsonProperty asset in displayAssets.EnumerateObject())
+                {
+                    if (!TryGetString(asset.Value, "geometry", out string geometryRelativePath) ||
+                        !TryGetString(asset.Value, "texture", out string textureRelativePath))
+                    {
+                        return false;
+                    }
+                    string geometryPath = ResolveContainedEvidencePath(displayDirectory, geometryRelativePath);
+                    string texturePath = ResolveContainedEvidencePath(displayDirectory, textureRelativePath);
+                    if (!File.Exists(geometryPath) ||
+                        !File.Exists(texturePath) ||
+                        !TryGetString(avatarHashes, $"{asset.Name}_geometry", out string geometryHash) ||
+                        !TryGetString(avatarHashes, $"{asset.Name}_texture", out string textureHash) ||
+                        !HashesEqual(geometryHash, FileSha256(geometryPath)) ||
+                        !HashesEqual(textureHash, FileSha256(texturePath)))
+                    {
+                        return false;
+                    }
+                    if (string.Equals(asset.Name, "bra", StringComparison.Ordinal) &&
+                        (!asset.Value.TryGetProperty("display_optional", out JsonElement displayOptional) ||
+                            displayOptional.ValueKind is not JsonValueKind.True ||
+                            !asset.Value.TryGetProperty("maximum_surface_offset_m", out JsonElement offset) ||
+                            !offset.TryGetDouble(out double offsetMeters) ||
+                            !double.IsFinite(offsetMeters) ||
+                            offsetMeters < 0 ||
+                            offsetMeters > 0.0001))
+                    {
+                        return false;
+                    }
                 }
             }
 
@@ -367,7 +397,9 @@ public static class SimulationPipeline
                 }
                 string renderPath = ResolveContainedEvidencePath(proofDirectory, relativePath);
                 if (!File.Exists(renderPath) ||
-                    !HashesEqual(expectedHash, FileSha256(renderPath)))
+                    !HashesEqual(expectedHash, FileSha256(renderPath)) ||
+                    !TryGetString(reviewedRenderHashes, view, out string reviewedHash) ||
+                    !HashesEqual(reviewedHash, expectedHash))
                 {
                     return false;
                 }
@@ -783,6 +815,12 @@ public static class SimulationPipeline
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(runtime);
+        if (!string.Equals(runtime.AvatarBackend, ProductAvatarBackend, StringComparison.Ordinal) ||
+            string.IsNullOrWhiteSpace(runtime.AvatarCharacterDirectory))
+        {
+            throw new SimulationPipelineException(
+                $"The installed simulation runtime uses {runtime.AvatarBackend}, but this product revision requires {ProductAvatarBackend}. Repair the simulation runtime before solving cloth.");
+        }
         string revision = ComputeRevision(bridge);
         string shortRevision = revision[..12];
         string jobDirectory = Path.Combine(localAppDataPath, "SimulationJobs", revision);
@@ -805,6 +843,8 @@ public static class SimulationPipeline
         string avatarReportPath = Path.Combine(jobDirectory, "avatar-report.json");
         string displayAvatarDirectory = Path.Combine(jobDirectory, "display-avatar");
         string displayAvatarManifestPath = Path.Combine(displayAvatarDirectory, "manifest.json");
+        string displayAvatarGlbPath = Path.Combine(displayAvatarDirectory, "avatar.glb");
+        string displayAvatarLicensePath = Path.Combine(displayAvatarDirectory, "license.txt");
         string bodyPath = Path.Combine(jobDirectory, "simulation-body.obj");
         string bodyMeasurementsPath = Path.Combine(jobDirectory, "simulation-body.yaml");
         string bodySegmentationPath = Path.Combine(jobDirectory, "simulation-body.segmentation.json");
@@ -833,7 +873,7 @@ public static class SimulationPipeline
         string visualProofDirectory = Path.Combine(
             jobDirectory,
             "proofs",
-            Guid.NewGuid().ToString("N")[..12]);
+            "product");
         string visualProofManifestPath = Path.Combine(visualProofDirectory, "manifest.json");
 
         string? bridgeDirectory = Path.GetDirectoryName(bridgePath);
@@ -864,16 +904,11 @@ public static class SimulationPipeline
             Path.Combine(runtime.ToolsDirectory, "prepare_charmorph_garmentcode_body.py"),
             "CharMorph GarmentCode body converter");
         string charMorphCharacterDirectory = RequireDirectory(
-            Path.Combine(
-                runtime.RootDirectory,
-                "third_party",
-                "CharMorph-db",
-                "characters",
-                "mb_female"),
-            "CharMorph female character data");
+            runtime.AvatarCharacterDirectory,
+            "Antonia character data");
         string charMorphBlendPath = RequireFile(
             Path.Combine(charMorphCharacterDirectory, "char.blend"),
-            "CharMorph female source mesh");
+            "Antonia source mesh");
         string bodyProfileScript = RequireFile(
             Path.Combine(runtime.ToolsDirectory, "generate_body_profile_from_mesh.py"),
             "compiler body-profile generator");
@@ -908,6 +943,8 @@ public static class SimulationPipeline
             meshPath,
             avatarFitReportPath,
             displayAvatarManifestPath,
+            displayAvatarGlbPath,
+            displayAvatarLicensePath,
             bodyPath,
             bodySegmentationPath,
             bodyPreparationReportPath,
@@ -937,7 +974,7 @@ public static class SimulationPipeline
 
             progress?.Report(new(
                 "avatar",
-                "Fitting the CharMorph female anatomy to the current measurements",
+                "Fitting Antonia anatomy to the current measurements",
                 0.08));
             await RunProcessAsync(
                 garmentCodePythonPath,
@@ -969,7 +1006,8 @@ public static class SimulationPipeline
                 "--fit-report", avatarFitReportPath,
                 "--output-dir", jobDirectory,
                 "--output", avatarBodyPath,
-                "--render-output-dir", displayAvatarDirectory
+                "--glb-output", displayAvatarGlbPath,
+                "--glb-manifest", displayAvatarManifestPath
                 ],
                 runtime.RootDirectory,
                 Path.Combine(jobDirectory, "02-avatar-export.log"),
@@ -977,6 +1015,8 @@ public static class SimulationPipeline
             RequireFile(avatarBodyPath, "measurement-fitted CharMorph avatar");
             RequireAcceptedJson(avatarReportPath, "CharMorph avatar export");
             RequireFile(displayAvatarManifestPath, "measurement-fitted display avatar manifest");
+            RequireFile(displayAvatarGlbPath, "measurement-fitted Antonia display GLB");
+            RequireFile(displayAvatarLicensePath, "Antonia display license");
 
             progress?.Report(new(
                 "collision-body",
@@ -1641,6 +1681,8 @@ public static class SimulationPipeline
         string MeshPath,
         string AvatarFitReportPath,
         string DisplayAvatarManifestPath,
+        string DisplayAvatarGlbPath,
+        string DisplayAvatarLicensePath,
         string BodyPath,
         string BodySegmentationPath,
         string BodyPreparationReportPath,
@@ -1788,6 +1830,8 @@ public static class SimulationPipeline
                 artifacts.PatternPath,
                 artifacts.MeshPath,
                 artifacts.DisplayAvatarManifestPath,
+                artifacts.DisplayAvatarGlbPath,
+                artifacts.DisplayAvatarLicensePath,
                 artifacts.BodyPath,
                 artifacts.BodySegmentationPath,
                 artifacts.BodyProfilePath,

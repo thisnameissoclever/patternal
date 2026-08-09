@@ -1,6 +1,6 @@
 # Patternal architecture v3 reassessment
 
-Status: proposed replacement boundary based on packaged UI evidence and a local asset bake-off on 2026-08-08.
+Status: active replacement boundary based on packaged UI evidence and local asset and solver bake-offs begun on 2026-08-08.
 
 This document does not declare the product complete. It records why the present stack cannot honestly meet the CLO-class acceptance target and defines the smallest credible migration for a one-person, non-revenue project.
 
@@ -65,7 +65,7 @@ Required correction:
 | Windows product shell | WinUI 3 with WebView2 3D surface | Microsoft platform terms | Keep |
 | 2D pattern document | Native Patternal model with GarmentCode import and export | Project code plus MIT GarmentCode | Keep and improve UX |
 | Bundled display body | MakeHuman and MPFB-derived mesh and CC0 appearance assets | CC0 assets; tool code varies | Retire as hero baseline after replacement proof |
-| Current source avatar path | CharMorph `mb_female` | Generated body is AGPL-3.0 | Reject as the distributable product boundary |
+| Current live source avatar path | CharMorph Antonia | Generated body is CC-BY 3.0 with attribution | Keep as the versioned runtime foundation; production visual gate remains open |
 | Available feminine source | CharMorph Antonia | CC-BY 3.0 | Primary replacement candidate |
 | Available masculine source | CharMorph Reom | Declared CC-BY; license artifact missing | Research-only candidate; do not redistribute |
 | Current accepted cloth backend | Newton 1.4.0 `SolverStyle3D` on Warp 1.15.0 | Apache-2.0 | Keep as bake-off control |
@@ -138,6 +138,10 @@ The local spike now proves that Antonia is a viable replacement foundation, but 
 8. Antonia's legacy bra cannot be called fitted after body customization. The candidate uses a clearly identified convex-envelope modesty bandeau for display only. It is intentionally not described as a bra, pattern, cloth solve, or fit proof.
 
 Packaged WinUI GLB loading is now proven for the candidate. The application ships the 14.3 MB GLB, a candidate-only manifest, and the exact CC-BY 3.0 license through the AppX recipe. The embedded renderer verifies the geometry and license hashes, rejects unsupported GLB transforms, decodes the known indexed triangle and embedded-image contract, and applies a manifest-bound 180 degree display yaw so the existing semantic cameras remain correct. Isolated run `20260809-041233-0852a5fd` used payload `b3b01e84513736fac6988156b3c93573d3730369a747737a887ea2967cf3ea4e`; 27 functional interactions passed, host input injection and VMConnect use remained false, and all six camera plus both final 2D viewport screenshots were reviewed. The run correctly failed only because no accepted cloth matches the current revision.
+
+The live simulation route now uses the same Antonia character directory and GLB contract as the packaged candidate. Runtime version `2026.08.08-style3d-antonia-v1` binds the Antonia character files, CC-BY 3.0 license, generator, GLB exporter, six-view renderer, and visual-review recorder. Pipeline revision 5 rejects an older `mb_female` runtime instead of silently solving against a different body family. Each job writes `display-avatar/avatar.glb`, its local license, and its manifest beside the collision body and fitted-state evidence.
+
+The first live-contract six-view render used exact fitted Antonia and the existing production crew-neck OBJ. The numerical registration gate accepted it. Human review rejected it immediately: both breasts and the abdomen protrude through large holes, the rear neckline is open, sleeves appear detached, and the underarm and side surfaces are severely distorted. This is evidence about the existing production garment asset, not a claim that a new Newton result was produced. Product proof now requires an explicit `visual_quality.accepted` decision whose six reviewed hashes match the exact six render hashes. Every rerender resets that decision because Blender output is not assumed byte-deterministic. Numerical registration, collision, strain, or equilibrium evidence cannot promote a visually rejected result.
 
 The packaged review still rejects several production-quality details. Antonia has visible texture-region transitions on the limbs and crown, no hair geometry, a coarse display-only bandeau, and no accepted cloth. The 2D workspace now packs the exact piece extents into deterministic shelves, keeps labels in dedicated headers, exposes pan through the ScrollViewer, and provides visible Zoom out, Zoom in, Fit, and Frame selected controls. The reviewed 1920 by 1080 Fit screenshot shows all 14 pieces without clipping or overlap, including physically small collar and cuff pieces. A physical-scale command remains absent because four canvas pixels per centimeter is not a calibrated monitor measurement, and the broader authoring workflow still needs isolated interaction coverage. The current candidate is therefore accepted as a packaged architecture foundation and rejected as a production baseline.
 
@@ -249,7 +253,7 @@ WebView2 may remain because it provides an isolated, easily packaged interactive
 
 1. Make the isolated runner exercise all controls even when cloth is stale, then fail the freshness gate explicitly.
 2. Correct UI and documentation that still call the current body MPFB when the source path is CharMorph.
-3. Record the current avatar asset and generated-output licenses in the runtime manifest and every simulation job. New runtime manifests now declare `CharMorph mb_female` and `AGPL-3.0`; legacy manifests are labeled as undeclared rather than silently presented as permissive.
+3. Record the current avatar asset, character directory, and generated-output license in the runtime manifest and every simulation job. Runtime `2026.08.08-style3d-antonia-v1` now declares `CharMorph Antonia`, `CC-BY 3.0`, the concrete license file, and the exact character directory. Pipeline revision 5 refuses older or undeclared body families.
 4. Do not promote the current AGPL `mb_female` source as the replacement baseline.
 
 ### Phase 1: Antonia measurement and display spike
@@ -269,7 +273,7 @@ WebView2 may remain because it provides an isolated, easily packaged interactive
 
 ### Phase 3: packaged viewer and baseline
 
-1. Replace raw OBJ delivery with GLB.
+1. Keep the display avatar on the verified GLB path and replace raw cloth OBJ delivery only after the accepted cloth backend emits an equivalent compact, inspectable payload.
 2. Load the winning Antonia body and winning cloth result.
 3. Correct the 2D layout and responsive behavior.
 4. Rerun the complete isolated UI suite at every required viewport and text scale.

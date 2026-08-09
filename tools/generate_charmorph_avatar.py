@@ -45,6 +45,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", type=Path)
     parser.add_argument("--render-output-dir", type=Path)
     parser.add_argument("--glb-output", type=Path)
+    parser.add_argument("--glb-manifest", type=Path)
     parser.add_argument("--glb-render-output-dir", type=Path)
     parser.add_argument("--fit-report", type=Path)
     parser.add_argument("--height-cm", type=float)
@@ -261,8 +262,8 @@ def main() -> None:
             output_path,
         )
 
-    if args.glb_render_output_dir is not None and args.glb_output is None:
-        raise ValueError("GLB render output requires --glb-output")
+    if (args.glb_render_output_dir is not None or args.glb_manifest is not None) and args.glb_output is None:
+        raise ValueError("GLB render output and manifest paths require --glb-output")
     glb_manifest = None
     if args.glb_output is not None:
         glb_manifest = export_glb_candidate(
@@ -275,6 +276,7 @@ def main() -> None:
             target_height_cm,
             fit_report,
             fit_report_path,
+            resolve(args.glb_manifest) if args.glb_manifest else None,
         )
 
     report = {

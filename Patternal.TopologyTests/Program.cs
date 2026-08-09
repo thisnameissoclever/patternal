@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Patterna;
 
 static void Assert(bool condition, string message)
@@ -1067,6 +1068,10 @@ Assert(
         viewportSource.IndexOf("supportedBustY", StringComparison.Ordinal),
     "The procedural-avatar fallback reads yScale before JavaScript initializes it.");
 Assert(viewportSource.Contains("loadDisplayAvatar", StringComparison.Ordinal) && viewportSource.Contains("Production/Avatar/", StringComparison.Ordinal), "The packaged renderer no longer loads the real display-avatar stack.");
+Assert(
+    viewportSource.Contains("loadGlbDisplayAvatar", StringComparison.Ordinal) &&
+        viewportSource.Contains("manifest.schemaVersion==='patterna.display-avatar-glb/1.0'", StringComparison.Ordinal),
+    "The packaged renderer cannot load the live Antonia GLB display-avatar contract.");
 Assert(viewportSource.Contains("fitted GLB candidate", StringComparison.Ordinal), "The Antonia HUD again implies that every editable measurement is mapped into the fixed candidate.");
 Assert(
     viewportSource.Contains("loadCandidateDisplayAvatar", StringComparison.Ordinal) &&
@@ -1130,7 +1135,11 @@ Assert(
 Assert(viewportSource.Contains("clearAcceptedRevision", StringComparison.Ordinal), "The renderer cannot hide stale accepted cloth after a source edit.");
 Assert(mainPageCode.Contains("window.patterna.clearAcceptedRevision();", StringComparison.Ordinal), "Source edits do not clear stale accepted cloth in the embedded viewport.");
 Assert(mainPageCode.Contains("display-avatar", StringComparison.Ordinal), "Revision-specific display avatars are not mapped into the embedded viewport.");
-Assert(simulationPipelineSource.Contains("--render-output-dir", StringComparison.Ordinal) && simulationPipelineSource.Contains("display-avatar", StringComparison.Ordinal), "Revision-specific simulations do not package their fitted visual avatar beside the collider.");
+Assert(
+    simulationPipelineSource.Contains("--glb-output", StringComparison.Ordinal) &&
+        simulationPipelineSource.Contains("--glb-manifest", StringComparison.Ordinal) &&
+        simulationPipelineSource.Contains("display-avatar", StringComparison.Ordinal),
+    "Revision-specific simulations do not package their fitted Antonia GLB beside the collider.");
 Assert(
     simulationPipelineSource.Contains("build_style3d_source.py", StringComparison.Ordinal) &&
     simulationPipelineSource.Contains("prefit_newton_style3d.py", StringComparison.Ordinal) &&
@@ -1156,7 +1165,8 @@ Assert(
 Assert(
     simulationRuntimeSource.Contains("\"patterna_style3d_sewing.py\"", StringComparison.Ordinal) &&
         simulationRuntimeInstallerSource.Contains("'patterna_style3d_sewing.py'", StringComparison.Ordinal) &&
-        simulationRuntimeInstallerSource.Contains("2026.07.23-style3d-v2", StringComparison.Ordinal),
+        simulationRuntimeInstallerSource.Contains("2026.08.08-style3d-antonia-v1", StringComparison.Ordinal) &&
+        simulationRuntimeInstallerSource.Contains("avatarCharacterDirectory = 'third_party/CharMorph-db/characters/antonia'", StringComparison.Ordinal),
     "The project-owned Style3D sewing solver is no longer a required, versioned runtime entry point.");
 Assert(
     simulationPipelineSource.Contains("patterna.newton-style3d-report/1.0", StringComparison.Ordinal) &&
@@ -2532,6 +2542,7 @@ try
     string compilerRelative = "compiler/Patternal.UnrealGarmentCompiler.exe";
     string toolsRelative = "tools";
     string avatarLicenseRelative = "third_party/CharMorph-db/characters/antonia/license.txt";
+    string avatarCharacterDirectoryRelative = "third_party/CharMorph-db/characters/antonia";
     string[] scriptNames =
     [
         "fit_charmorph_profile.py",
@@ -2550,6 +2561,7 @@ try
         "prefit_newton_style3d.py",
         "patterna_style3d_sewing.py",
         "render_product_acceptance.py",
+        "record_product_visual_review.py",
         "product_registration.py"
     ];
     string[] entrypointRelativePaths =
@@ -2590,6 +2602,7 @@ try
                 avatarBackend = "CharMorph Antonia",
                 avatarOutputLicense = "CC-BY-3.0",
                 avatarLicenseFile = avatarLicenseRelative,
+                avatarCharacterDirectory = avatarCharacterDirectoryRelative,
                 entrypointSha256 = runtimeHashes
             },
             new JsonSerializerOptions { WriteIndented = true });
@@ -2606,6 +2619,10 @@ try
             string.Equals(
                 installedRuntime.AvatarLicensePath,
                 Path.Combine(runtimeFixtureRoot, avatarLicenseRelative.Replace('/', Path.DirectorySeparatorChar)),
+                StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(
+                installedRuntime.AvatarCharacterDirectory,
+                Path.Combine(runtimeFixtureRoot, avatarCharacterDirectoryRelative.Replace('/', Path.DirectorySeparatorChar)),
                 StringComparison.OrdinalIgnoreCase) &&
             string.Equals(
                 installedRuntime.RootDirectory,
@@ -2717,16 +2734,19 @@ try
         "right"
     ];
     Dictionary<string, object> proofRenders = new(StringComparer.Ordinal);
+    Dictionary<string, string> reviewedRenderHashes = new(StringComparer.Ordinal);
     foreach (string viewName in viewNames)
     {
         string renderName = $"{viewName}.png";
         string renderPath = Path.Combine(proofDirectory, renderName);
         File.WriteAllText(renderPath, $"fixture render {viewName}", new UTF8Encoding(false));
+        string renderHash = FileHash(renderPath);
         proofRenders[viewName] = new
         {
             path = renderName,
-            sha256 = FileHash(renderPath)
+            sha256 = renderHash
         };
+        reviewedRenderHashes[viewName] = renderHash;
     }
 
     string proofManifestPath = Path.Combine(proofDirectory, "manifest.json");
@@ -2747,6 +2767,13 @@ try
             {
                 schema_version = "patterna.product-registration/2.0",
                 accepted = true
+            },
+            visual_quality = new
+            {
+                accepted = true,
+                review_required = false,
+                reviewed_render_sha256 = reviewedRenderHashes,
+                issues = Array.Empty<string>()
             },
             resolution = new[] { 720, 900 },
             renders = proofRenders
@@ -2779,6 +2806,16 @@ try
     Assert(
         SimulationPipeline.TryValidateProductVisualProof(visualProofResult),
         "A complete hash-bound six-view product proof was rejected.");
+
+    JsonNode rejectedProof = JsonNode.Parse(File.ReadAllText(proofManifestPath))
+        ?? throw new InvalidOperationException("The product-proof fixture did not parse.");
+    rejectedProof["visual_quality"]!["accepted"] = false;
+    File.WriteAllText(proofManifestPath, rejectedProof.ToJsonString(), new UTF8Encoding(false));
+    Assert(
+        !SimulationPipeline.TryValidateProductVisualProof(visualProofResult),
+        "A visually rejected product proof was accepted.");
+    rejectedProof["visual_quality"]!["accepted"] = true;
+    File.WriteAllText(proofManifestPath, rejectedProof.ToJsonString(), new UTF8Encoding(false));
 
     File.AppendAllText(Path.Combine(proofDirectory, "back.png"), ":tampered");
     Assert(
