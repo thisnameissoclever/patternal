@@ -65,6 +65,8 @@ Antonia is the current rational choice because it is already local, attributable
 5. Expand semantic measurement coverage beyond the currently accepted primary fit set.
 6. Add a relaxed display pose only after accepted cloth can follow the same skeleton and pose state.
 
+The generated avatar report uses `accepted` only for its measurement-fit and geometry-export stage because the simulation pipeline must consume that exact result before it can construct a collider. The report also carries `acceptanceScope`, `productAccepted: false`, and a pending product status. Numerical body fit must never be presented as packaged visual or cloth acceptance.
+
 Momentum Human Rig is worth a controlled future bake-off because it addresses detailed hands, face, pose deformation, and levels of detail in one model. It is not eligible for packaging while its downloadable asset archive lacks an explicit license artifact. Even after that is fixed, its statistical identity coefficients are not Patterna measurements. It would need the same constrained measurement fitting, anatomical review, collision derivation, GLB export, and license hashing required of Antonia.
 
 ## Rejected shortcuts

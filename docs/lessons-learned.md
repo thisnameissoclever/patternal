@@ -2682,3 +2682,13 @@ Accessible names for repeated geometry must include both the human-readable owne
 ### How to verify
 
 Create `Canvas polygon 15`, enter point-edit mode, and independently invoke `Canvas polygon 15 edge-1 endpoint` and `Canvas polygon 15 edge-3 endpoint`. Sew them, require the Assembly summary to increase from 38 to 39 permanent seams, prove Undo and Redo, and remove the temporary piece. Confirm the final UI Automation tree returns to 14 pieces and 38 seams.
+
+## Stage acceptance must name its scope
+
+**What happened:** The CharMorph avatar report wrote top-level `accepted: true` after a successful numerical measurement fit. The same report embedded a candidate-only GLB manifest and said render review was pending, so a generic reader could reasonably misread stage success as product acceptance.
+
+**Root cause:** One Boolean was doing two jobs: allowing the cloth pipeline to consume a valid exported body and communicating the broader avatar product state.
+
+**Prevention rule:** Keep the pipeline stage Boolean for compatibility, but pair it with an exact `acceptanceScope`, an explicit `productAccepted` value, and a product-status string. Avoid acceptance labels such as `accepted-topology` when any required visual review is still pending.
+
+**How to verify:** Generate an Antonia avatar report and confirm that accepted measurement geometry declares `acceptanceScope: measurement-fit-and-geometry-export`, while `productAccepted` remains false and the product status remains pending render and cloth review.

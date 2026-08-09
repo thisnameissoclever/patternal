@@ -110,6 +110,29 @@ class CandidateAvatarAssetTests(unittest.TestCase):
         self.assertIn("gl.UNPACK_COLORSPACE_CONVERSION_WEBGL", renderer)
         self.assertNotIn("gl.enable(gl.FRAMEBUFFER_SRGB)", renderer)
 
+    def test_generator_scopes_stage_acceptance_away_from_product_acceptance(self) -> None:
+        generator = (REPO_ROOT / "tools" / "generate_charmorph_avatar.py").read_text(
+            encoding="utf-8"
+        )
+        preparation = (
+            REPO_ROOT / "tools" / "prepare_charmorph_garmentcode_body.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn(
+            '"acceptanceScope": "measurement-fit-and-geometry-export"',
+            generator,
+        )
+        self.assertIn('"productAccepted": False', generator)
+        self.assertIn(
+            '"productAcceptanceStatus": "candidate-pending-render-and-cloth-review"',
+            generator,
+        )
+        self.assertIn("topology-eligible-pending-render-review", generator)
+        self.assertNotIn("accepted-topology-pending-render-review", generator)
+        self.assertIn(
+            'avatar_report.get("acceptanceScope") != "measurement-fit-and-geometry-export"',
+            preparation,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -214,8 +214,14 @@ def main() -> None:
     avatar_report = json.loads(avatar_report_path.read_text(encoding="utf-8"))
     fit_report = json.loads(fit_report_path.read_text(encoding="utf-8"))
     profile = json.loads(profile_path.read_text(encoding="utf-8"))
-    if not avatar_report.get("accepted") or not fit_report.get("accepted"):
-        raise ValueError("CharMorph body and fit reports must both be accepted")
+    if (
+        not avatar_report.get("accepted")
+        or avatar_report.get("acceptanceScope") != "measurement-fit-and-geometry-export"
+        or not fit_report.get("accepted")
+    ):
+        raise ValueError(
+            "CharMorph body export and measurement fit must both be accepted for collision preparation"
+        )
     if avatar_report.get("outputBodySha256") != sha256(avatar_body_path):
         raise ValueError("CharMorph avatar report does not match the body OBJ")
     if fit_report.get("sourceProfileSha256") != sha256(profile_path):

@@ -305,12 +305,18 @@ def main() -> None:
         "fitReportSha256": sha256(fit_report_path) if fit_report_path else None,
         "displayManifest": display_manifest,
         "glbCandidateManifest": glb_manifest,
+        # This flag is consumed by the simulation pipeline as the acceptance
+        # result for this export stage. It does not represent product visual
+        # or cloth acceptance, which remain separate gates below.
         "accepted": bool(fit_report and fit_report.get("accepted")),
+        "acceptanceScope": "measurement-fit-and-geometry-export",
+        "productAccepted": False,
+        "productAcceptanceStatus": "candidate-pending-render-and-cloth-review",
         "anatomicalAcceptance": {
             "requiresDistinctBreastRoots": True,
             "requiresInframammaryFold": True,
             "requiresIndependentUpperArmControl": True,
-            "status": "accepted-topology-pending-render-review" if fit_report else "pending-render-review",
+            "status": "topology-eligible-pending-render-review" if fit_report else "pending-render-review",
         },
     }
     (output_dir / "avatar-report.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
