@@ -342,6 +342,31 @@ function Select-UiComboBoxItem {
     }
 }
 
+function Assert-UiComboBoxItemSelected {
+    param(
+        [Parameter(Mandatory)]
+        [System.Windows.Automation.AutomationElement]$Root,
+        [Parameter(Mandatory)]
+        [string]$ComboBoxName,
+        [Parameter(Mandatory)]
+        [string]$ItemName
+    )
+
+    $comboBox = Find-UiElement -Root $Root -Name $ComboBoxName
+    $expandCollapse = Get-UiPattern -Element $comboBox -Pattern ([System.Windows.Automation.ExpandCollapsePattern]::Pattern) -PatternName 'ExpandCollapsePattern'
+    if ($expandCollapse.Current.ExpandCollapseState.ToString() -ne 'Expanded') {
+        $expandCollapse.Expand()
+    }
+    $item = Find-UiElement -Root $Root -Name $ItemName
+    $selection = Get-UiPattern -Element $item -Pattern ([System.Windows.Automation.SelectionItemPattern]::Pattern) -PatternName 'SelectionItemPattern'
+    if (-not $selection.Current.IsSelected) {
+        throw "'$ItemName' is not selected in '$ComboBoxName'."
+    }
+    if ($expandCollapse.Current.ExpandCollapseState.ToString() -eq 'Expanded') {
+        $expandCollapse.Collapse()
+    }
+}
+
 function Get-ToggleState {
     param([System.Windows.Automation.AutomationElement]$Element)
     $toggle = Get-UiPattern -Element $Element -Pattern ([System.Windows.Automation.TogglePattern]::Pattern) -PatternName 'TogglePattern'
@@ -1313,6 +1338,204 @@ try {
             restored = $true
             screenshot = [IO.Path]::GetFileName($dartShotPath)
         }
+    }
+
+    Invoke-UiCheck -Name '2D existing-seam physical dart update undo and redo' -Check {
+        Invoke-UiElement -Element (Find-UiElement -Root $window -Name 'Front Torso')
+        $originalFirstLeg = 'Front Torso dart Left side bust dart first leg'
+        $originalSecondLeg = 'Front Torso dart Left side bust dart second leg'
+        Wait-ForCondition -Description 'production left bust dart legs to be visible' -Condition {
+            (Find-UiElementOnce -Root $window -Name $originalFirstLeg) -and
+            (Find-UiElementOnce -Root $window -Name $originalSecondLeg)
+        } | Out-Null
+
+        Invoke-UiElement -Element (Find-UiElement -Root $window -Name 'Add a precise dart to the selected pattern piece')
+        Select-UiComboBoxItem -Root $window -ComboBoxName 'Select a new or existing dart' -ItemName 'Edit: Left side bust dart'
+        Assert-UiComboBoxItemSelected -Root $window -ComboBoxName 'Dart construction mode' -ItemName 'Cut and sew existing seam'
+        Set-UiTextValue -Element (Find-UiElement -Root $window -Name 'Dart name') -Value 'Left side bust dart verified'
+        Select-UiComboBoxItem -Root $window -ComboBoxName 'Dart fold direction' -ItemName 'Right'
+        Invoke-UiElement -Element (Find-UiElement -Root $window -Name 'Apply dart')
+
+        $updatedFirstLeg = 'Front Torso dart Left side bust dart verified first leg'
+        $updatedSecondLeg = 'Front Torso dart Left side bust dart verified second leg'
+        Wait-ForCondition -Description 'updated sewn-edge bust dart legs to replace the originals' -Condition {
+            (Find-UiElementOnce -Root $window -Name $updatedFirstLeg) -and
+            (Find-UiElementOnce -Root $window -Name $updatedSecondLeg) -and
+            -not (Find-UiElementOnce -Root $window -Name $originalFirstLeg) -and
+            -not (Find-UiElementOnce -Root $window -Name $originalSecondLeg)
+        } | Out-Null
+
+        $undo = Find-UiElement -Root $window -Name 'Undo pattern geometry edit'
+        Invoke-UiElement -Element $undo
+        Wait-ForCondition -Description 'Undo to restore the original sewn-edge bust dart' -Condition {
+            (Find-UiElementOnce -Root $window -Name $originalFirstLeg) -and
+            (Find-UiElementOnce -Root $window -Name $originalSecondLeg) -and
+            -not (Find-UiElementOnce -Root $window -Name $updatedFirstLeg)
+        } | Out-Null
+        $redo = Find-UiElement -Root $window -Name 'Redo pattern geometry edit'
+        Invoke-UiElement -Element $redo
+        Wait-ForCondition -Description 'Redo to restore the updated sewn-edge bust dart' -Condition {
+            (Find-UiElementOnce -Root $window -Name $updatedFirstLeg) -and
+            (Find-UiElementOnce -Root $window -Name $updatedSecondLeg)
+        } | Out-Null
+
+        Invoke-UiElement -Element (Find-UiElementByAutomationId -Root $window -AutomationId 'PatternFrameSelectedButton')
+        $existingDartShotPath = Join-Path $evidenceDirectory '14-2d-existing-seam-physical-dart.png'
+        Save-WindowScreenshot -Window $window -Path $existingDartShotPath
+        $script:screenshots.Add([pscustomobject]@{ name = '2d-existing-seam-physical-dart'; file = [IO.Path]::GetFileName($existingDartShotPath) })
+
+        $undo = Find-UiElement -Root $window -Name 'Undo pattern geometry edit'
+        Invoke-UiElement -Element $undo
+        Wait-ForCondition -Description 'final Undo to restore the original production bust dart' -Condition {
+            (Find-UiElementOnce -Root $window -Name $originalFirstLeg) -and
+            (Find-UiElementOnce -Root $window -Name $originalSecondLeg) -and
+            -not (Find-UiElementOnce -Root $window -Name $updatedFirstLeg)
+        } | Out-Null
+        Invoke-UiElement -Element (Find-UiElementByAutomationId -Root $window -AutomationId 'PatternFitButton')
+
+        [ordered]@{
+            piece = 'Front Torso'
+            dart = 'Left side bust dart'
+            constructionMode = 'sewn-edge'
+            updatedFoldDirection = 'right'
+            restored = $true
+            screenshot = [IO.Path]::GetFileName($existingDartShotPath)
+        }
+    }
+
+    Invoke-UiCheck -Name '2D free-edge physical dart creation undo and redo' -Check {
+        Invoke-UiElement -Element (Find-UiElementByAutomationId -Root $window -AutomationId 'PatternFitButton')
+        $originalPieceCount = [int]((Find-UiElementByAutomationId -Root $window -AutomationId 'PatternPieceCountText').Current.Name -replace '\D', '')
+        $assemblyMode = Find-UiElement -Root $window -Name 'Inspect garment seam graph'
+        $assemblyOriginal = Get-ToggleState -Element $assemblyMode
+        Set-ToggleState -Element $assemblyMode -State 'On'
+        $assemblySummary = Find-UiElementByAutomationId -Root $window -AutomationId 'AssemblySummaryText'
+        if ($assemblySummary.Current.Name -notmatch '^(\d+) permanent seams') {
+            throw "Cannot read the initial physical-dart seam count from '$($assemblySummary.Current.Name)'."
+        }
+        $originalSeamCount = [int]$Matches[1]
+        Set-ToggleState -Element $assemblyMode -State 'Off'
+        $freeDartResult = $null
+        try {
+            Invoke-UiElement -Element (Find-UiElement -Root $window -Name 'Draw a polygon pattern piece directly on the canvas')
+        $xCoordinate = Find-UiElement -Root $window -Name 'Canvas polygon point X coordinate in centimeters'
+        $yCoordinate = Find-UiElement -Root $window -Name 'Canvas polygon point Y coordinate in centimeters'
+        $addPoint = Find-UiElement -Root $window -Name 'Add the entered point to the canvas polygon'
+        $finish = Find-UiElement -Root $window -Name 'Finish the polygon pattern piece'
+        $xRange = Get-UiPattern -Element $xCoordinate -Pattern ([System.Windows.Automation.RangeValuePattern]::Pattern) -PatternName 'RangeValuePattern'
+        $yRange = Get-UiPattern -Element $yCoordinate -Pattern ([System.Windows.Automation.RangeValuePattern]::Pattern) -PatternName 'RangeValuePattern'
+        $coordinates = @(
+            @(120.0, 140.0),
+            @(130.0, 140.0),
+            @(130.0, 150.0),
+            @(120.0, 150.0)
+        )
+        foreach ($coordinate in $coordinates) {
+            $xRange.SetValue([double]$coordinate[0])
+            $yRange.SetValue([double]$coordinate[1])
+            Invoke-UiElement -Element $addPoint
+        }
+        Invoke-UiElement -Element $finish
+        $createdPieceCount = $originalPieceCount + 1
+        Wait-ForCondition -Description 'temporary physical-dart polygon to be created' -Condition {
+            (Find-UiElementByAutomationId -Root $window -AutomationId 'PatternPieceCountText').Current.Name -eq "$createdPieceCount pieces"
+        } | Out-Null
+
+        Invoke-UiElement -Element (Find-UiElement -Root $window -Name 'Add a precise dart to the selected pattern piece')
+        Set-UiTextValue -Element (Find-UiElement -Root $window -Name 'Dart name') -Value 'Free edge proof dart'
+        Select-UiComboBoxItem -Root $window -ComboBoxName 'Dart construction mode' -ItemName 'Cut and sew free edge'
+        Invoke-UiElement -Element (Find-UiElement -Root $window -Name 'Add dart')
+
+            $freeFirstLeg = 'Canvas polygon 15 dart Free edge proof dart first leg'
+            $freeSecondLeg = 'Canvas polygon 15 dart Free edge proof dart second leg'
+            $physicalSeamCount = $originalSeamCount + 1
+            Wait-ForCondition -Description 'free-edge dart legs to materialize in the 2D pattern' -Condition {
+                (Find-UiElementOnce -Root $window -Name $freeFirstLeg) -and
+                (Find-UiElementOnce -Root $window -Name $freeSecondLeg)
+            } | Out-Null
+
+            Invoke-UiElement -Element (Find-UiElementByAutomationId -Root $window -AutomationId 'PatternFrameSelectedButton')
+            $freeDartShotPath = Join-Path $evidenceDirectory '14-2d-free-edge-physical-dart.png'
+            Save-WindowScreenshot -Window $window -Path $freeDartShotPath
+            $script:screenshots.Add([pscustomobject]@{ name = '2d-free-edge-physical-dart'; file = [IO.Path]::GetFileName($freeDartShotPath) })
+
+            Set-ToggleState -Element $assemblyMode -State 'On'
+            Wait-ForCondition -Description 'free-edge dart to add one physical closure seam' -Condition {
+                (Find-UiElementByAutomationId -Root $window -AutomationId 'AssemblySummaryText').Current.Name -like "$physicalSeamCount permanent seams*"
+            } | Out-Null
+
+        $undo = Find-UiElement -Root $window -Name 'Undo pattern geometry edit'
+        Invoke-UiElement -Element $undo
+        Wait-ForCondition -Description 'Undo to remove the free-edge dart closure seam' -Condition {
+            -not (Find-UiElementOnce -Root $window -Name $freeFirstLeg) -and
+            (Find-UiElementByAutomationId -Root $window -AutomationId 'AssemblySummaryText').Current.Name -like "$originalSeamCount permanent seams*"
+        } | Out-Null
+        $redo = Find-UiElement -Root $window -Name 'Redo pattern geometry edit'
+        Invoke-UiElement -Element $redo
+        Wait-ForCondition -Description 'Redo to restore the free-edge dart closure seam' -Condition {
+            (Find-UiElementOnce -Root $window -Name $freeFirstLeg) -and
+            (Find-UiElementByAutomationId -Root $window -AutomationId 'AssemblySummaryText').Current.Name -like "$physicalSeamCount permanent seams*"
+        } | Out-Null
+        $undo = Find-UiElement -Root $window -Name 'Undo pattern geometry edit'
+        Invoke-UiElement -Element $undo
+        Wait-ForCondition -Description 'final Undo to remove the free-edge dart' -Condition {
+            -not (Find-UiElementOnce -Root $window -Name $freeFirstLeg) -and
+            (Find-UiElementByAutomationId -Root $window -AutomationId 'AssemblySummaryText').Current.Name -like "$originalSeamCount permanent seams*"
+        } | Out-Null
+        $undo = Find-UiElement -Root $window -Name 'Undo pattern geometry edit'
+        Invoke-UiElement -Element $undo
+        Wait-ForCondition -Description 'final Undo to remove the temporary physical-dart polygon' -Condition {
+            (Find-UiElementByAutomationId -Root $window -AutomationId 'PatternPieceCountText').Current.Name -eq "$originalPieceCount pieces"
+        } | Out-Null
+        Set-ToggleState -Element $assemblyMode -State $assemblyOriginal
+        Invoke-UiElement -Element (Find-UiElementByAutomationId -Root $window -AutomationId 'PatternFitButton')
+
+            $freeDartResult = [ordered]@{
+                piece = 'Canvas polygon 15'
+                dart = 'Free edge proof dart'
+                constructionMode = 'sewn-free-edge'
+                originalSeamCount = $originalSeamCount
+                physicalSeamCount = $physicalSeamCount
+                restoredPieceCount = $originalPieceCount
+                screenshot = [IO.Path]::GetFileName($freeDartShotPath)
+            }
+        }
+        finally {
+            if ($null -eq $freeDartResult) {
+                try {
+                    Set-ToggleState -Element $assemblyMode -State 'Off'
+                }
+                catch {
+                }
+                $cancelDraft = Find-UiElementOnce -Root $window -Name 'Cancel canvas pattern drafting'
+                if ($cancelDraft -and -not $cancelDraft.Current.IsOffscreen -and $cancelDraft.Current.IsEnabled) {
+                    try {
+                        Invoke-UiElement -Element $cancelDraft
+                    }
+                    catch {
+                    }
+                }
+                for ($cleanupAttempt = 0; $cleanupAttempt -lt 5; $cleanupAttempt++) {
+                    $currentPieceCount = [int]((Find-UiElementByAutomationId -Root $window -AutomationId 'PatternPieceCountText').Current.Name -replace '\D', '')
+                    if ($currentPieceCount -le $originalPieceCount) {
+                        break
+                    }
+                    $cleanupUndo = Find-UiElement -Root $window -Name 'Undo pattern geometry edit'
+                    if (-not $cleanupUndo.Current.IsEnabled) {
+                        break
+                    }
+                    Invoke-UiElement -Element $cleanupUndo
+                    Start-Sleep -Milliseconds 300
+                }
+                try {
+                    Set-ToggleState -Element $assemblyMode -State $assemblyOriginal
+                    Invoke-UiElement -Element (Find-UiElementByAutomationId -Root $window -AutomationId 'PatternFitButton')
+                }
+                catch {
+                }
+            }
+        }
+        $freeDartResult
     }
 
     Invoke-UiCheck -Name '2D free sewing creation undo and redo' -Check {

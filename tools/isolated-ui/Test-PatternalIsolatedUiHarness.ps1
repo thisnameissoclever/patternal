@@ -171,7 +171,13 @@ foreach ($patternLifecycleContract in @(
     "'2D dart create update delete undo and redo'",
     "'Edit: Dart 1'",
     "'Waist shaping guide'",
-    "'Delete dart'"
+    "'Delete dart'",
+    "'2D existing-seam physical dart update undo and redo'",
+    "'Cut and sew existing seam'",
+    "'14-2d-existing-seam-physical-dart.png'",
+    "'2D free-edge physical dart creation undo and redo'",
+    "'Cut and sew free edge'",
+    "'14-2d-free-edge-physical-dart.png'"
 )) {
     if (-not $guestRunner.Contains($patternLifecycleContract)) {
         throw "Guest runner no longer proves the full 2D construction lifecycle contract $patternLifecycleContract."

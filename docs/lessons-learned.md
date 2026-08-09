@@ -2786,3 +2786,21 @@ Label authored grid spacing from document units, never from an assumed monitor s
 ### How to verify
 
 Require the source grid interval to remain 40 canvas pixels at four pixels per centimeter and the UI to name it as a 10 cm minor and 50 cm major grid. In the packaged guest, enter 10 cm for the 320-DIP calibration ruler, require 32 DIPs per centimeter and 800% actual-size zoom, leave through Fit, return through 1:1, capture the scale UI, clear the test calibration, and restore the original fitted zoom.
+
+## Physical-dart UI proof must include compiled topology and failure cleanup
+
+### What happened
+
+The first packaged physical-dart test checked only that two dart legs appeared after applying a free-edge dart. It then entered Assembly mode before reading the legs, which changed the accessible drawing surface, and a failed assertion left the temporary polygon in the document. The later free-sewing test failed for the wrong reason because it inherited that extra piece.
+
+### Root cause
+
+The test mixed two distinct contracts: visible 2D construction feedback and compiler-owned closure topology. It also assumed the happy-path Undo sequence would always run. A structural authoring test that mutates the document must restore its baseline even when the assertion being investigated fails.
+
+### Prevention rule
+
+Assert rendered dart legs while the 2D construction surface is active. Then enter Assembly mode and require the permanent-seam count to change by exactly the compiler-owned closure seam. Wrap temporary document mutations in bounded cleanup that cancels active drafts, restores the original piece count, and restores the prior assembly state.
+
+### How to verify
+
+In the packaged guest, edit and restore one existing sewn-edge dart. Create a temporary polygon and a free-edge dart, require both rendered legs, require the permanent-seam count to increase from 38 to 39, prove Undo and Redo, and restore 14 pieces and 38 seams. Run the subsequent free-sewing check in the same application session to prove no temporary state leaked forward.
