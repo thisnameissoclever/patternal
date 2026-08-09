@@ -81,6 +81,8 @@ The replacement should preserve one body family from editing through simulation 
 
 This architecture costs some debounced background latency, but it removes the present bait-and-switch between a detailed default body and a visibly inferior edited one. A one-person project can own and test this pipeline because it reuses the already vendored fitter, Blender exporter, cache identity, and license evidence instead of introducing another human ecosystem.
 
+Horizontal collider sections are valid only where the plane crosses the torso without posed limbs. The high-bust tape distribution now comes from the explicit `acrossFront` and `acrossBack` measurements across CharMorph, Anny, and MPFB body preparation. The current Antonia report records the requested 96 cm tape, its 0.5020 back fraction, and that no horizontal collider circuit was used; the former 202.47 cm T-pose arm circuit is rejected evidence, not anatomy.
+
 Momentum Human Rig is worth a controlled future bake-off because it addresses detailed hands, face, pose deformation, and levels of detail in one model. It is not eligible for packaging while its downloadable asset archive lacks an explicit license artifact. Even after that is fixed, its statistical identity coefficients are not Patterna measurements. It would need the same constrained measurement fitting, anatomical review, collision derivation, GLB export, and license hashing required of Antonia.
 
 ## Rejected shortcuts

@@ -2,7 +2,7 @@
 param(
     [string]$SourceRoot = (Split-Path -Parent $PSScriptRoot),
     [string]$DestinationRoot = (Join-Path $env:LOCALAPPDATA 'Patterna\SimulationRuntime'),
-    [string]$RuntimeVersion = '2026.08.08-style3d-antonia-v1',
+    [string]$RuntimeVersion = '2026.08.09-style3d-antonia-v3',
     [switch]$Replace
 )
 

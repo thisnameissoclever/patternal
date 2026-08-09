@@ -1165,7 +1165,7 @@ Assert(
 Assert(
     simulationRuntimeSource.Contains("\"patterna_style3d_sewing.py\"", StringComparison.Ordinal) &&
         simulationRuntimeInstallerSource.Contains("'patterna_style3d_sewing.py'", StringComparison.Ordinal) &&
-        simulationRuntimeInstallerSource.Contains("2026.08.08-style3d-antonia-v1", StringComparison.Ordinal) &&
+        simulationRuntimeInstallerSource.Contains("2026.08.09-style3d-antonia-v3", StringComparison.Ordinal) &&
         simulationRuntimeInstallerSource.Contains("avatarCharacterDirectory = 'third_party/CharMorph-db/characters/antonia'", StringComparison.Ordinal),
     "The project-owned Style3D sewing solver is no longer a required, versioned runtime entry point.");
 Assert(

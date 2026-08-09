@@ -6,7 +6,11 @@ import unittest
 import numpy as np
 import trimesh
 
-from tools.mesh_torso_arcs import measure_front_surface_ruler, split_front_back_arc
+from tools.mesh_torso_arcs import (
+    back_fraction_from_across_measurements,
+    measure_front_surface_ruler,
+    split_front_back_arc,
+)
 
 
 def _asymmetric_loop(reverse: bool = False) -> np.ndarray:
@@ -31,6 +35,18 @@ def _asymmetric_loop(reverse: bool = False) -> np.ndarray:
 
 
 class TorsoArcTests(unittest.TestCase):
+    def test_high_bust_back_fraction_uses_across_body_measurements(self) -> None:
+        self.assertAlmostEqual(
+            37.0 / (36.7 + 37.0),
+            back_fraction_from_across_measurements(36.7, 37.0),
+        )
+
+    def test_high_bust_back_fraction_rejects_invalid_measurements(self) -> None:
+        with self.assertRaisesRegex(ValueError, "positive and finite"):
+            back_fraction_from_across_measurements(math.nan, 37.0)
+        with self.assertRaisesRegex(ValueError, "outside the torso domain"):
+            back_fraction_from_across_measurements(5.0, 95.0)
+
     def test_front_surface_ruler_follows_exact_vertical_mesh_section(self) -> None:
         vertices = []
         segments = 64

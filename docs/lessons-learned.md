@@ -2704,3 +2704,13 @@ Create `Canvas polygon 15`, enter point-edit mode, and independently invoke `Can
 **How to verify:** In the isolated guest, change Height with linked proportions disabled, enter 3D, require `DrapeAvatarPreviewState` to name the editable measurement mesh, capture it, restore Height, and require the same element to name the fitted Antonia candidate before returning to 2D.
 
 The first implementation captured immediately after the accessible state changed. WinUI had repainted its label before the WebView compositor visibly replaced the old mesh, producing a contradictory screenshot. Allow the embedded renderer to settle before capture and review the pixels; an event proves internal state, not the frame the user actually saw.
+
+## A torso plane can become an arm-span measurement
+
+**What happened:** CharMorph body preparation measured the `highBustTape` station by intersecting the entire T-pose collision mesh with a horizontal plane. At 133.934 cm the connected section ran through both arms and reported 202.47 cm as a high-bust circuit.
+
+**Root cause:** The generic centered-loop selector reasonably chose the largest centered closed loop, but above the underarm that loop was no longer torso-only. The report made the impossible circuit look like ordinary anatomical evidence and used its front/back split for pattern distribution.
+
+**Prevention rule:** Never infer a high-bust front/back distribution from a horizontal collider section that intersects posed limbs. Use the explicit across-front and across-back measurements, retain the requested tape height and circumference, and record that no horizontal section was used. Apply the same invariant to every avatar backend.
+
+**How to verify:** Prepare the default 167 cm Antonia collider. Require a watertight accepted body, `highBustTapeDistribution.requestedCircumferenceCm` of 96.0, a back fraction of `37.0 / (36.7 + 37.0)`, `horizontalColliderSectionUsed: false`, and no `highBustTape` entry in the measured horizontal `sections` map.

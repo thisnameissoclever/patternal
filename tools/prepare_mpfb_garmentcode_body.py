@@ -15,12 +15,17 @@ import yaml
 
 try:
     from .mesh_torso_arcs import (
+        back_fraction_from_across_measurements,
         measure_front_surface_ruler,
         measure_torso_arc_section,
     )
     from .mpfb_measurements import MEASUREMENT_VERTEX_CHAINS
 except ImportError:
-    from mesh_torso_arcs import measure_front_surface_ruler, measure_torso_arc_section
+    from mesh_torso_arcs import (
+        back_fraction_from_across_measurements,
+        measure_front_surface_ruler,
+        measure_torso_arc_section,
+    )
     from mpfb_measurements import MEASUREMENT_VERTEX_CHAINS
 
 
@@ -326,6 +331,10 @@ def main() -> None:
     high_bust_tape_cm = float(measurements["highChestCirc"])
     if not np.isfinite(high_bust_tape_cm) or high_bust_tape_cm <= 0.0:
         raise ValueError("High-chest circumference must be positive and finite.")
+    high_bust_back_fraction = back_fraction_from_across_measurements(
+        float(measurements["acrossFront"]),
+        float(measurements["acrossBack"]),
+    )
     measurement_origins = profile_payload.get("measurementOrigins")
     high_bust_origin = (
         str(measurement_origins.get("highChestCirc", "unknown"))
@@ -430,9 +439,7 @@ def main() -> None:
         ("waist", "patterna_back_waist_fraction"),
     ):
         drafting_body[key] = torso_arc_sections[station].back_fraction
-    drafting_body["patterna_back_high_bust_tape_fraction"] = (
-        torso_arc_sections["highBustTape"].back_fraction
-    )
+    drafting_body["patterna_back_high_bust_tape_fraction"] = high_bust_back_fraction
     drafting_body["patterna_waist_level_world"] = station_heights["waist"]
     drafting_body["patterna_side_seam_height_from_waist"] = (
         station_heights["underarmCircuit"] - station_heights["waist"]
@@ -531,6 +538,8 @@ def main() -> None:
                 "colliderHorizontalCircumferenceCm": torso_arc_sections[
                     "highBustTape"
                 ].circumference_cm,
+                "backFraction": high_bust_back_fraction,
+                "backFractionSource": "editable acrossFront and acrossBack measurements",
                 "usedAsClosedGarmentCircuit": False,
             },
             "upperTorsoCircuit": {

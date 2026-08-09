@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from charmorph_collision import build_collision_body
 from fit_charmorph_profile import STATION_RATIOS
 from mesh_torso_arcs import (
+    back_fraction_from_across_measurements,
     lateral_extrema_depth_cm,
     measure_front_surface_ruler,
     measure_torso_arc_section,
@@ -129,7 +130,12 @@ def drafting_body(
     sections = {
         name: measure_torso_arc_section(collision_body, height)
         for name, height in stations.items()
+        if name != "highBustTape"
     }
+    high_bust_back_fraction = back_fraction_from_across_measurements(
+        float(measurements["acrossFront"]),
+        float(measurements["acrossBack"]),
+    )
     bust_side_seam_depth_cm = float(np.mean([
         lateral_extrema_depth_cm(collision_body, stations["underbust"]),
         lateral_extrema_depth_cm(collision_body, stations["upperTorsoCircuit"]),
@@ -160,9 +166,9 @@ def drafting_body(
         ("underarmCircuit", "patterna_back_underarm_fraction"),
         ("underbust", "patterna_back_underbust_fraction"),
         ("waist", "patterna_back_waist_fraction"),
-        ("highBustTape", "patterna_back_high_bust_tape_fraction"),
     ):
         body[key] = sections[station].back_fraction
+    body["patterna_back_high_bust_tape_fraction"] = high_bust_back_fraction
     waist_height = stations["waist"]
     body["patterna_waist_level_world"] = waist_height
     body["patterna_side_seam_height_from_waist"] = stations["underarmCircuit"] - waist_height
@@ -200,6 +206,13 @@ def drafting_body(
         "heightsCm": stations,
         "bustSideSeamDepthCm": bust_side_seam_depth_cm,
         "bustArcSplitMethod": "interpolated underbust-to-upper-torso side-seam depth",
+        "highBustTapeDistribution": {
+            "heightCm": stations["highBustTape"],
+            "requestedCircumferenceCm": float(measurements["highChestCirc"]),
+            "backFraction": high_bust_back_fraction,
+            "source": "editable acrossFront and acrossBack measurements",
+            "horizontalColliderSectionUsed": False,
+        },
         "sections": {name: section.to_dict() for name, section in sections.items()},
     }
 

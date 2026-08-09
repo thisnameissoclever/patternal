@@ -17,6 +17,7 @@ import trimesh
 import yaml
 
 from mesh_torso_arcs import (
+    back_fraction_from_across_measurements,
     lateral_extrema_depth_cm,
     measure_torso_arc_section,
 )
@@ -396,7 +397,12 @@ def build_drafting_body(
             front_is_positive_depth=False,
         )
         for name, height in stations.items()
+        if name != "highBustTape"
     }
+    high_bust_back_fraction = back_fraction_from_across_measurements(
+        float(measurements["acrossFront"]),
+        float(measurements["acrossBack"]),
+    )
     bust_side_seam_depth_cm = lateral_extrema_depth_cm(
         collision_body,
         stations["bust"],
@@ -434,9 +440,7 @@ def build_drafting_body(
         ("waist", "patterna_back_waist_fraction"),
     ):
         body[key] = sections[station].back_fraction
-    body["patterna_back_high_bust_tape_fraction"] = sections[
-        "underarmCircuit"
-    ].back_fraction
+    body["patterna_back_high_bust_tape_fraction"] = high_bust_back_fraction
 
     waist_height = stations["waist"]
     body["patterna_waist_level_world"] = waist_height
@@ -574,6 +578,13 @@ def build_drafting_body(
             "full-bust lateral extrema continued through the underarm"
         ),
         "frontDirection": "negative GarmentCode Z",
+        "highBustTapeDistribution": {
+            "heightCm": stations["highBustTape"],
+            "requestedCircumferenceCm": float(measurements["highChestCirc"]),
+            "backFraction": high_bust_back_fraction,
+            "source": "editable acrossFront and acrossBack measurements",
+            "horizontalColliderSectionUsed": False,
+        },
         "frontStagingDepthCm": body["patterna_front_staging_depth_cm"],
         "backStagingDepthCm": body["patterna_back_staging_depth_cm"],
         "princessRulerMethod": "shortest path on the exact collision surface",

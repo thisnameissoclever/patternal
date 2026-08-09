@@ -25,6 +25,21 @@ class TorsoArcSection:
         return asdict(self)
 
 
+def back_fraction_from_across_measurements(
+    across_front_cm: float,
+    across_back_cm: float,
+) -> float:
+    """Derive high-bust width distribution without slicing through T-pose arms."""
+
+    values = (float(across_front_cm), float(across_back_cm))
+    if not all(math.isfinite(value) and value > 0.0 for value in values):
+        raise ValueError("Across-front and across-back measurements must be positive and finite.")
+    fraction = values[1] / sum(values)
+    if not 0.25 <= fraction <= 0.70:
+        raise ValueError(f"Measured back width fraction {fraction:.4f} is outside the torso domain.")
+    return fraction
+
+
 def _path_length_cm(points: np.ndarray) -> float:
     return float(np.linalg.norm(np.diff(points, axis=0), axis=1).sum() * 100.0)
 
