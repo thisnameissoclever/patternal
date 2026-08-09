@@ -10,6 +10,8 @@ param(
     [int]$DisplayWidth = 1920,
     [ValidateRange(720, 2160)]
     [int]$DisplayHeight = 1080,
+    [ValidateRange(100, 225)]
+    [int]$TextScalePercent = 100,
     [switch]$KeepAppOpen
 )
 
@@ -40,6 +42,7 @@ $request = [ordered]@{
     mode = $Mode
     displayWidth = $DisplayWidth
     displayHeight = $DisplayHeight
+    textScalePercent = $TextScalePercent
     requestedAtUtc = [DateTimeOffset]::UtcNow.ToString('O')
 }
 $request | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $localRequestPath -Encoding utf8

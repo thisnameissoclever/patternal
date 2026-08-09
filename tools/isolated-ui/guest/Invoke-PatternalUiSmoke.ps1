@@ -25,6 +25,9 @@ public static class PatternalDisplayMode
     private const int DISP_CHANGE_SUCCESSFUL = 0;
     private const int DM_PELSWIDTH = 0x00080000;
     private const int DM_PELSHEIGHT = 0x00100000;
+    private const uint WM_SETTINGCHANGE = 0x001A;
+    private const uint SMTO_ABORTIFHUNG = 0x0002;
+    private static readonly IntPtr HWND_BROADCAST = new IntPtr(0xffff);
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     private struct DEVMODE
@@ -67,6 +70,16 @@ public static class PatternalDisplayMode
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern int ChangeDisplaySettings(ref DEVMODE devMode, int flags);
 
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern IntPtr SendMessageTimeout(
+        IntPtr hWnd,
+        uint message,
+        UIntPtr wParam,
+        string lParam,
+        uint flags,
+        uint timeout,
+        out UIntPtr result);
+
     public static bool TrySet(int width, int height)
     {
         var mode = new DEVMODE();
@@ -80,6 +93,19 @@ public static class PatternalDisplayMode
         mode.dmPelsHeight = height;
         mode.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT;
         return ChangeDisplaySettings(ref mode, CDS_UPDATEREGISTRY) == DISP_CHANGE_SUCCESSFUL;
+    }
+
+    public static void BroadcastAccessibilityChange()
+    {
+        UIntPtr result;
+        SendMessageTimeout(
+            HWND_BROADCAST,
+            WM_SETTINGCHANGE,
+            UIntPtr.Zero,
+            "Accessibility",
+            SMTO_ABORTIFHUNG,
+            5000,
+            out result);
     }
 }
 
@@ -886,8 +912,31 @@ $fatalError = $null
 $fatalErrorType = $null
 $fatalScriptStackTrace = $null
 $failureDiagnostics = $null
+$textScaleRegistryPath = 'HKCU:\Software\Microsoft\Accessibility'
+$originalTextScaleExists = $false
+$originalTextScalePercent = 100
+$textScaleChanged = $false
 
 try {
+    $requestedTextScalePercent = if ($request.PSObject.Properties.Name -contains 'textScalePercent') {
+        [int]$request.textScalePercent
+    }
+    else {
+        100
+    }
+    New-Item -Path $textScaleRegistryPath -Force | Out-Null
+    $originalTextScaleProperty = Get-ItemProperty -Path $textScaleRegistryPath -Name TextScaleFactor -ErrorAction SilentlyContinue
+    if ($null -ne $originalTextScaleProperty -and $null -ne $originalTextScaleProperty.TextScaleFactor) {
+        $originalTextScaleExists = $true
+        $originalTextScalePercent = [int]$originalTextScaleProperty.TextScaleFactor
+    }
+    if ($requestedTextScalePercent -ne $originalTextScalePercent -or -not $originalTextScaleExists) {
+        Set-ItemProperty -Path $textScaleRegistryPath -Name TextScaleFactor -Type DWord -Value $requestedTextScalePercent
+        [PatternalDisplayMode]::BroadcastAccessibilityChange()
+        $textScaleChanged = $true
+        Start-Sleep -Milliseconds 750
+    }
+
     $requestedDisplayWidth = if ($request.PSObject.Properties.Name -contains 'displayWidth') {
         [int]$request.displayWidth
     }
@@ -913,6 +962,11 @@ try {
         requestedHeight = $requestedDisplayHeight
         width = $screen.Width
         height = $screen.Height
+    }) -ErrorMessage $null
+    Add-ActionResult -Name 'Guest text scale request' -Passed $true -Details ([ordered]@{
+        requestedPercent = $requestedTextScalePercent
+        registryPercent = [int](Get-ItemProperty -Path $textScaleRegistryPath -Name TextScaleFactor -ErrorAction Stop).TextScaleFactor
+        originalPercent = $originalTextScalePercent
     }) -ErrorMessage $null
 
     Get-Process -Name Patternal -ErrorAction SilentlyContinue | Stop-Process -Force
@@ -2387,6 +2441,16 @@ finally {
         }
     }
 
+    if ($textScaleChanged) {
+        if ($originalTextScaleExists) {
+            Set-ItemProperty -Path $textScaleRegistryPath -Name TextScaleFactor -Type DWord -Value $originalTextScalePercent
+        }
+        else {
+            Remove-ItemProperty -Path $textScaleRegistryPath -Name TextScaleFactor -ErrorAction SilentlyContinue
+        }
+        [PatternalDisplayMode]::BroadcastAccessibilityChange()
+    }
+
     $finishedAt = [DateTimeOffset]::UtcNow
     $result = [ordered]@{
         schema = 'patternal.isolated-ui-result/1.0'
@@ -2402,6 +2466,8 @@ finally {
             primaryDisplay = if ([System.Windows.Forms.Screen]::PrimaryScreen) {
                 [ordered]@{ width = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Width; height = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Height }
             } else { $null }
+            requestedTextScalePercent = $requestedTextScalePercent
+            restoredTextScalePercent = $originalTextScalePercent
         }
         process = if ($process) { [ordered]@{ id = $process.Id; responding = $process.Responding } } else { $null }
         hostInputInjected = $false
