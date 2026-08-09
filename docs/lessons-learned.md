@@ -3110,3 +3110,41 @@ Report all three boundaries explicitly before making a GPU virtualization recomm
 ### How to verify
 
 Record the host OS and build, `Get-VMHostPartitionableGpu`, and `Get-VMGpuPartitionAdapter -VMName Patternal-UI` separately. Require official Microsoft and GPU-vendor support for the exact host OS, guest OS, and GPU model before treating a partitioned guest as physical-GPU acceptance evidence.
+
+## Observation commands must not masquerade as acceptance runs
+
+### What happened
+
+A request to leave Patternal visible first used a one-shot AppsFolder scheduled task, then reused the persistence acceptance workflow with `KeepAppOpen`. The direct activation created a process without proving a window, while the acceptance workflow correctly refused to run because user-opened VMConnect fixed the guest at 1366 by 768 instead of its required 1920 by 1080 mode.
+
+### Root cause
+
+The guest had a comprehensive one-shot acceptance harness but no durable lifecycle channel for launch, status, screenshot, and close. A simple observation request was forced through tools with different proof contracts.
+
+### Prevention rule
+
+Keep observation and acceptance lanes separate. Use a persistent logged-in-user runner with atomic requests, fresh heartbeat evidence, explicit lifecycle commands, bounded retained files, and hash-verified screenshots. Keep full acceptance on the fixed-resolution one-shot harness and continue rejecting VMConnect or unexpected display modes there.
+
+### How to verify
+
+Install the guest payload, require `Patternal Guest Runner` to remain active under the interactive user, then run status, launch, screenshot, and close from the host wrapper. Require the launch result to contain the real top-level window and primary workspace, require the copied screenshot hash to match, require close to leave no Patternal process, and confirm every result records the interactive session without host input or VMConnect launch.
+
+The interactive runner's PowerShell host must use `-WindowStyle Hidden`. A visible scheduled-task console can sit above the app and invalidate screenshots while every process, heartbeat, and UI Automation assertion remains green. After installing or updating the runner, inspect a fresh screenshot and reject any evidence obscured by harness windows.
+
+## Guest package installers must reuse an identical registered layout
+
+### What happened
+
+A runner-only update rebuilt the same AppX payload identity. The guest installer stopped Patternal and immediately tried to delete the already-registered identical layout. Windows still had `Microsoft.InteractiveExperiences.Projection.dll` mapped, so deletion failed with access denied even though no product binary had changed.
+
+### Root cause
+
+The installer treated every tooling sync as a package replacement. It deleted files before deciding whether the package content or registration differed and before unregistering a changed package.
+
+### Prevention rule
+
+Make payload installation idempotent. Reuse a complete AppX directory whose hash identity and registered install location already match. For a changed payload, stop the exact application with a bounded wait, unregister it before deleting its owned layout, verify the replacement directory identity, and then register the new manifest.
+
+### How to verify
+
+Install one payload, leave Patternal open, and sync a guest-tool-only change with the same payload identity. Require `appxReused: true`, `registrationReused: true`, and an uninterrupted app process. Then change one packaged byte in a disposable fixture and require orderly unregister, owned-layout replacement, identity verification, and registration without access-denied retries.

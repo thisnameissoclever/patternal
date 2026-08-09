@@ -96,6 +96,23 @@ The plaintext note is machine-local for manual VMConnect login. Existing encrypt
 
 When VMConnect is open for a user-observed run, log in manually from this note. Do not blindly send the password through the synthetic keyboard: unattended AutoLogon may already have reached the desktop, in which case the text can land in Windows Search or another focused control and invalidate keyboard evidence. Keep synthetic keyboard use limited to the documented boot Enter key.
 
+### Persistent interactive guest runner
+
+Guest installation registers `Patternal Guest Runner` as an indefinite logon-triggered task for the disposable interactive user. It is deliberately a hidden user-session process rather than a Windows service because session 0 cannot operate or capture the visible desktop reliably. Hiding the PowerShell host is mandatory: an interactive console would cover the app and corrupt visual evidence even though process and UI Automation checks still pass. The runner publishes a fresh heartbeat, consumes atomically transferred `patternal.guest-runner-request/1.0` files, and writes `patternal.guest-runner-result/1.0` results under `C:\PatternalTest\Runner`. It supports bounded `status`, `launch`, `screenshot`, `close`, and `stop` commands. Result history is capped at 200 files, screenshot history at 100 files, and logs rotate at 1 MB.
+
+Guest payload installation is idempotent. When the complete AppX directory identity and registered install location already match the requested payload, installation reuses both and updates only guest tooling and task definitions. A changed payload first stops Patternal with a bounded wait, unregisters the old package, replaces only the owned hash-addressed layout, verifies the full directory identity, and registers the new manifest. Tool-only updates must not close the user's unchanged application or delete files still mapped by its package.
+
+The host wrapper sends commands through PowerShell Direct and copies every result plus any hash-verified screenshot to ignored `artifacts\isolated-ui\runner`. It never injects host input or starts VMConnect. This lane is for observation and deterministic app lifecycle control at the guest's current display mode; it does not replace the fixed-resolution full acceptance harness.
+
+Verified lifecycle sequence on 2026-08-09 ran status, launch, screenshot, close, stop, automatic restart, final launch, and final screenshot. Every command executed in interactive session 1 with `hostInputInjected: false` and `vmConnectLaunched: false`. Graceful close left no Patternal process and did not require termination. Stopping runner process 4232 and issuing the next status command produced fresh runner process 5232. A subsequent tool-only reinstall reported `appxReused: true` and `registrationReused: true`, restarted only the hidden runner as process 12156, and preserved responsive Patternal process 12216. Its unobscured copied 1,806 by 860 screenshot has SHA-256 `75d30a91c2d20255d4ab9d01e31f20f48d0976a2fdd33649ca5f201e63a682c4`; visual review confirms the 2D workspace, all 14 pieces, inspector, toolbar, status surface, and viewport controls are readable. This current-display observation is not fixed-resolution acceptance evidence.
+
+```powershell
+.\tools\isolated-ui\Invoke-PatternalGuestRunner.ps1 -Command status
+.\tools\isolated-ui\Invoke-PatternalGuestRunner.ps1 -Command launch
+.\tools\isolated-ui\Invoke-PatternalGuestRunner.ps1 -Command screenshot
+.\tools\isolated-ui\Invoke-PatternalGuestRunner.ps1 -Command close
+```
+
 The temporary answer-media ISO contains the generated password during setup. It is deleted after successful provisioning. If setup fails, the script preserves that media for diagnosis and prints a warning. Delete it after recovery.
 
 5. Sign out and back in once after the host bootstrap adds the account to `Hyper-V Administrators`. This refreshes the access token used by ordinary, non-elevated shells and Codex. A restart also works, but the scripts never impose one.

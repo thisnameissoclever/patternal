@@ -65,6 +65,37 @@ if (-not $guestProvisioner.Contains('VM root ''$normalizedVmRoot'' must end with
 
 $guestRunnerPath = Join-Path $PSScriptRoot 'guest\Invoke-PatternalUiSmoke.ps1'
 $guestRunner = Get-Content -LiteralPath $guestRunnerPath -Raw
+$persistentRunnerPath = Join-Path $PSScriptRoot 'guest\Start-PatternalGuestRunner.ps1'
+$persistentRunner = Get-Content -LiteralPath $persistentRunnerPath -Raw
+$persistentRunnerHostPath = Join-Path $PSScriptRoot 'Invoke-PatternalGuestRunner.ps1'
+$persistentRunnerHost = Get-Content -LiteralPath $persistentRunnerHostPath -Raw
+$guestInstaller = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'guest\Install-PatternalGuestPayload.ps1') -Raw
+$payloadSync = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'Sync-PatternalGuestPayload.ps1') -Raw
+foreach ($contract in @(
+    'patternal.guest-runner-request/1.0',
+    'patternal.guest-runner-result/1.0',
+    "'status'",
+    "'launch'",
+    "'screenshot'",
+    "'close'",
+    "'stop'"
+)) {
+    if (-not $persistentRunner.Contains($contract) -or -not $persistentRunnerHost.Contains($contract)) {
+        throw "Persistent guest runner no longer shares required contract: $contract"
+    }
+}
+if (-not $persistentRunner.Contains('hostInputInjected = $false') -or
+    -not $persistentRunner.Contains('vmConnectLaunched = $false')) {
+    throw 'Persistent guest runner results no longer record the host-input and VMConnect isolation boundary.'
+}
+if (-not $guestInstaller.Contains("Register-ScheduledTask -TaskName 'Patternal Guest Runner'") -or
+    -not $guestInstaller.Contains("New-ScheduledTaskTrigger -AtLogOn") -or
+    -not $guestInstaller.Contains('-WindowStyle Hidden') -or
+    -not $guestInstaller.Contains('$appxReused') -or
+    -not $guestInstaller.Contains('$registrationReused') -or
+    -not $payloadSync.Contains("Start-PatternalGuestRunner.ps1")) {
+    throw 'The persistent runner install no longer preserves hidden interactive execution, idempotent AppX registration, logon startup, and payload synchronization.'
+}
 $windowsPowerShellPath = Join-Path $env:WINDIR 'System32\WindowsPowerShell\v1.0\powershell.exe'
 if (-not (Test-Path -LiteralPath $windowsPowerShellPath -PathType Leaf)) {
     throw 'Windows PowerShell 5.1 is required to validate the guest runner compiler boundary.'

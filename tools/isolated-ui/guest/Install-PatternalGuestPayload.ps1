@@ -132,6 +132,22 @@ function Get-CompatibleDotNetRuntime {
         Select-Object -First 1
 }
 
+function Stop-PatternalPackageProcesses {
+    $processes = @(Get-Process -Name Patternal -ErrorAction SilentlyContinue)
+    if ($processes.Count -eq 0) {
+        return
+    }
+    $processes | Stop-Process -Force
+    $deadline = [DateTimeOffset]::UtcNow.AddSeconds(30)
+    do {
+        Start-Sleep -Milliseconds 250
+        $processes = @(Get-Process -Name Patternal -ErrorAction SilentlyContinue)
+    } while ($processes.Count -gt 0 -and [DateTimeOffset]::UtcNow -lt $deadline)
+    if ($processes.Count -gt 0) {
+        throw 'Patternal processes did not exit within 30 seconds before package replacement.'
+    }
+}
+
 $manifest = Get-Content -LiteralPath $PayloadManifest -Raw | ConvertFrom-Json
 if ($manifest.schema -ne 'patternal.isolated-ui-payload/1.0') {
     throw "Unsupported payload manifest schema: $($manifest.schema)"
@@ -151,15 +167,30 @@ $cacheRoot = Join-Path $root 'Cache'
 New-Item -ItemType Directory -Path $payloadRoot -Force | Out-Null
 New-Item -ItemType Directory -Path $cacheRoot -Force | Out-Null
 
-Get-Process -Name Patternal -ErrorAction SilentlyContinue | Stop-Process -Force
-if (Test-Path -LiteralPath $appxRoot) {
+$appxReused = $false
+if (Test-Path -LiteralPath $appxRoot -PathType Container) {
+    try {
+        $appxReused = (Get-DirectoryIdentity -Path $appxRoot) -eq [string]$manifest.payloadIdentity
+    }
+    catch {
+        $appxReused = $false
+    }
+}
+if (-not $appxReused -and (Test-Path -LiteralPath $appxRoot)) {
     if (-not $appxRoot.StartsWith($payloadBase.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase)) {
         throw "Refusing to clean payload path outside its owned root: $appxRoot"
     }
+    Stop-PatternalPackageProcesses
+    $registeredForReplacement = Get-AppxPackage -Name $manifest.packageName
+    if ($registeredForReplacement) {
+        $registeredForReplacement | Remove-AppxPackage
+    }
     Remove-Item -LiteralPath $appxRoot -Recurse -Force
 }
-New-Item -ItemType Directory -Path $appxRoot -Force | Out-Null
-Expand-Archive -LiteralPath $PayloadZip -DestinationPath $appxRoot -Force
+if (-not $appxReused) {
+    New-Item -ItemType Directory -Path $appxRoot -Force | Out-Null
+    Expand-Archive -LiteralPath $PayloadZip -DestinationPath $appxRoot -Force
+}
 
 $actualIdentity = Get-DirectoryIdentity -Path $appxRoot
 if ($actualIdentity -ne $manifest.payloadIdentity) {
@@ -234,12 +265,19 @@ if (-not $installedRuntime -or [version]$installedRuntime.Version -lt $requiredR
 }
 
 $existingPackage = Get-AppxPackage -Name $manifest.packageName
-if ($existingPackage) {
-    $existingPackage | Remove-AppxPackage
+$registrationReused = $existingPackage -and
+    [string]::Equals(
+        [IO.Path]::GetFullPath([string]$existingPackage.InstallLocation).TrimEnd('\'),
+        [IO.Path]::GetFullPath($appxRoot).TrimEnd('\'),
+        [StringComparison]::OrdinalIgnoreCase)
+if (-not $registrationReused) {
+    Stop-PatternalPackageProcesses
+    if ($existingPackage) {
+        $existingPackage | Remove-AppxPackage
+    }
+    $appxManifest = Join-Path $appxRoot 'AppxManifest.xml'
+    Add-AppxPackage -Register $appxManifest -ForceApplicationShutdown
 }
-
-$appxManifest = Join-Path $appxRoot 'AppxManifest.xml'
-Add-AppxPackage -Register $appxManifest -ForceApplicationShutdown
 $registeredPackage = Get-AppxPackage -Name $manifest.packageName
 if (-not $registeredPackage) {
     throw 'Patternal AppX registration did not appear for the guest test user.'
@@ -250,12 +288,40 @@ $taskPrincipal = New-ScheduledTaskPrincipal -UserId ([System.Security.Principal.
 $taskSettings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Minutes 30) -MultipleInstances IgnoreNew -StartWhenAvailable
 Register-ScheduledTask -TaskName 'Patternal Guest UI Smoke' -Action $taskAction -Principal $taskPrincipal -Settings $taskSettings -Force | Out-Null
 
+$runnerScriptPath = 'C:\PatternalTest\Guest\Start-PatternalGuestRunner.ps1'
+if (-not (Test-Path -LiteralPath $runnerScriptPath -PathType Leaf)) {
+    throw "Persistent guest runner is missing: $runnerScriptPath"
+}
+$runnerRoot = 'C:\PatternalTest\Runner'
+foreach ($runnerDirectory in @('requests', 'processing', 'results', 'evidence', 'logs', 'staging')) {
+    New-Item -ItemType Directory -Path (Join-Path $runnerRoot $runnerDirectory) -Force | Out-Null
+}
+$existingRunnerTask = Get-ScheduledTask -TaskName 'Patternal Guest Runner' -ErrorAction SilentlyContinue
+if ($existingRunnerTask -and $existingRunnerTask.State -eq 'Running') {
+    Stop-ScheduledTask -TaskName 'Patternal Guest Runner'
+    $runnerStopDeadline = [DateTimeOffset]::UtcNow.AddSeconds(15)
+    do {
+        Start-Sleep -Milliseconds 250
+        $existingRunnerTask = Get-ScheduledTask -TaskName 'Patternal Guest Runner'
+    } while ($existingRunnerTask.State -eq 'Running' -and [DateTimeOffset]::UtcNow -lt $runnerStopDeadline)
+    if ($existingRunnerTask.State -eq 'Running') {
+        throw 'The previous persistent guest runner did not stop within 15 seconds.'
+    }
+}
+$runnerAction = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "C:\PatternalTest\Guest\Start-PatternalGuestRunner.ps1"'
+$runnerTrigger = New-ScheduledTaskTrigger -AtLogOn -User ([System.Security.Principal.WindowsIdentity]::GetCurrent().Name)
+$runnerSettings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit ([TimeSpan]::Zero) -MultipleInstances IgnoreNew -StartWhenAvailable -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1)
+Register-ScheduledTask -TaskName 'Patternal Guest Runner' -Action $runnerAction -Principal $taskPrincipal -Trigger $runnerTrigger -Settings $runnerSettings -Force | Out-Null
+Start-ScheduledTask -TaskName 'Patternal Guest Runner'
+
 $installResult = [ordered]@{
     schema = 'patternal.isolated-ui-install/1.0'
     installedAtUtc = [DateTimeOffset]::UtcNow.ToString('O')
     payloadIdentity = $manifest.payloadIdentity
     appxRoot = $appxRoot
     packageFullName = $registeredPackage.PackageFullName
+    appxReused = $appxReused
+    registrationReused = $registrationReused
     windowsAppRuntime = $requiredRuntime.ToString()
     dotNetRuntimeMinimum = $dotNetRuntimeMinimum.ToString()
     dotNetRuntimeInstalled = $installedDotNetRuntime.ToString()
@@ -266,6 +332,8 @@ $installResult = [ordered]@{
     runtimeRedistributableUri = $RuntimeRedistributableUri.AbsoluteUri
     runtimeDeployment = $runtimeDeployment
     scheduledTask = 'Patternal Guest UI Smoke'
+    persistentRunnerTask = 'Patternal Guest Runner'
+    persistentRunnerSchema = 'patternal.guest-runner-request/1.0'
     interactiveUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
 }
 $installResultPath = Join-Path $payloadRoot 'install-result.json'

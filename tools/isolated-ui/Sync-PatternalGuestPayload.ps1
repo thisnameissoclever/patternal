@@ -184,6 +184,7 @@ $identityFiles = @(
             Copy-Item -ToSession $session -LiteralPath $manifestPath -Destination (Join-Path $guestTransferRoot 'payload-manifest.json')
             Copy-Item -ToSession $session -LiteralPath (Join-Path $PSScriptRoot 'guest\Install-PatternalGuestPayload.ps1') -Destination 'C:\PatternalTest\Guest\Install-PatternalGuestPayload.ps1'
             Copy-Item -ToSession $session -LiteralPath (Join-Path $PSScriptRoot 'guest\Invoke-PatternalUiSmoke.ps1') -Destination 'C:\PatternalTest\Guest\Invoke-PatternalUiSmoke.ps1'
+            Copy-Item -ToSession $session -LiteralPath (Join-Path $PSScriptRoot 'guest\Start-PatternalGuestRunner.ps1') -Destination 'C:\PatternalTest\Guest\Start-PatternalGuestRunner.ps1'
 
             $installResult = Invoke-Command -Session $session -ScriptBlock {
                 param($TransferRoot, $RuntimeUri, $RedistributableUri, $DotNetUri, $DotNetVersion)
