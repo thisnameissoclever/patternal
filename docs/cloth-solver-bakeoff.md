@@ -8,15 +8,16 @@ This document defines the repeatable process for evaluating cloth backends witho
 
 1. Export the exact live bridge garment with `Patternal.UnrealGarmentCompiler --garmentcode-pattern-output`. Do not substitute a nearby fixture or a previously accepted shirt.
 2. Bind the export to the exact fitted collision body, body profile, pattern SHA-256, and generated-output license.
-3. Generate the stitch-matched material surface at a declared resolution. Preserve panel ownership, two-dimensional material coordinates, seam correspondence, and rest lengths.
-4. Apply the common input gate before starting a solver. The initial arrangement needs finite metrics, at least `0.001 cm2` minimum triangle area, no more than `2.0` peak edge strain, no more than `0.25` 95th-percentile edge strain, and at least `0.25 cm` torso clearance. `build_style3d_source.py` now enforces this gate. `--allow-rejected-initial-arrangement` is a research-only override and is recorded in the source report.
-5. Prefer rigid source-panel placement plus explicit progressive sewing over a pre-warped or pre-welded shell. A solver must demonstrate assembly instead of inheriting closed seams from preprocessing.
-6. Resolve construction semantics before simulation. Identify finishing pieces separately, close internal construction first, close torso sides next, close both anatomical shoulders next, and attach sleeve caps last. Never infer shoulders from stitch count alone.
-7. Run the unchanged fabric and acceptance thresholds. Record backend version, adapter hash, GPU, settings, timings, all source hashes, and whether a dressing-body sequence was used.
-8. Reject numerically when any required collision, seam, strain, equilibrium, identity, or finite-position gate fails.
-9. Render the exact rejected or accepted result from six anatomical cameras. Front must show the face and chest; Back must show the back and seat. Numerical acceptance does not waive visual review.
-10. Record the visual decision against the SHA-256 identity of every rendered view. A rerender always requires a fresh review; do not assume Blender will emit byte-identical PNGs across separate processes.
-11. Promote only when the exact result passes both the numerical report and reviewed multi-angle appearance. Package only the promoted hashes.
+3. Generate a solver-specific collision proxy only when the exact display body is impractical. Bind it to the canonical body SHA-256 and require one watertight component, preserved orientation, floor error below `0.10 cm`, and bidirectional maximum and 95th-percentile surface drift below `0.50 cm` and `0.15 cm` globally and for head, torso, arms, and legs. The detailed body remains the render authority.
+4. Generate the stitch-matched material surface at a declared resolution. Preserve panel ownership, two-dimensional material coordinates, seam correspondence, and rest lengths.
+5. Apply the common input gate before starting a solver. The initial arrangement needs finite metrics, at least `0.001 cm2` minimum triangle area, no more than `2.0` peak edge strain, no more than `0.25` 95th-percentile edge strain, and at least `0.25 cm` torso clearance. `build_style3d_source.py` now enforces this gate. `--allow-rejected-initial-arrangement` is a research-only override and is recorded in the source report.
+6. Prefer rigid source-panel placement plus explicit progressive sewing over a pre-warped or pre-welded shell. A solver must demonstrate assembly instead of inheriting closed seams from preprocessing.
+7. Resolve construction semantics before simulation. Identify finishing pieces separately, close internal construction first, close torso sides next, close both anatomical shoulders next, and attach sleeve caps last. Never infer shoulders from stitch count alone.
+8. Run the unchanged fabric and acceptance thresholds. Record backend version, adapter hash, GPU, settings, timings, all source hashes, and whether a dressing-body sequence was used.
+9. Reject numerically when any required collision, seam, strain, equilibrium, identity, or finite-position gate fails.
+10. Render the exact rejected or accepted result from six anatomical cameras. Front must show the face and chest; Back must show the back and seat. Numerical acceptance does not waive visual review.
+11. Record the visual decision against the SHA-256 identity of every rendered view. A rerender always requires a fresh review; do not assume Blender will emit byte-identical PNGs across separate processes.
+12. Promote only when the exact result passes both the numerical report and reviewed multi-angle appearance. Package only the promoted hashes.
 
 ## Current normalized bundle
 
@@ -26,6 +27,7 @@ This document defines the repeatable process for evaluating cloth backends witho
 4. Pattern SHA-256: `a92f9a87b3b89c4578b2468fcf9b68a04a544512be7ccaee75529c19c7bcf8e8`.
 5. Construction: 38 stitch-matched seams, including physical dart splits.
 6. Control backend: Newton 1.4.0 with Warp 1.15.0 on the RTX 4090.
+7. Accepted derived collision proxy: 5,002 vertices and 10,000 faces, SHA-256 `fee0a35515594cd295758237d038069ab4955b0c5ff14c7e42dbedfd191b83fd`. Worst bidirectional drift is `0.142 cm`; every regional maximum is below `0.15 cm`, and every regional 95th percentile is below `0.07 cm`.
 
 ## Control results
 
@@ -39,19 +41,29 @@ This document defines the repeatable process for evaluating cloth backends witho
 
 The 0.50 cm material surface is the current useful control resolution. It reduces the exact surface from 146,874 to 37,287 vertices and clears the minimum-triangle-area gate. It does not make the current pre-warped arrangement acceptable, and it does not make the Newton result production cloth.
 
+## PPF challenger results
+
+| Run | Input and assembly | Result |
+| --- | --- | --- |
+| `ppf-patterna-common-bundle-v1` | Exact 0.50 cm garment, full 69,164-face body, 932 authored point stitches | Research-only and rejected after 2 native frames. The solver took 751.260 seconds, or 375.630 seconds per frame. Maximum seam separation was `21.771 cm`, p95 strain was `0.186`, p99.9 strain was `0.597`, and the cloth was nowhere near equilibrium. This establishes the full body as an offline truth input, not an interactive collision mesh. The later adapter-side input gate was not present for this run. |
+| `ppf-patterna-common-bundle-1cm-proxy-v1` | Exact 1.00 cm garment, accepted 10,000-face body proxy, 488 authored point stitches, default stitch stiffness `1` and length factor `10` | Research-only and rejected after the correctly configured 20 native frames. Runtime was 390.128 seconds, or 19.506 seconds per frame. Maximum seam separation plateaued at `9.062 cm`, p95 seam separation at `7.319 cm`, p99.9 strain at `0.563`, and final-frame motion at `0.848 cm`. A later strict preflight found 17 garment-to-body pairs inside the required `0.25 cm` initial clearance. |
+| `ppf-patterna-common-bundle-1cm-proxy-strong-v1` | Same exact garment and proxy, with a bounded five-frame stitch experiment at stiffness `5` and length factor `50` | Research-only and rejected. Runtime rose to 351.405 seconds, maximum seam separation remained `7.375 cm`, p99.9 strain worsened to `0.692`, and high-strain edge fraction worsened to `0.007749`. Brute-force stitch parameters do not replace a seam-aware dressing stage, and the same 17 initial-clearance violations apply. |
+
+The PPF adapter now preserves exact authored point-pair stitches, records material coordinates and rest lengths, rigidly separates only initially intersecting panels, verifies every pinned runtime entry point, restores source vertex order through PPF's exported object map, and grades every saved snapshot. Its mandatory input gate independently recomputes triangle areas, initial strain, garment self-intersection, body intersection, and `0.25 cm` body clearance. The raw current source has zero body intersections but 17 clearance violations across three panels. The standard bounded stage moves only those panels radially outward by at most `0.30 cm`, then rechecks and reaches zero violations with unchanged material shape and negligible initial strain. Fresh preflight is accepted. The earlier simulations did not include this stage and remain research evidence rather than common-bundle acceptance runs.
+
 ## Architecture decision
 
 1. Keep Newton as the reproducible control and regression backend.
 2. Keep rigid source placement, explicit sewing, semantic seam phases, and the common bundle as backend-neutral inputs.
 3. Do not spend another full control run on the rejected C# initial arrangement.
-4. Continue with the installed ZOZO PPF Contact Solver in its separate versioned runtime. Its pinned native executable passes a real RTX 4090 contact smoke with 20 frames, 221 nonzero contact samples, and 118 peak contacts. The next gate is the Patterna adapter using this same 0.50 cm bundle, body, fabric, seam graph, cameras, and gates.
-   PPF's current Snap and Merge contract supports cross-object soft stitches with barycentric anchor evidence and an exact fetched-surface post-snap. The adapter must create anchors from authored seam correspondence and prove raw soft-stitch closure before post-snap; post-processing cannot turn a rejected solve into accepted cloth.
+4. Keep the installed ZOZO PPF Contact Solver in its separate versioned runtime as the active contact challenger. Its native GPU path and Patterna adapter are proven, and the bounded rigid clearance stage now passes the common input gate. The spread-panel research solves remain rejected. Build a seam-aware, body-registered dressing stage before another acceptance-length run. Do not spend more runs on global stitch-force escalation; the bounded strong-stitch experiment increased runtime and strain without closing the remaining seams.
+   PPF's current Snap and Merge contract supports cross-object soft stitches with barycentric anchor evidence and an exact fetched-surface post-snap. The adapter creates anchors from authored seam correspondence and must prove raw soft-stitch closure before post-snap; post-processing cannot turn a rejected solve into accepted cloth.
 5. Use IPC Toolkit only as an offline contact oracle if Newton and PPF disagree about a difficult collision case.
 6. Do not use XRTailor as the first challenger. Its documented custom-garment workflow starts with Marvelous Designer sewing and draping and imports a welded template, so it does not test Patterna's panel-assembly problem independently.
 7. Preserve the audited sleeve contract in every challenger. The exact control is left/right symmetric; cap-to-armscye mismatch is below `0.04 cm`, cuff-to-opening mismatch is zero at displayed precision, and the short underarm connector mismatch is below `0.002 cm`. Those measurements rule out a scrambled or materially mismatched sewing graph, but they do not prove a production-quality sleeve silhouette. A new solver is not allowed to hide malformed construction input.
 
 ## Evidence boundary
 
-All named runs and renders are local ignored artifacts under `artifacts/cloth-bakeoff-antonia/control`. The separate PPF runtime smoke is under `artifacts/ppf-runtime-smoke-v1`. They prove the decisions above on this machine. They are not packaged release evidence, and none is accepted cloth. The next promotion attempt must adapt the exact common garment bundle, generate a new hash-bound report, and produce a fresh six-view set.
+All named runs and renders are local ignored artifacts under `artifacts/cloth-bakeoff-antonia/control`, `artifacts/ppf-runtime-smoke-v1`, and the named `artifacts/ppf-patterna-*` directories. They prove the decisions above on this machine. They are not packaged release evidence, and none is accepted cloth. The next promotion attempt must add a seam-aware dressing stage to the exact common garment bundle, generate a new hash-bound report, and produce a fresh six-view set.
 
 The exact Antonia live-contract render under `artifacts/antonia-live-contract/product-render` adds a separate rejected control. It uses the existing production crew-neck OBJ rather than a new solver output. Bounds-based `patterna.product-registration/2.0` accepted it, but exact six-view review found large breast and abdominal holes, an open rear neckline, detached-looking sleeves, and severe side distortion. The recorded visual rejection proves registration is only a coordinate sanity check. It is not garment-quality acceptance.

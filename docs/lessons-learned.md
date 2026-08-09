@@ -3220,3 +3220,111 @@ Require lower-body vertices at the same absolute X to receive zero arm weight. T
 ### How to verify
 
 Install one payload, leave Patternal open, and sync a guest-tool-only change with the same payload identity. Require `appxReused: true`, `registrationReused: true`, and an uninterrupted app process. Then change one packaged byte in a disposable fixture and require orderly unregister, owned-layout replacement, identity verification, and registration without access-denied retries.
+
+## PPF dynamic timelines can override an explicit frame count
+
+### What happened
+
+The first Patterna garment command requested 20 PPF frames, but the native `param.toml` recorded only 2. Adding release keyframes after setting `frames` let PPF's dynamic timeline derive a new frame count from its last keyframe. The solve completed normally, so counting output files without reading native parameters made the short run look like a wrapper or cache failure.
+
+### Root cause
+
+The adapter treated independent-looking fluent parameter calls as order-independent. PPF's dynamic builder owns timeline duration and can update the session frame count as a side effect.
+
+### Prevention rule
+
+Configure every dynamic parameter first and apply the caller's explicit `frames` value last. Grade the persisted native `param.toml`, not the command line or wrapper's intention. Report simulated frames separately from the initial vertex snapshot.
+
+### How to verify
+
+Run a 20-frame session with a release keyframe, require `param.toml` to contain `frames = 20`, and require 21 vertex snapshots numbered 0 through 20. The collector must report 20 simulated frames and 21 saved snapshots.
+
+## PPF output vertices must be restored through its object map
+
+### What happened
+
+PPF wrote all scene vertices into one solver-owned ordering. Taking the first garment-sized prefix produced the expected array shape but attached positions to the wrong source indices, corrupting seam, strain, and export evidence without an obvious file-format error.
+
+### Root cause
+
+Topology counts were mistaken for vertex correspondence. PPF reorders and combines scene objects for its solver, then records the reverse mapping in `map.pickle`.
+
+### Prevention rule
+
+Decode the versioned object map with the pinned runtime and restore `patterna-garment` source order before every metric, OBJ export, render, or recovery operation. Reject missing, empty, duplicated, or out-of-range mappings.
+
+### How to verify
+
+Use a synthetic three-vertex permutation and require exact source-order restoration. On a real session, require the mapped garment shape to match the source OBJ and bind the vertex-map SHA-256 into the collection report.
+
+## A detailed render body and a cloth collider have different jobs
+
+### What happened
+
+The exact 0.50 cm garment plus the 69,164-face Antonia body took 751.260 seconds for two native PPF frames. The body dominated the contact workload. Replacing it blindly would have improved speed while discarding the registration evidence that makes collision believable.
+
+### Root cause
+
+One mesh was being asked to preserve visible anatomy, materials, camera quality, contact fidelity, and solver throughput. Those constraints do not require identical topology, but they do require measured surface agreement.
+
+### Prevention rule
+
+Keep the detailed fitted body as the display authority and derive a separate hash-bound collision proxy. Require a watertight single component, preserved orientation and floor datum, and bidirectional global plus head, torso, arm, and leg surface gates. Never promote a proxy merely because decimation completed.
+
+### How to verify
+
+Build the 10,000-face Antonia proxy twice and require the same OBJ SHA-256. Confirm global and regional maximum drift below `0.50 cm`, 95th-percentile drift below `0.15 cm`, floor error below `0.10 cm`, and unchanged component and non-manifold counts. Then prove the solver report records both canonical and proxy identities.
+
+## Stronger stitches do not replace seam-aware dressing
+
+### What happened
+
+The 1 cm PPF garment began with authored seam pairs as far as 55.519 cm apart. Default stitches pulled most panels rapidly but plateaued at 9.062 cm maximum separation after 20 frames. Raising stitch stiffness fivefold and the stitch-length factor fivefold still left 7.375 cm separation, took 351.405 seconds for only five frames, and worsened p99.9 strain to 0.692.
+
+### Root cause
+
+The spread-panel source asks global soft stitches to drag front, back, sleeve, cuff, and collar surfaces through a crowded contact field at once. A larger force cap increases solver work and material distortion but does not provide construction order or a collision-safe dressing path.
+
+### Prevention rule
+
+Stop global stitch-force tuning after one bounded comparison. Build a seam-aware dressing stage that preserves each panel's material shape, keeps authored seam identity, orders internal, torso, shoulder, cuff, and sleeve-cap closure, and starts each active stitch phase inside a documented capture distance.
+
+### How to verify
+
+Before another acceptance-length PPF solve, require the staged report to list every panel transform, phase, source hash, initial and per-phase seam distances, body clearance, and zero self-intersections. The raw solve must close every authored seam below `0.25 cm` without post-snap and pass strain, equilibrium, collision, and six-view review.
+
+## A wrapper timeout does not prove its native child failed
+
+### What happened
+
+The first full Patterna PPF wrapper exceeded its shell timeout, but the native solver child continued and wrote a clean finished marker, empty error log, vertex snapshots, object map, and stdout log. Treating the shell result as solver failure would have discarded valid, expensive rejection evidence.
+
+### Root cause
+
+The wrapper and native solver had separate process lifetimes, while grading was coupled to the wrapper's final Python code path.
+
+### Prevention rule
+
+Use a bounded wrapper timeout, but inspect the owned session before declaring failure. Keep a separate collector that verifies runtime and input identities, native parameters, finished and error markers, object mapping, and every output hash. Do not kill a healthy owned child merely because its parent stopped waiting.
+
+### How to verify
+
+Allow a wrapper to end while a disposable native session finishes. Run the collector against that exact session and require an honest accepted, rejected, or pending report whose frame count comes from native `param.toml` and whose final metrics use the last two mapped snapshots.
+
+## Every solver adapter must enforce the common input gate
+
+### What happened
+
+The first PPF adapter verified hashes, topology, garment self-intersection, and native scene construction, then ran the 1 cm source for 20 frames. A later complete adapter preflight found zero body intersections but 17 garment-to-body pairs inside the mandatory `0.25 cm` initial clearance. The source report carried `accepted: false` only because it required a fresh solver evaluation, so checking that Boolean alone would also have rejected the wrong thing for the wrong reason.
+
+### Root cause
+
+The common-bundle gate lived mainly in the source builder and was treated as inherited evidence. A rebuilt resolution could preserve hashes and rest geometry while lacking a complete, solver-specific body-clearance proof.
+
+### Prevention rule
+
+Every backend adapter must independently recompute the input properties it relies on before launching an expensive child process. Require source schema, no research override, finite geometry and material triangle areas, initial strain, panel self-intersection, body intersection, and body clearance. A generic bounded rigid stage may repair clearance only by translating the violating panels, recording every transform, preserving material shape, and rerunning every gate. Write the input report even on rejection and provide no convenience flag that turns a failed production gate into an ordinary run.
+
+### How to verify
+
+Run the exact current 1 cm source through `--preflight-only` and require `patterna.ppf-input-gate/1.0` to record 17 initial clearance violations, rigid translations for only `left_collar_back`, `right_collar_back`, and `right_sleeve_b`, no more than `0.30 cm` maximum shift, zero final intersections, zero final clearance violations, accepted area and strain metrics, and no native solver process. Move a disposable panel into the body and require the intersection gate to fail.

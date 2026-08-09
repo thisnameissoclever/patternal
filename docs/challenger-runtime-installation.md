@@ -65,3 +65,40 @@ $python = Join-Path $ppf 'python\python.exe'
 ```
 
 This smoke redirects both cache and session data into the artifact directory, verifies every manifest entry point before execution, forces a fresh small sheet-versus-sphere scene on the NVIDIA GPU, requires a finished marker, finite output, and at least one nonzero contact count, then records runtime, GPU, timing, bounds, contact counts, logs, and output hashes. The process-local `App.get_data_dirpath` override uses PPF's explicitly patchable data-root seam without disabling its real GPU or driver checks. It proves native solver startup and basic contact execution only; garment seam and visual quality gates remain open.
+
+## Standard Patterna garment evaluation
+
+Build a body proxy through the installed Blender, then pass both its OBJ and its accepted report to the PPF adapter. Never pass an unreported decimation or replace the canonical body path in the source report.
+
+```powershell
+$runtime = Join-Path $env:LOCALAPPDATA 'Patterna\SimulationRuntime\current'
+$blender = Join-Path $runtime 'blender\blender.exe'
+$ppf = Join-Path $env:LOCALAPPDATA 'Patterna\ChallengerRuntimes\PPF\2026-08-08-03-55-win64'
+$python = Join-Path $ppf 'python\python.exe'
+
+& $blender --background --factory-startup `
+    --python .\tools\build_body_collision_proxy.py -- `
+    --input .\artifacts\cloth-bakeoff-antonia\control\antonia-simulation-body.obj `
+    --output .\artifacts\ppf-patterna-common-bundle-1cm-v1\collision-proxy\antonia-collision-10000f.obj `
+    --report .\artifacts\ppf-patterna-common-bundle-1cm-v1\collision-proxy\antonia-collision-10000f.report.json `
+    --target-face-count 10000
+
+& $python .\tools\run_ppf_patterna_bundle.py `
+    --runtime-root $ppf `
+    --source-report .\artifacts\ppf-patterna-common-bundle-1cm-v1\source\patterna-style3d-source-1.000cm.report.json `
+    --body-override .\artifacts\ppf-patterna-common-bundle-1cm-v1\collision-proxy\antonia-collision-10000f.obj `
+    --body-override-report .\artifacts\ppf-patterna-common-bundle-1cm-v1\collision-proxy\antonia-collision-10000f.report.json `
+    --output-directory .\artifacts\ppf-patterna-common-bundle-1cm-proxy-v1 `
+    --frames 20 `
+    --preflight-only
+
+& $python .\tools\run_ppf_patterna_bundle.py `
+    --runtime-root $ppf `
+    --source-report .\artifacts\ppf-patterna-common-bundle-1cm-v1\source\patterna-style3d-source-1.000cm.report.json `
+    --body-override .\artifacts\ppf-patterna-common-bundle-1cm-v1\collision-proxy\antonia-collision-10000f.obj `
+    --body-override-report .\artifacts\ppf-patterna-common-bundle-1cm-v1\collision-proxy\antonia-collision-10000f.report.json `
+    --output-directory .\artifacts\ppf-patterna-common-bundle-1cm-proxy-v1 `
+    --frames 20
+```
+
+`run_ppf_patterna_bundle.py` verifies the immutable runtime manifest and every input hash. Before launching the native child, it independently recomputes triangle area, initial strain, garment self-intersection, body intersection, and `0.25 cm` body-clearance gates. Its bounded rigid stage may move only violating panels radially outward, records every transform, and must recheck to zero violations without changing material shape. Run `--preflight-only` first; it writes the same gate report without creating a native session. The normal path redirects cache and session state into the artifact, records the native requested frame count after configuring dynamic release parameters, and never labels a completed solve as accepted. If a host wrapper ends before the native child, let the solver finish and use `collect_ppf_patterna_session.py` against the exact session directory. The collector verifies runtime identity, restores PPF's object vertex map, reads the native TOML frame count, grades every saved snapshot, and writes a fresh hash-bound rejection or remaining-acceptance report.
