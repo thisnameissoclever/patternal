@@ -2520,3 +2520,39 @@ Reject an initial arrangement before solver launch unless it meets the common mi
 ### How to verify
 
 Run the source-builder and Newton adapter unit suites. Confirm the exact rejected 0.50 cm C# arrangement fails before solve with both strain reasons. Confirm collar joins are excluded, `seam_link_12` and `seam_link_27` are both phase 2, sleeve caps are phase 3, and all six diagnostic camera names show the matching anatomy.
+
+## Data-bound list rows need explicit automation identities
+
+### What happened
+
+The isolated UI test could see the rendered `Back Torso` text but could not select the row. The WinUI `ListViewItem` exposed the model type name, `Patterna.PatternPieceListItem`, and the editor updated its active piece only through a mouse-style item-click event.
+
+### Root cause
+
+The data template made the visible text correct without defining the container's accessible identity. Selection and activation were treated as the same event even though keyboard and UI Automation selection do not raise `ItemClick`.
+
+### Prevention rule
+
+Give data-bound row models a stable human-readable string identity and drive active selection from `SelectionChanged`. Do not infer accessibility from visible child text.
+
+### How to verify
+
+Inspect the packaged UI Automation tree and require each pattern-piece `ListItem` to expose its piece name. Select `Back Torso` through `SelectionItemPattern`, invoke Frame selected, and require the selected piece to be centered at the calculated zoom without host input injection.
+
+## Viewport labels must follow committed view state
+
+### What happened
+
+The Fit command set its zoom label to 89 percent immediately, so automation accepted the command. The packaged screenshot taken 300 milliseconds later still showed 109 percent because an older `ScrollViewer` view change completed after the optimistic label update.
+
+### Root cause
+
+The command handler treated a requested zoom as committed state. `ScrollViewer.ChangeView` completes asynchronously even when animation is disabled, and the label created a second, premature source of truth.
+
+### Prevention rule
+
+Update viewport labels and control availability only from the final `ViewChanged` event. Tests must wait for that committed property and then inspect the screenshot; a transient requested value is not visual proof.
+
+### How to verify
+
+In the packaged guest, run Zoom in, Zoom out, Zoom in, Fit, and Frame selected in sequence. Require the final label and screenshot to agree after every command, with Fit restoring the full 14-piece layout and Frame selected centering the named piece.

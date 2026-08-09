@@ -77,6 +77,7 @@ public sealed partial class MainPage : Page
     private bool _updatingAssemblyInspector;
     private bool _patternViewInitialized;
     private float _patternZoomTarget = 1f;
+    private PatternCanvasLayoutResult? _patternCanvasLayout;
     private readonly SemaphoreSlim _unrealBridgeWriteLock = new(1, 1);
     private string? _currentSimulationRevision;
     private string? _acceptedSimulationRevision;
@@ -584,6 +585,7 @@ public sealed partial class MainPage : Page
             MinimumPatternCanvasWidth,
             MinimumPatternCanvasHeight,
             PatternPixelsPerCentimeter);
+        _patternCanvasLayout = layout;
         PatternCanvas.Width = layout.CanvasWidth;
         PatternCanvas.Height = layout.CanvasHeight;
         PatternCanvas.Children.Clear();
@@ -608,6 +610,7 @@ public sealed partial class MainPage : Page
             DrawDimension(107, 682, 282 * skirt.ScaleX, $"hip contour  {HipSlider.Value:0.#} cm");
         }
         DrawCanvasDraftPreview();
+        PatternFrameSelectedButton.IsEnabled = layout.Placements.ContainsKey(_selectedPieceId);
     }
 
     private GarmentDocument BuildCurrentGarmentDocument()
@@ -4488,9 +4491,10 @@ public sealed partial class MainPage : Page
         }
     }
 
-    private void OnPatternPieceClicked(object sender, ItemClickEventArgs e)
+    private void OnPatternPieceSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (e.ClickedItem is PatternPieceListItem item)
+        if (PatternPiecesList.SelectedItem is PatternPieceListItem item &&
+            !string.Equals(_selectedPieceId, item.Id, StringComparison.OrdinalIgnoreCase))
         {
             _selectedPieceId = item.Id;
             _selectedPatternPoint = null;
@@ -5459,6 +5463,34 @@ public sealed partial class MainPage : Page
     private void OnPatternZoomOutClicked(object sender, RoutedEventArgs e)
         => ChangePatternZoom(-0.2f);
 
+    private void OnFrameSelectedPatternClicked(object sender, RoutedEventArgs e)
+    {
+        if (_patternCanvasLayout is null ||
+            !_patternCanvasLayout.Placements.TryGetValue(_selectedPieceId, out PatternCanvasPlacement? placement))
+        {
+            return;
+        }
+
+        PatternCanvasFrameResult frame = PatternCanvasLayoutEngine.Frame(
+            placement,
+            _patternCanvasLayout.CanvasWidth,
+            _patternCanvasLayout.CanvasHeight,
+            PatternScrollViewer.ViewportWidth,
+            PatternScrollViewer.ViewportHeight,
+            PatternScrollViewer.MinZoomFactor,
+            PatternScrollViewer.MaxZoomFactor);
+        _patternZoomTarget = frame.ZoomFactor;
+        PatternScrollViewer.ChangeView(
+            frame.HorizontalOffset,
+            frame.VerticalOffset,
+            frame.ZoomFactor,
+            disableAnimation: true);
+        string pieceName = _garmentDocument?.Pieces
+            .FirstOrDefault(piece => string.Equals(piece.Id, _selectedPieceId, StringComparison.OrdinalIgnoreCase))?.Name
+            ?? _selectedPieceId;
+        ShowStatus("Pattern piece framed", $"{pieceName} is framed in the drafting viewport.", InfoBarSeverity.Informational);
+    }
+
     private void ChangePatternZoom(float delta)
     {
         float target = Math.Clamp(
@@ -5467,7 +5499,6 @@ public sealed partial class MainPage : Page
             PatternScrollViewer.MaxZoomFactor);
         _patternZoomTarget = target;
         PatternScrollViewer.ChangeView(null, null, target, disableAnimation: true);
-        UpdatePatternZoomLabel(target);
     }
 
     private void OnPatternScrollViewerViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
@@ -5499,7 +5530,6 @@ public sealed partial class MainPage : Page
             PatternScrollViewer.MaxZoomFactor);
         _patternZoomTarget = target;
         PatternScrollViewer.ChangeView(0, 0, target, disableAnimation);
-        UpdatePatternZoomLabel(target);
     }
 
     private void UpdatePatternZoomLabel(float zoomFactor)
@@ -5622,6 +5652,8 @@ public sealed class PatternPieceListItem
     public string Detail { get; set; }
 
     public Brush Swatch { get; set; }
+
+    public override string ToString() => Name;
 }
 
 internal sealed record SavedCustomMeasurement(string Name, double Value, string Unit);

@@ -668,6 +668,33 @@ try {
         }
     }
 
+    Invoke-UiCheck -Name '2D selection and frame-selected workflow' -Check {
+        $piece = Find-UiElement -Root $window -Name 'Back Torso'
+        Invoke-UiElement -Element $piece
+        $frame = Find-UiElementByAutomationId -Root $window -AutomationId 'PatternFrameSelectedButton'
+        $zoomLabel = Find-UiElementByAutomationId -Root $window -AutomationId 'PatternZoomText'
+        if (-not $frame.Current.IsEnabled) {
+            throw 'Frame selected is disabled after selecting Back Torso.'
+        }
+        Invoke-UiElement -Element $frame
+        $framedZoom = Wait-ForCondition -Description 'frame-selected command to enlarge Back Torso' -Condition {
+            $current = $zoomLabel.Current.Name
+            $currentValue = [double]::Parse(
+                $current.TrimEnd('%'),
+                [Globalization.CultureInfo]::InvariantCulture)
+            if ($currentValue -gt 100) { $current } else { $null }
+        }
+        Start-Sleep -Milliseconds 300
+        $frameShotPath = Join-Path $evidenceDirectory '09-2d-frame-selected.png'
+        Save-WindowScreenshot -Window $window -Path $frameShotPath
+        $script:screenshots.Add([pscustomobject]@{ name = '2d-frame-selected'; file = [IO.Path]::GetFileName($frameShotPath) })
+        [ordered]@{
+            piece = 'Back Torso'
+            zoom = $framedZoom
+            screenshot = [IO.Path]::GetFileName($frameShotPath)
+        }
+    }
+
     foreach ($toggleName in @(
         'Show pattern pieces panel',
         'Show avatar and material inspector',

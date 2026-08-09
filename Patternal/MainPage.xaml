@@ -170,9 +170,8 @@
                     Grid.Row="1"
                     Margin="0,16,0,12"
                     AutomationProperties.Name="Pattern pieces"
-                    IsItemClickEnabled="True"
-                    ItemClick="OnPatternPieceClicked"
                     ItemsSource="{x:Bind PatternPieceItems}"
+                    SelectionChanged="OnPatternPieceSelectionChanged"
                     SelectionMode="Single"
                     SelectedIndex="0">
                     <ListView.ItemTemplate>
@@ -649,6 +648,12 @@
                                         AutomationProperties.Name="Fit all pattern pieces"
                                         Click="OnFitPatternClicked"
                                         Content="Fit" />
+                                    <Button
+                                        x:Name="PatternFrameSelectedButton"
+                                        AutomationProperties.AutomationId="PatternFrameSelectedButton"
+                                        AutomationProperties.Name="Frame selected pattern piece"
+                                        Click="OnFrameSelectedPatternClicked"
+                                        Content="Frame" />
                                 </StackPanel>
                             </Border>
                         </Grid>

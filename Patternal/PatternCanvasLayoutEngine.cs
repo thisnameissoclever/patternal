@@ -14,6 +14,11 @@ public sealed record PatternCanvasLayoutResult(
     double CanvasHeight,
     double Utilization);
 
+public sealed record PatternCanvasFrameResult(
+    float ZoomFactor,
+    double HorizontalOffset,
+    double VerticalOffset);
+
 public static class PatternCanvasLayoutEngine
 {
     private const double OuterMargin = 18;
@@ -21,6 +26,41 @@ public static class PatternCanvasLayoutEngine
     private const double HeaderHeight = 26;
     private const double ContentPadding = 10;
     private const double MinimumItemWidth = 132;
+
+    public static PatternCanvasFrameResult Frame(
+        PatternCanvasPlacement placement,
+        double canvasWidth,
+        double canvasHeight,
+        double viewportWidth,
+        double viewportHeight,
+        float minimumZoomFactor,
+        float maximumZoomFactor,
+        double viewportPadding = 48)
+    {
+        if (canvasWidth <= 0 || canvasHeight <= 0 ||
+            viewportWidth <= 0 || viewportHeight <= 0 ||
+            placement.Width <= 0 || placement.Height <= 0 ||
+            minimumZoomFactor <= 0 || maximumZoomFactor < minimumZoomFactor)
+        {
+            throw new ArgumentOutOfRangeException(nameof(canvasWidth));
+        }
+
+        double availableWidth = Math.Max(1, viewportWidth - viewportPadding);
+        double availableHeight = Math.Max(1, viewportHeight - viewportPadding);
+        float zoomFactor = (float)Math.Clamp(
+            Math.Min(availableWidth / placement.Width, availableHeight / placement.Height),
+            minimumZoomFactor,
+            maximumZoomFactor);
+        double horizontalOffset = Math.Clamp(
+            (placement.Left + placement.Width / 2) * zoomFactor - viewportWidth / 2,
+            0,
+            Math.Max(0, canvasWidth * zoomFactor - viewportWidth));
+        double verticalOffset = Math.Clamp(
+            (placement.Top + placement.Height / 2) * zoomFactor - viewportHeight / 2,
+            0,
+            Math.Max(0, canvasHeight * zoomFactor - viewportHeight));
+        return new PatternCanvasFrameResult(zoomFactor, horizontalOffset, verticalOffset);
+    }
 
     public static PatternCanvasLayoutResult Arrange(
         IReadOnlyList<PatternPieceDocument> pieces,

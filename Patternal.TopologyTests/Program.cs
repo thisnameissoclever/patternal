@@ -448,6 +448,24 @@ Assert(
             pair.Second.Top + pair.Second.Height <= pair.First.Top),
     "The 2D auto layout overlaps production shirt piece cells.");
 Assert(acceptedShirtLayout.CanvasHeight <= 720, "The 14-piece production shirt no longer fits the baseline 2D canvas.");
+PatternCanvasPlacement frontTorsoPlacement = acceptedShirtLayout.Placements["front-torso"];
+PatternCanvasFrameResult frontTorsoFrame = PatternCanvasLayoutEngine.Frame(
+    frontTorsoPlacement,
+    acceptedShirtLayout.CanvasWidth,
+    acceptedShirtLayout.CanvasHeight,
+    800,
+    600,
+    0.5f,
+    3f);
+Assert(frontTorsoFrame.ZoomFactor is >= 0.5f and <= 3f, "Frame-selected produced an invalid zoom factor.");
+Assert(
+    frontTorsoFrame.HorizontalOffset >= 0 &&
+        frontTorsoFrame.HorizontalOffset <= acceptedShirtLayout.CanvasWidth * frontTorsoFrame.ZoomFactor - 800,
+    "Frame-selected produced an invalid horizontal viewport offset.");
+Assert(
+    frontTorsoFrame.VerticalOffset >= 0 &&
+        frontTorsoFrame.VerticalOffset <= acceptedShirtLayout.CanvasHeight * frontTorsoFrame.ZoomFactor - 600,
+    "Frame-selected produced an invalid vertical viewport offset.");
 Assert(acceptedShirt.Seams.Count == 34, "The production shirt source did not import all 34 construction seams.");
 Assert(acceptedShirtTopology.Panels.Count == 14, "The production shirt source did not compile all 14 panels.");
 Assert(acceptedShirtTopology.Seams.Count == 34, "The production shirt topology lost a construction seam.");
@@ -976,8 +994,12 @@ Assert(
         mainPageXaml.Contains("AutomationProperties.AutomationId=\"PatternZoomText\"", StringComparison.Ordinal) &&
         mainPageXaml.Contains("AutomationProperties.AutomationId=\"PatternZoomInButton\"", StringComparison.Ordinal) &&
         mainPageXaml.Contains("AutomationProperties.AutomationId=\"PatternFitButton\"", StringComparison.Ordinal) &&
+        mainPageXaml.Contains("AutomationProperties.AutomationId=\"PatternFrameSelectedButton\"", StringComparison.Ordinal) &&
+        mainPageXaml.Contains("SelectionChanged=\"OnPatternPieceSelectionChanged\"", StringComparison.Ordinal) &&
         !mainPageXaml.Contains("86% FABRIC USE", StringComparison.Ordinal) &&
-        mainPageCode.Contains("PatternCanvasLayoutEngine.Arrange", StringComparison.Ordinal),
+        mainPageCode.Contains("PatternCanvasLayoutEngine.Arrange", StringComparison.Ordinal) &&
+        mainPageCode.Contains("PatternCanvasLayoutEngine.Frame", StringComparison.Ordinal) &&
+        mainPageCode.Contains("public override string ToString() => Name;", StringComparison.Ordinal),
     "The 2D workspace lost deterministic packing or its visible pan and zoom contract.");
 Assert(mainPageXaml.Contains("x:Name=\"AcceptedEquilibriumTopologyText\"", StringComparison.Ordinal), "The packaged 3D overlay is not driven by live topology metadata.");
 Assert(
