@@ -48,14 +48,27 @@ try {
     }
 
     $deadline = [DateTimeOffset]::UtcNow.AddSeconds($TimeoutSeconds)
+    $taskStartRequestedAt = Get-Date
     $guestResultPath = "$guestEvidenceRoot\$runId\result.json"
     do {
-        $complete = Invoke-Command -Session $session -ScriptBlock {
+        $guestStatus = Invoke-Command -Session $session -ScriptBlock {
             param($Path)
-            Test-Path -LiteralPath $Path
+            $task = Get-ScheduledTask -TaskName 'Patternal Guest UI Smoke' -ErrorAction Stop
+            $taskInfo = Get-ScheduledTaskInfo -TaskName 'Patternal Guest UI Smoke' -ErrorAction Stop
+            [pscustomobject]@{
+                ResultExists = Test-Path -LiteralPath $Path
+                TaskState = $task.State.ToString()
+                LastRunTime = $taskInfo.LastRunTime
+                LastTaskResult = $taskInfo.LastTaskResult
+            }
         } -ArgumentList $guestResultPath
+        $complete = $guestStatus.ResultExists
         if ($complete) {
             break
+        }
+        if ($guestStatus.TaskState -ne 'Running' -and
+            $guestStatus.LastRunTime -ge $taskStartRequestedAt.AddSeconds(-2)) {
+            throw "Guest UI smoke task exited before writing result.json. Task state was $($guestStatus.TaskState); last task result was $($guestStatus.LastTaskResult)."
         }
         Start-Sleep -Seconds 5
     } while ([DateTimeOffset]::UtcNow -lt $deadline)

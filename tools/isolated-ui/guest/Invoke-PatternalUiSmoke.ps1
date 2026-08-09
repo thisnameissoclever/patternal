@@ -14,7 +14,9 @@ Add-Type -AssemblyName System.Windows.Forms
 if (-not ('PatternalDisplayMode' -as [type])) {
     Add-Type -TypeDefinition @'
 using System;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 public static class PatternalDisplayMode
 {
@@ -78,6 +80,72 @@ public static class PatternalDisplayMode
         mode.dmPelsHeight = height;
         mode.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT;
         return ChangeDisplaySettings(ref mode, CDS_UPDATEREGISTRY) == DISP_CHANGE_SUCCESSFUL;
+    }
+}
+
+public static class PatternalGuestPointerInput
+{
+    private const uint INPUT_MOUSE = 0;
+    private const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
+    private const uint MOUSEEVENTF_LEFTUP = 0x0004;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MOUSEINPUT
+    {
+        public int dx;
+        public int dy;
+        public uint mouseData;
+        public uint dwFlags;
+        public uint time;
+        public UIntPtr dwExtraInfo;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct INPUT
+    {
+        public uint type;
+        public MOUSEINPUT mouse;
+    }
+
+    [DllImport("user32.dll")]
+    private static extern bool SetCursorPos(int x, int y);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern uint SendInput(uint count, INPUT[] inputs, int size);
+
+    [DllImport("user32.dll")]
+    private static extern bool SetForegroundWindow(IntPtr window);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetForegroundWindow();
+
+    public static bool BringToFront(int nativeWindowHandle)
+    {
+        return SetForegroundWindow(new IntPtr(nativeWindowHandle));
+    }
+
+    public static int ForegroundWindowHandle()
+    {
+        return GetForegroundWindow().ToInt32();
+    }
+
+    public static void Click(int x, int y)
+    {
+        if (!SetCursorPos(x, y))
+        {
+            throw new InvalidOperationException("The guest desktop rejected the requested pointer position.");
+        }
+        Thread.Sleep(60);
+        var inputs = new[]
+        {
+            new INPUT { type = INPUT_MOUSE, mouse = new MOUSEINPUT { dwFlags = MOUSEEVENTF_LEFTDOWN } },
+            new INPUT { type = INPUT_MOUSE, mouse = new MOUSEINPUT { dwFlags = MOUSEEVENTF_LEFTUP } }
+        };
+        var sent = SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
+        if (sent != (uint)inputs.Length)
+        {
+            throw new Win32Exception(Marshal.GetLastWin32Error(), "The guest desktop did not accept the complete pointer click.");
+        }
     }
 }
 '@
@@ -888,6 +956,110 @@ try {
             enteredPoints = $coordinates.Count
             screenshot = [IO.Path]::GetFileName($draftShotPath)
         }
+    }
+
+    Invoke-UiCheck -Name '2D guest pointer polygon drafting undo and redo' -Check {
+        $fit = Find-UiElementByAutomationId -Root $window -AutomationId 'PatternFitButton'
+        Invoke-UiElement -Element $fit
+        $originalCount = [int]((Find-UiElementByAutomationId -Root $window -AutomationId 'PatternPieceCountText').Current.Name -replace '\D', '')
+        Invoke-UiElement -Element (Find-UiElement -Root $window -Name 'Draw a polygon pattern piece directly on the canvas')
+        $pointerDraftResult = $null
+        try {
+            $canvas = Find-UiElement -Root $window -Name 'Interactive two dimensional pattern layout'
+            $canvasBounds = $canvas.Current.BoundingRectangle
+            if ($canvasBounds.Width -lt 600 -or $canvasBounds.Height -lt 450) {
+                throw "The visible pattern canvas is too small for deterministic pointer drafting: $($canvasBounds.Width) by $($canvasBounds.Height)."
+            }
+            [void][PatternalGuestPointerInput]::BringToFront($window.Current.NativeWindowHandle)
+            Start-Sleep -Milliseconds 150
+            $screenPoints = @(
+                @([double]($canvasBounds.Left + ([double]$canvasBounds.Width * 0.58)), [double]($canvasBounds.Top + ([double]$canvasBounds.Height * 0.62))),
+                @([double]($canvasBounds.Left + ([double]$canvasBounds.Width * 0.68)), [double]($canvasBounds.Top + ([double]$canvasBounds.Height * 0.62))),
+                @([double]($canvasBounds.Left + ([double]$canvasBounds.Width * 0.68)), [double]($canvasBounds.Top + ([double]$canvasBounds.Height * 0.72))),
+                @([double]($canvasBounds.Left + ([double]$canvasBounds.Width * 0.58)), [double]($canvasBounds.Top + ([double]$canvasBounds.Height * 0.72)))
+            )
+            for ($pointIndex = 0; $pointIndex -lt $screenPoints.Count; $pointIndex++) {
+                $point = $screenPoints[$pointIndex]
+                $screenX = [int][math]::Round($point[0])
+                $screenY = [int][math]::Round($point[1])
+                $hit = [System.Windows.Automation.AutomationElement]::FromPoint([System.Windows.Point]::new($screenX, $screenY))
+                if (-not $hit -or $hit.Current.ProcessId -ne $window.Current.ProcessId) {
+                    $hitSummary = if ($hit) { "'$($hit.Current.Name)' from process $($hit.Current.ProcessId)" } else { 'no UI Automation element' }
+                    throw "Guest pointer coordinate $screenX,$screenY hit $hitSummary instead of the Patternal window process."
+                }
+                [PatternalGuestPointerInput]::Click($screenX, $screenY)
+                $expectedCornerCount = $pointIndex + 1
+                try {
+                    Wait-ForCondition -Description "guest pointer polygon corner $expectedCornerCount to be placed" -Condition {
+                        $status = Find-UiElementByAutomationId -Root $window -AutomationId 'CanvasDraftStatusText'
+                        $status.Current.Name -like "$expectedCornerCount corner*"
+                    } | Out-Null
+                }
+                catch {
+                    $cursor = [System.Windows.Forms.Cursor]::Position
+                    $foreground = [PatternalGuestPointerInput]::ForegroundWindowHandle()
+                    throw "Guest click $expectedCornerCount at $screenX,$screenY hit '$($hit.Current.Name)' ($($hit.Current.ControlType.ProgrammaticName)); cursor ended at $($cursor.X),$($cursor.Y); foreground handle was $foreground; the draft status did not advance."
+                }
+            }
+
+            $pointerDraftShotPath = Join-Path $evidenceDirectory '11-2d-pointer-polygon-draft.png'
+            Save-WindowScreenshot -Window $window -Path $pointerDraftShotPath
+            $script:screenshots.Add([pscustomobject]@{ name = '2d-pointer-polygon-draft'; file = [IO.Path]::GetFileName($pointerDraftShotPath) })
+
+            $firstPoint = $screenPoints[0]
+            [PatternalGuestPointerInput]::Click([int][math]::Round($firstPoint[0]), [int][math]::Round($firstPoint[1]))
+            $createdCount = $originalCount + 1
+            Wait-ForCondition -Description 'clicking the first pointer corner to close and create the polygon' -Condition {
+                (Find-UiElementByAutomationId -Root $window -AutomationId 'PatternPieceCountText').Current.Name -eq "$createdCount pieces"
+            } | Out-Null
+
+            $undo = Find-UiElement -Root $window -Name 'Undo pattern geometry edit'
+            Invoke-UiElement -Element $undo
+            Wait-ForCondition -Description 'Undo to remove the pointer-drafted polygon' -Condition {
+                (Find-UiElementByAutomationId -Root $window -AutomationId 'PatternPieceCountText').Current.Name -eq "$originalCount pieces"
+            } | Out-Null
+            $redo = Find-UiElement -Root $window -Name 'Redo pattern geometry edit'
+            Invoke-UiElement -Element $redo
+            Wait-ForCondition -Description 'Redo to restore the pointer-drafted polygon' -Condition {
+                (Find-UiElementByAutomationId -Root $window -AutomationId 'PatternPieceCountText').Current.Name -eq "$createdCount pieces"
+            } | Out-Null
+            $undo = Find-UiElement -Root $window -Name 'Undo pattern geometry edit'
+            Invoke-UiElement -Element $undo
+            Wait-ForCondition -Description 'final Undo to restore the original piece count after pointer drafting' -Condition {
+                (Find-UiElementByAutomationId -Root $window -AutomationId 'PatternPieceCountText').Current.Name -eq "$originalCount pieces"
+            } | Out-Null
+
+            $pointerDraftResult = [ordered]@{
+                originalPieceCount = $originalCount
+                createdPieceCount = $createdCount
+                restoredPieceCount = $originalCount
+                pointerClicks = $screenPoints.Count + 1
+                guestOnlyPointerInput = $true
+                screenshot = [IO.Path]::GetFileName($pointerDraftShotPath)
+            }
+        }
+        finally {
+            $cancelDraft = Find-UiElementOnce -Root $window -Name 'Cancel canvas pattern drafting'
+            if ($cancelDraft -and -not $cancelDraft.Current.IsOffscreen -and $cancelDraft.Current.IsEnabled) {
+                try {
+                    Invoke-UiElement -Element $cancelDraft
+                }
+                catch {
+                }
+            }
+            for ($cleanupAttempt = 0; $cleanupAttempt -lt 4; $cleanupAttempt++) {
+                $currentCount = [int]((Find-UiElementByAutomationId -Root $window -AutomationId 'PatternPieceCountText').Current.Name -replace '\D', '')
+                if ($currentCount -le $originalCount) {
+                    break
+                }
+                $cleanupUndo = Find-UiElement -Root $window -Name 'Undo pattern geometry edit'
+                Invoke-UiElement -Element $cleanupUndo
+                Wait-ForCondition -Description 'pointer-draft failure cleanup to reduce the piece count' -Condition {
+                    [int]((Find-UiElementByAutomationId -Root $window -AutomationId 'PatternPieceCountText').Current.Name -replace '\D', '') -lt $currentCount
+                } | Out-Null
+            }
+        }
+        $pointerDraftResult
     }
 
     Invoke-UiCheck -Name '2D internal line create update delete undo and redo' -Check {

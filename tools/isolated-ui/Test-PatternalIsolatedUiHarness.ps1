@@ -52,10 +52,31 @@ foreach ($file in $hostFiles) {
 
 $guestRunnerPath = Join-Path $PSScriptRoot 'guest\Invoke-PatternalUiSmoke.ps1'
 $guestRunner = Get-Content -LiteralPath $guestRunnerPath -Raw
+$windowsPowerShellPath = Join-Path $env:WINDIR 'System32\WindowsPowerShell\v1.0\powershell.exe'
+if (-not (Test-Path -LiteralPath $windowsPowerShellPath -PathType Leaf)) {
+    throw 'Windows PowerShell 5.1 is required to validate the guest runner compiler boundary.'
+}
+$escapedGuestRunnerPath = $guestRunnerPath.Replace("'", "''")
+$guestCompilerCommand = @"
+`$sourceText = Get-Content -LiteralPath '$escapedGuestRunnerPath' -Raw
+`$sourceMatch = [regex]::Match(`$sourceText, "Add-Type -TypeDefinition @'\r?\n(?<source>[\s\S]*?)\r?\n'@")
+if (-not `$sourceMatch.Success) {
+    throw 'Guest C# source block was not found.'
+}
+Add-Type -TypeDefinition `$sourceMatch.Groups['source'].Value
+"@
+$encodedGuestCompilerCommand = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($guestCompilerCommand))
+$guestCompilerOutput = & $windowsPowerShellPath -NoLogo -NoProfile -NonInteractive -EncodedCommand $encodedGuestCompilerCommand 2>&1
+if ($LASTEXITCODE -ne 0) {
+    throw "Guest C# does not compile under Windows PowerShell 5.1: $($guestCompilerOutput -join [Environment]::NewLine)"
+}
 $xamlPath = Join-Path $repositoryRoot 'Patternal\MainPage.xaml'
 $xaml = Get-Content -LiteralPath $xamlPath -Raw
 $codeBehindPath = Join-Path $repositoryRoot 'Patternal\MainPage.xaml.cs'
 $codeBehind = Get-Content -LiteralPath $codeBehindPath -Raw
+if ($xaml -notmatch '(?s)<Canvas(?=[^>]*x:Name="PatternCanvas")(?=[^>]*Background="Transparent")[^>]*>') {
+    throw 'The interactive pattern canvas no longer exposes a transparent hit-test surface for empty-space pointer drafting.'
+}
 if ($xaml.Contains('Exact measured MPFB body') -or $codeBehind.Contains('Exact measured MPFB body')) {
     throw 'The product UI again hard-codes the legacy MPFB backend name for every current collision body.'
 }
@@ -135,6 +156,9 @@ foreach ($avatarStateContract in @(
     }
 }
 foreach ($patternLifecycleContract in @(
+    "'2D guest pointer polygon drafting undo and redo'",
+    '[PatternalGuestPointerInput]::Click',
+    "'11-2d-pointer-polygon-draft.png'",
     "'2D internal line create update delete undo and redo'",
     "'Edit: Construction line 1'",
     "'Shoulder balance guide'",
@@ -176,6 +200,15 @@ if (-not $guestRunner.Contains('failureDiagnostics = $failureDiagnostics')) {
 }
 if (-not $guestRunner.Contains('fatalScriptStackTrace = $fatalScriptStackTrace')) {
     throw 'Guest runner no longer preserves the failing PowerShell script line with failed UI evidence.'
+}
+$hostRunner = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'Invoke-PatternalGuestUiSmoke.ps1') -Raw
+foreach ($earlyExitContract in @(
+    'LastTaskResult',
+    'exited before writing result.json'
+)) {
+    if (-not $hostRunner.Contains($earlyExitContract)) {
+        throw "Host runner no longer fails promptly when the guest task exits before evidence initialization: '$earlyExitContract'."
+    }
 }
 if (-not $guestRunner.Contains('[System.Drawing.Bitmap]::new([int]$width, [int]$height)')) {
     throw 'Guest screenshot capture no longer pins System.Drawing bitmap dimensions to integer pixels.'
@@ -262,6 +295,7 @@ foreach ($file in @($scriptFiles) + @(Get-Item -LiteralPath $documentationPath))
     ParsedFiles = $scriptFiles.Count
     Parser = 'Passed'
     HostInputBoundary = 'Passed'
+    GuestCSharpCompiler = 'Windows PowerShell 5.1 passed'
     AutomationContracts = $requiredAutomationNames.Count
     Schemas = $requiredSchemas.Count
     Documentation = 'Passed'

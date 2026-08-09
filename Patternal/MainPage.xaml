@@ -299,6 +299,7 @@
                                     x:Name="PatternCanvas"
                                     Width="960"
                                     Height="720"
+                                    Background="Transparent"
                                     AutomationProperties.Name="Interactive two dimensional pattern layout"
                                     PointerMoved="OnPatternCanvasPointerMoved"
                                     PointerPressed="OnPatternCanvasPointerPressed" />

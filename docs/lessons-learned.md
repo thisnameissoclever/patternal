@@ -2732,3 +2732,39 @@ Before implementing a listed UI gap, inspect the active command handler, documen
 ### How to verify
 
 In the packaged guest, create an internal line and a guide dart, update their names and semantic fields, prove each update through Undo and Redo, delete each object, prove each deletion through Undo and Redo, and leave the garment with neither test object. Review the resulting line and dart screenshots at 1920 by 1080 and confirm the result bundle records no functional failure beyond the independent current-cloth freshness gate.
+
+## An interactive canvas needs a hit-test surface on empty space
+
+### What happened
+
+The 2D toolbar told the user to click the canvas to place polygon corners, but guest-local pointer clicks on visually empty grid space never reached `OnPatternCanvasPointerPressed`. The cursor moved to the expected coordinate, Windows accepted the click, Patternal was foreground, and UI Automation resolved the point to an unnamed parent pane instead of `PatternCanvas`.
+
+### Root cause
+
+The WinUI `Canvas` had no background. A null background makes visually empty regions transparent to hit testing, so only existing child geometry could receive pointer input. Numeric coordinate entry worked and disguised the broken direct-manipulation path.
+
+### Prevention rule
+
+Every interactive drawing surface must declare an explicit hit-testable background. Use `Transparent` when the parent owns the visible fill, and keep a packaged pointer test that places geometry on empty space rather than over an existing child.
+
+### How to verify
+
+In the isolated guest, fit the 2D canvas, enter pointer polygon mode, and click four empty-space corners. Require each click to advance the accessible corner count, click the first corner again to close the polygon, prove the piece count changes through Undo and Redo, restore the original count, and review the captured preview. The host-input and VMConnect flags must remain false.
+
+## Guest bootstrap code must compile with the guest compiler
+
+### What happened
+
+A guest-local pointer helper compiled under PowerShell 7 on the host but used expression-bodied C# methods that Windows PowerShell 5.1 `Add-Type` rejected. The failure happened before the runner created its evidence directory, so the scheduled task exited with code 1 while the host waited for a `result.json` file that could never appear.
+
+### Root cause
+
+The harness parsed PowerShell syntax and checked automation contracts but did not compile the embedded C# with the same compiler used by the guest scheduled task. The host poller watched only for the result file and ignored the scheduled task state.
+
+### Prevention rule
+
+Compile embedded guest C# through Windows PowerShell 5.1 during the repository harness check. While polling a guest run, observe both `result.json` and scheduled-task state; fail promptly with `LastTaskResult` when a newly started task exits before initializing evidence.
+
+### How to verify
+
+Run `Test-PatternalIsolatedUiHarness.ps1` and require `GuestCSharpCompiler` to report `Windows PowerShell 5.1 passed`. Run the normal guest suite and confirm a valid result bundle is copied. A deliberately invalid guest C# probe must fail the harness before sync, while an early guest task exit must stop the host poller without waiting for its full timeout.
