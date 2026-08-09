@@ -20,6 +20,7 @@ SOURCE_LICENSE = (
     / "antonia"
     / "license.txt"
 )
+PACKAGED_RENDERER = REPO_ROOT / "Patternal" / "Assets" / "avatar3d.html"
 
 
 def sha256(path: Path) -> str:
@@ -97,6 +98,17 @@ class CandidateAvatarAssetTests(unittest.TestCase):
         for buffer_view in self.document["bufferViews"]:
             start = buffer_view.get("byteOffset", 0)
             self.assertLessEqual(start + buffer_view["byteLength"], len(self.binary))
+
+    def test_packaged_renderer_uses_one_explicit_srgb_base_color_contract(self) -> None:
+        renderer = PACKAGED_RENDERER.read_text(encoding="utf-8")
+        self.assertIn("uniform float uSrgbBaseColor;", renderer)
+        self.assertIn("vec3 srgbToLinear(vec3 value)", renderer)
+        self.assertIn("vec3 linearToSrgb(vec3 value)", renderer)
+        self.assertIn("gl.uniform1f(locations.srgbBaseColor,srgbBaseColor&&texture?1:0);", renderer)
+        self.assertIn("state.displayBodyTexture,.66,.01,true", renderer)
+        self.assertIn("loadTexture(objectUrl,{flipY:false,ignoreEmbeddedColorSpace:true})", renderer)
+        self.assertIn("gl.UNPACK_COLORSPACE_CONVERSION_WEBGL", renderer)
+        self.assertNotIn("gl.enable(gl.FRAMEBUFFER_SRGB)", renderer)
 
 
 if __name__ == "__main__":

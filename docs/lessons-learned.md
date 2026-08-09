@@ -1385,6 +1385,24 @@ Treat compiler output, normal application output, and the registered loose AppX 
 
 Compare SHA-256 hashes for `avatar3d.html`, the accepted garment OBJ, and the fabric texture between the normal output and `AppX` directories. Require exact matches before AUMID activation. In the live 3D tab, require the current HUD text with both 30,362 surface vertices and 180,936 UV corners instead of accepting a visually similar window as proof.
 
+## A generic WebGL image upload is not a glTF texture loader
+
+### What happened
+
+The fitted Antonia candidate looked coherent in Blender but appeared dark, patchy, and stitched from incompatible skin regions in the packaged application. Anatomical texture details appeared on the wrong surfaces, and hard boundaries were visible between the head, arms, torso, and legs.
+
+### Root cause
+
+The custom WebGL loader applied `UNPACK_FLIP_Y_WEBGL` to every image. glTF defines texture coordinate `(0, 0)` at the upper-left image pixel, so this extra flip vertically inverted every embedded albedo texture. The shader also performed lighting directly on sRGB albedo samples and left browser image color conversion implicit.
+
+### Prevention rule
+
+Keep generic OBJ texture upload and glTF base-color upload as explicit separate contracts. Do not vertically flip glTF images. Ignore embedded image color-profile conversion for glTF, decode base-color samples from sRGB before lighting, and encode the lit result to sRGB exactly once. Do not apply that transfer to procedural display colors or grayscale fabric-relief samples.
+
+### How to verify
+
+Build and register the exact packaged payload, then inspect Front, Right, Rear, Left, Oblique, and Fit views. Facial features, nipples, navel, hands, feet, and limb detail must appear on the correct anatomy; the head, arm, torso, and leg boundaries must remain visually continuous. Run every 2D authoring, camera, toggle, and slider check afterward so the renderer correction does not hide an interaction regression.
+
 ## Symmetric drafting helpers are not always valid production cutting pieces
 
 ### What happened

@@ -93,8 +93,20 @@
         uniform float uAlphaCutoff;
         uniform float uTextureScale;
         uniform float uSurfaceRelief;
+        uniform float uSrgbBaseColor;
         uniform vec3 uCameraPosition;
         out vec4 outColor;
+        vec3 srgbToLinear(vec3 value) {
+          vec3 low = value / 12.92;
+          vec3 high = pow((value + 0.055) / 1.055, vec3(2.4));
+          return mix(low, high, step(vec3(0.04045), value));
+        }
+        vec3 linearToSrgb(vec3 value) {
+          vec3 safe = max(value, vec3(0.0));
+          vec3 low = safe * 12.92;
+          vec3 high = 1.055 * pow(safe, vec3(1.0 / 2.4)) - 0.055;
+          return mix(low, high, step(vec3(0.0031308), safe));
+        }
         vec3 stressColor(float v) {
           vec3 low = vec3(0.20, 0.78, 0.56);
           vec3 mid = vec3(0.96, 0.77, 0.25);
@@ -135,9 +147,10 @@
           vec4 textureSample = uTextureEnabled > 0.5 ? texture(uTexture, sampledUv) : vec4(1.0);
           if (textureSample.a < uAlphaCutoff) discard;
           float fabricFiber = dot(textureSample.rgb, vec3(0.2126, 0.7152, 0.0722));
+          vec3 sampledColor = uSrgbBaseColor > 0.5 ? srgbToLinear(textureSample.rgb) : textureSample.rgb;
           vec3 base = uGarment > 0.5 && uTextureEnabled > 0.5
             ? uColor * mix(0.70, 1.12, fabricFiber)
-            : uColor * textureSample.rgb;
+            : uColor * sampledColor;
           if (uGarment > 0.5 && uStressEnabled > 0.5) base = mix(base, stressColor(vStress), 0.68);
           if (uGarment < 0.5 && uTextureEnabled < 0.5) {
             float skinVariation = sin(vWorld.y * 17.0 + vWorld.x * 11.0) * sin(vWorld.z * 23.0) * 0.008;
@@ -161,6 +174,7 @@
           }
           lit += rim * (uGarment > 0.5 ? vec3(0.025, 0.035, 0.055) : vec3(0.075, 0.035, 0.025));
           lit += vec3(specular);
+          if (uSrgbBaseColor > 0.5) lit = linearToSrgb(lit);
           outColor = vec4(clamp(lit, vec3(0.0), vec3(1.0)), uAlpha * textureSample.a);
         }`;
 
@@ -197,6 +211,7 @@
         alphaCutoff: gl.getUniformLocation(program, 'uAlphaCutoff'),
         textureScale: gl.getUniformLocation(program, 'uTextureScale'),
         surfaceRelief: gl.getUniformLocation(program, 'uSurfaceRelief'),
+        srgbBaseColor: gl.getUniformLocation(program, 'uSrgbBaseColor'),
         cameraPosition: gl.getUniformLocation(program, 'uCameraPosition')
       };
 
@@ -606,12 +621,13 @@
         };
       }
 
-      function loadTexture(url,{repeat=false}={}) {
+      function loadTexture(url,{repeat=false,flipY=true,ignoreEmbeddedColorSpace=false}={}) {
         return new Promise((resolve,reject)=>{
           const image=new Image();
           image.onload=()=>{
             const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);
-            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,flipY);
+            gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL,ignoreEmbeddedColorSpace?gl.NONE:gl.BROWSER_DEFAULT_WEBGL);
             gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
             const wrap=repeat?gl.REPEAT:gl.CLAMP_TO_EDGE;
             gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,wrap);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,wrap);
@@ -690,7 +706,7 @@
         const texture=document.textures?.[textureIndex],image=document.images?.[texture?.source];
         if(!texture||!image||image.bufferView===undefined||!image.mimeType)throw new Error(`Candidate GLB texture ${textureIndex} is not an embedded image.`);
         const objectUrl=URL.createObjectURL(new Blob([glbBufferView(document,binary,image.bufferView)],{type:image.mimeType}));
-        try{return await loadTexture(objectUrl);}finally{URL.revokeObjectURL(objectUrl);}
+        try{return await loadTexture(objectUrl,{flipY:false,ignoreEmbeddedColorSpace:true});}finally{URL.revokeObjectURL(objectUrl);}
       }
 
       function candidatePrimitiveData(document,binary,primitive,floorOffsetM,displayYawDegrees) {
@@ -1722,7 +1738,7 @@
         return new Float32Array([xx,yx,zx,0,xy,yy,zy,0,xz,yz,zz,0,-(xx*eye[0]+xy*eye[1]+xz*eye[2]),-(yx*eye[0]+yy*eye[1]+yz*eye[2]),-(zx*eye[0]+zy*eye[1]+zz*eye[2]),1]);
       }
       function rotationY(angle) { const c=Math.cos(angle),s=Math.sin(angle); return new Float32Array([c,0,-s,0,0,1,0,0,s,0,c,0,0,0,0,1]); }
-      function drawMesh(mesh,color,garment,now,mvp,model,texture=null,roughness=null,alphaCutoff=0) {
+      function drawMesh(mesh,color,garment,now,mvp,model,texture=null,roughness=null,alphaCutoff=0,srgbBaseColor=false) {
         if(!mesh)return; gl.bindVertexArray(mesh.vao);
         gl.uniformMatrix4fv(locations.mvp,false,mvp); gl.uniformMatrix4fv(locations.model,false,model);
         gl.uniform3fv(locations.color,new Float32Array(color)); gl.uniform3fv(locations.light,new Float32Array([-.36,.76,.63]));
@@ -1733,6 +1749,7 @@
         gl.uniform1f(locations.textureEnabled,texture?1:0);gl.uniform1f(locations.alphaCutoff,alphaCutoff);
         gl.uniform1f(locations.textureScale,garment?(fabricTextureScale[state.fabric.key]??8):1);
         gl.uniform1f(locations.surfaceRelief,garment&&texture?(fabricSurfaceRelief[state.fabric.key]??.48):0);
+        gl.uniform1f(locations.srgbBaseColor,srgbBaseColor&&texture?1:0);
         gl.drawElements(mesh.mode,mesh.count,gl.UNSIGNED_INT,0);
       }
 
@@ -1766,14 +1783,14 @@
         const view=lookAt(eye,[0,-.12,0],[0,1,0]),model=rotationY(state.yaw),mvp=multiply(multiply(projection,view),model);
         gl.uniform3fv(locations.cameraPosition,new Float32Array(eye));
         drawMesh(state.grid,[.22,.23,.27],false,now,mvp,model);
-        drawMesh(state.body,state.displayBodyTexture?(state.displayBodyColor||[1,1,1]):[.72,.49,.39],false,now,mvp,model,state.displayBodyTexture,.66,.01);
+        drawMesh(state.body,state.displayBodyTexture?(state.displayBodyColor||[1,1,1]):[.72,.49,.39],false,now,mvp,model,state.displayBodyTexture,.66,.01,true);
         for(const feature of state.face)drawMesh(feature.mesh,feature.color,false,now,mvp,model);
-        for(const asset of state.displayMeshes)if(asset.key!=='bra')drawMesh(asset.mesh,asset.color||[1,1,1],false,now,mvp,model,asset.texture,asset.roughness,asset.alphaCutoff);
+        for(const asset of state.displayMeshes)if(asset.key!=='bra')drawMesh(asset.mesh,asset.color||[1,1,1],false,now,mvp,model,asset.texture,asset.roughness,asset.alphaCutoff,true);
         const bra=state.avatar.showBra?state.displayMeshes.find(asset=>asset.key==='bra'):null;
         if(bra){
           gl.depthMask(false);
           gl.enable(gl.POLYGON_OFFSET_FILL);gl.polygonOffset(-1,-1);
-          drawMesh(bra.mesh,bra.color||[1,1,1],false,now,mvp,model,bra.texture,bra.roughness,bra.alphaCutoff);
+          drawMesh(bra.mesh,bra.color||[1,1,1],false,now,mvp,model,bra.texture,bra.roughness,bra.alphaCutoff,true);
           gl.disable(gl.POLYGON_OFFSET_FILL);
           gl.depthMask(true);
         }
