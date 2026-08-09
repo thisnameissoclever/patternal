@@ -29,24 +29,14 @@ The preserved reviewed run is `artifacts/isolated-ui/runs/20260808-234620-27d56b
 
 ### 2D interface review
 
-The 1920 by 1080 packaged screenshot is readable and exposes substantial editing functionality, but the automatic layout is not professionally usable yet.
+The packaged 1920 by 1080 workspace now uses geometry-aware deterministic packing, separate label headers, a scrollable canvas, and visible Zoom out, Zoom in, and Fit controls. Reviewed isolated run `20260809-025650-0625b0e8` shows all 14 exact pieces without overlap or clipping. Its automation sequence proved 89 percent, 109 percent, 89 percent, and final fitted 89 percent zoom state without host input injection.
 
-Observed problems:
+Open gates:
 
-1. Small collar and cuff pieces are scaled below their labels and appear as thin bars.
-2. Several labels overlap adjacent pieces or clip at the viewport boundary.
-3. The large torso pieces dominate the fit calculation, leaving small pieces visually meaningless.
-4. The inspector and piece list consume enough width that lower pattern rows are clipped below the window.
-5. There is no obvious persistent zoom, pan, frame-selection, or actual-size control in the main canvas chrome.
-6. The canvas communicates an 86 percent fabric-use metric before it communicates whether every piece can be inspected and edited.
-
-Required correction:
-
-1. Compute layout and camera fit separately. Packing efficiency must not determine the minimum readable piece scale.
-2. Introduce a minimum on-screen label and feature size. Move labels outside small pieces with leader lines or hide them below a documented zoom threshold.
-3. Add visible zoom, pan, frame-all, frame-selected, and actual-size controls with keyboard and automation coverage.
-4. Preserve access to every piece through list selection and frame the selected piece without destroying the user's prior camera state.
-5. Add screenshot gates at 1280 by 720, 1600 by 900, 1920 by 1080, and 200 percent text scaling.
+1. Add frame-selected and actual-size commands without losing the user's prior viewport.
+2. Cover selection, curve and point editing, seam authoring, save, load, Undo, Redo, and export round trips in the isolated guest.
+3. Add screenshot gates at 1280 by 720, 1600 by 900, 1920 by 1080, and 200 percent text scaling.
+4. Verify keyboard navigation, focus order, automation names, and screen-reader labels across the complete authoring workflow.
 
 ### 3D interface review
 
@@ -169,6 +159,18 @@ The present solver adapter also owns custom warm-start, contact, seam, and proje
 | PositionBasedDynamics | MIT, mature XPBD and deformable examples, Windows build path | General library rather than garment product; would recreate much of the missing sewing and material stack | Reference only |
 | Blender built-in cloth | Already available and artist-friendly | Past project evidence showed unstable sewing and collision for this garment | Diagnostic comparison only |
 
+### Antonia control result
+
+The exact live 14-piece adaptive shirt and exact fitted Antonia collision body now have a normalized control bundle and four Newton evaluations documented in `docs/cloth-solver-bakeoff.md`. None is accepted.
+
+1. The original 0.25 cm C# arrangement entered Newton despite already failing minimum triangle area and initial strain gates. It finished with 137 body crossings and 1.705 p99.9 strain.
+2. A 0.50 cm rigid source placement reduced the material surface from 146,874 to 37,287 vertices and cleared the minimum-area gate.
+3. Explicit progressive sewing exposed a semantic adapter defect: legacy logic selected collar joins as shoulders because it did not understand `front_torso` and `back_torso`. The adapter now identifies both real shoulder seams and excludes finishing pieces.
+4. The corrected control and a topology-identical dressing-body variant still failed equilibrium, body contact, seam closure, localized strain, and visual sleeve/cuff quality.
+5. The common source builder now rejects an unqualified initial arrangement before solver launch. A research-only override is explicit and report-visible.
+
+These results strengthen the case for the PPF challenger, but they do not prove that switching solvers alone will fix the live sleeve-cap or cuff construction contract.
+
 ### Common solver contract
 
 Every backend must consume the same normalized bundle:
@@ -259,9 +261,9 @@ WebView2 may remain because it provides an isolated, easily packaged interactive
 
 ### Phase 2: cloth bake-off
 
-1. Keep Newton as the control.
+1. Keep Newton as the control. The first exact Antonia/current-shirt control series is complete and rejected.
 2. Install the PPF native Windows solver in a separate versioned runtime only after dependency approval.
-3. Convert one accepted Patternal job into the common solver contract.
+3. Maintain the normalized common bundle and input gate documented in `docs/cloth-solver-bakeoff.md`.
 4. Compare numerical evidence, visual evidence, runtime, and integration complexity.
 5. Use IPC Toolkit only for cases where both interactive solvers disagree or fail contact.
 

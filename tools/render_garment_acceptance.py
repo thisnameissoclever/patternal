@@ -183,13 +183,16 @@ def main() -> None:
     scene.render.image_settings.file_format = "PNG"
     scene.world.color = (0.012, 0.014, 0.019)
     scene.view_settings.look = "AgX - Medium High Contrast"
+    # The Antonia and GarmentCode boundary faces toward negative depth after
+    # OBJ import. Keep these names anatomical so diagnostic evidence uses the
+    # same semantic contract as the packaged viewer.
     views = {
-        "front": (0.0, 3.0, 0.94),
-        "front-oblique": (-2.15, 2.15, 0.94),
-        "left": (-3.0, 0.0, 0.94),
-        "back": (0.0, -3.0, 0.94),
-        "back-oblique": (2.15, -2.15, 0.94),
-        "right": (3.0, 0.0, 0.94),
+        "front": (0.0, -3.0, 0.94),
+        "front-oblique": (2.15, -2.15, 0.94),
+        "left": (3.0, 0.0, 0.94),
+        "back": (0.0, 3.0, 0.94),
+        "back-oblique": (-2.15, 2.15, 0.94),
+        "right": (-3.0, 0.0, 0.94),
     }
     for name, location in views.items():
         render_view(camera, output_directory / f"{name}.png", location)
@@ -202,6 +205,7 @@ def main() -> None:
         "body_sha256": sha256(body_path),
         "garment": str(garment_path),
         "garment_sha256": sha256(garment_path),
+        "anatomical_front_axis": "negative depth after OBJ import",
         "views": {
             name: {
                 "path": str((output_directory / f"{name}.png").resolve()),

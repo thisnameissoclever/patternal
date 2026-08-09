@@ -259,17 +259,26 @@ def group_named_seam_links(
 
 
 def _is_torso_front_back_pair(panel_names: set[str]) -> bool:
-    if len(panel_names) != 2 or any("sleeve" in name for name in panel_names):
+    finishing_tokens = ("sleeve", "collar", "cuff", "band", "tie")
+    if len(panel_names) != 2 or any(
+        token in name
+        for name in panel_names
+        for token in finishing_tokens
+    ):
         return False
     front = [name for name in panel_names if "front" in name]
     back = [name for name in panel_names if "back" in name]
     if len(front) != 1 or len(back) != 1:
         return False
-    front_name = front[0]
-    back_name = back[0]
-    if front_name.split("_", 1)[0] != back_name.split("_", 1)[0]:
-        return False
-    return ("center" in front_name) == ("center" in back_name)
+
+    def construction_key(name: str) -> tuple[str, ...]:
+        return tuple(
+            token
+            for token in name.replace("-", "_").split("_")
+            if token and token not in {"front", "back"}
+        )
+
+    return construction_key(front[0]) == construction_key(back[0])
 
 
 def identify_shoulder_seam_groups(
@@ -286,7 +295,7 @@ def identify_shoulder_seam_groups(
     """
     if len(panel_vertices_cm) != len(vertex_owners):
         raise ValueError("Material coordinates and panel ownership must align.")
-    candidates: dict[tuple[str, str], list[tuple[float, str]]] = {}
+    candidates: dict[tuple[str, str], list[tuple[float, float, str]]] = {}
     for seam_name, links in group_named_seam_links(named_links).items():
         panel_names = {
             vertex_owners[vertex]
@@ -301,11 +310,29 @@ def identify_shoulder_seam_groups(
             dtype=np.int32,
         )
         mean_height_cm = float(np.mean(panel_vertices_cm[seam_vertices, 1]))
-        candidates.setdefault(owner_pair, []).append((mean_height_cm, seam_name))
-    return {
-        max(pair_candidates, key=lambda item: item[0])[1]
-        for pair_candidates in candidates.values()
-    }
+        mean_horizontal_cm = float(np.mean(panel_vertices_cm[seam_vertices, 0]))
+        candidates.setdefault(owner_pair, []).append(
+            (mean_height_cm, mean_horizontal_cm, seam_name)
+        )
+    shoulder_groups: set[str] = set()
+    for pair_candidates in candidates.values():
+        maximum_height = max(height for height, _, _ in pair_candidates)
+        selected_horizontal_positions: list[float] = []
+        for height, horizontal, seam_name in sorted(
+            pair_candidates,
+            key=lambda item: item[0],
+            reverse=True,
+        ):
+            if maximum_height - height > 1.0:
+                continue
+            if any(
+                abs(horizontal - selected) <= 1.0
+                for selected in selected_horizontal_positions
+            ):
+                continue
+            shoulder_groups.add(seam_name)
+            selected_horizontal_positions.append(horizontal)
+    return shoulder_groups
 
 
 def build_anatomical_sewing_anchors(

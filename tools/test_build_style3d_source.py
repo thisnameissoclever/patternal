@@ -9,6 +9,7 @@ import numpy as np
 
 from tools.build_style3d_source import (
     body_aware_vertices,
+    initial_arrangement_rejection_reasons,
     normalized_panel_key,
     resolve_inputs,
     segmentation_row,
@@ -46,6 +47,35 @@ class BuildStyle3DSourceTests(unittest.TestCase):
     def test_segmentation_row_rejects_unknown_types(self) -> None:
         with self.assertRaisesRegex(ValueError, "Unsupported"):
             segmentation_row(12)
+
+    def test_initial_arrangement_gate_accepts_verified_metrics(self) -> None:
+        self.assertEqual(
+            [],
+            initial_arrangement_rejection_reasons(
+                {
+                    "minimumTriangleAreaCm2": 0.001,
+                    "maximumEdgeStrainRatio": 2.0,
+                    "ninetyFifthPercentileEdgeStrainRatio": 0.25,
+                    "minimumTorsoClearanceCm": 0.25,
+                }
+            ),
+        )
+
+    def test_initial_arrangement_gate_reports_every_failed_metric(self) -> None:
+        reasons = initial_arrangement_rejection_reasons(
+            {
+                "minimumTriangleAreaCm2": 0.00007,
+                "maximumEdgeStrainRatio": 3.78,
+                "ninetyFifthPercentileEdgeStrainRatio": 0.36,
+                "minimumTorsoClearanceCm": float("nan"),
+            }
+        )
+
+        self.assertEqual(4, len(reasons))
+        self.assertTrue(any("minimumTriangleAreaCm2" in reason for reason in reasons))
+        self.assertTrue(any("maximumEdgeStrainRatio" in reason for reason in reasons))
+        self.assertTrue(any("ninetyFifthPercentileEdgeStrainRatio" in reason for reason in reasons))
+        self.assertTrue(any("minimumTorsoClearanceCm" in reason for reason in reasons))
 
     def test_direct_inputs_do_not_require_a_legacy_solver_report(self) -> None:
         with tempfile.TemporaryDirectory() as raw_directory:

@@ -24,6 +24,7 @@ string? objOutputPath = null;
 string? manifestOutputPath = null;
 string? bridgeOutputPath = null;
 string? garmentCodeBodyOutputPath = null;
+string? garmentCodePatternOutputPath = null;
 string? garmentCodePatternPath = null;
 string? garmentCodePatternReferencePath = null;
 string? garmentCodeMeshPath = null;
@@ -61,6 +62,9 @@ for (int index = 0; index < args.Length; index++)
         case "--garmentcode-body-output":
             garmentCodeBodyOutputPath = RequireValue(args, ref index, "--garmentcode-body-output");
             break;
+        case "--garmentcode-pattern-output":
+            garmentCodePatternOutputPath = RequireValue(args, ref index, "--garmentcode-pattern-output");
+            break;
         case "--garmentcode-pattern":
             garmentCodePatternPath = RequireValue(args, ref index, "--garmentcode-pattern");
             break;
@@ -87,7 +91,7 @@ for (int index = 0; index < args.Length; index++)
             break;
         case "--help":
         case "-h":
-            Console.WriteLine("Usage: Patternal.UnrealGarmentCompiler (--bridge <json> | --factory-default | --garmentcode-pattern <json>) --body-profile <json> [--garmentcode-pattern-reference <json>] [--garmentcode-mesh <json>] [--garmentcode-prefit <obj>] [--initial-arrangement-output <json>] [--output <json>] [--usd-output <usda>] [--obj-output <obj>] [--manifest-output <json>] [--bridge-output <json>] [--garmentcode-body-output <json>] [--garment-id <identifier>] [--report-only]");
+            Console.WriteLine("Usage: Patternal.UnrealGarmentCompiler (--bridge <json> | --factory-default | --garmentcode-pattern <json>) --body-profile <json> [--garmentcode-pattern-reference <json>] [--garmentcode-mesh <json>] [--garmentcode-prefit <obj>] [--initial-arrangement-output <json>] [--output <json>] [--usd-output <usda>] [--obj-output <obj>] [--manifest-output <json>] [--bridge-output <json>] [--garmentcode-body-output <json>] [--garmentcode-pattern-output <json>] [--garment-id <identifier>] [--report-only]");
             return 0;
         default:
             throw new ArgumentException($"Unknown argument: {args[index]}");
@@ -292,6 +296,16 @@ if (!string.IsNullOrWhiteSpace(garmentCodeBodyOutputPath))
     Console.Error.WriteLine(
         $"Wrote {bodyMapping.Body.Count} GarmentCode body parameters. " +
         $"Fallback source measurements: {bodyMapping.FallbackParameters.Count}.");
+}
+
+if (!string.IsNullOrWhiteSpace(garmentCodePatternOutputPath))
+{
+    string patternRevision = Convert.ToHexStringLower(
+        SHA256.HashData(Encoding.UTF8.GetBytes(bridgeJson)));
+    string patternJson = GarmentCodePatternExporter.Export(bridge.Garment, patternRevision);
+    await WriteTextAsync(garmentCodePatternOutputPath, patternJson);
+    Console.Error.WriteLine(
+        $"Wrote the authoritative GarmentCode pattern for revision {patternRevision[..12]}.");
 }
 
 bool exportRequested =

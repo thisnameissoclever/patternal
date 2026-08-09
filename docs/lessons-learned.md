@@ -2484,3 +2484,39 @@ Compute piece extents outside the UI, pack deterministic non-overlapping cells, 
 ### How to verify
 
 Require the 14-piece adaptive shirt to pack inside the bounded canvas with no overlapping placement rectangles. Build the packaged app, capture startup and post-Fit 2D views at 1920 by 1080, and confirm all 14 pieces and labels are visible. Invoke Zoom in, Zoom out, and Fit by stable automation ID; require the visible percentage to increase, return, and then decrease from a zoomed view. Reviewed run `20260809-025650-0625b0e8` demonstrated 89 percent, 109 percent, 89 percent, and a final fitted 89 percent without host input injection.
+
+## Inspect serialized JSON, not PowerShell's shallow object rendering
+
+### What happened
+
+A shallow `ConvertTo-Json` diagnostic displayed nested cubic controls as the text `System.Object[] System.Object[]`. That display was mistaken for corrupted GarmentCode output. The exporter was changed and tested before exact file hashes proved the original and modified specifications, generated meshes, and arrangements were byte-identical.
+
+### Root cause
+
+PowerShell had already parsed the JSON into nested objects, then a low serialization depth converted deeper arrays into display strings. A presentation artifact was treated as source bytes without checking the file or structural type first.
+
+### Prevention rule
+
+When diagnosing interchange corruption, inspect the raw file, parse the exact property with sufficient depth, and compare hashes of downstream artifacts before changing the serializer. Do not infer stored JSON types from a truncated shell rendering.
+
+### How to verify
+
+Parse every cubic `curvature.params` property from the exact exported specification. Require two nested numeric arrays, zero strings, and deterministic specification, mesh, and arrangement hashes across repeated exports.
+
+## Common cloth inputs must pass before a solver consumes them
+
+### What happened
+
+The first Antonia/current-shirt Newton control spent about 195 seconds solving a body-aware arrangement that already reported a `0.000076 cm2` minimum triangle, 378 percent peak strain, and 36 percent 95th-percentile strain. A second failure showed that the progressive-sewing adapter recognized collar joins as shoulders and missed both live torso shoulders.
+
+### Root cause
+
+The source builder copied arrangement metrics into provenance but did not enforce them. The seam scheduler encoded naming assumptions from an older princess-panel topology and received no explicit construction roles from the live 14-piece adaptive shirt.
+
+### Prevention rule
+
+Reject an initial arrangement before solver launch unless it meets the common minimum-area, peak-strain, broad-strain, and torso-clearance gates. Keep a report-visible research override only for deliberate failure studies. Derive seam phases from panel ownership and finishing roles, support the live front/back naming contract, and allow two spatially distinct shoulders on one front/back torso pair.
+
+### How to verify
+
+Run the source-builder and Newton adapter unit suites. Confirm the exact rejected 0.50 cm C# arrangement fails before solve with both strain reasons. Confirm collar joins are excluded, `seam_link_12` and `seam_link_27` are both phase 2, sleeve caps are phase 3, and all six diagnostic camera names show the matching anatomy.

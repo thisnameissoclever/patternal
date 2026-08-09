@@ -22,6 +22,12 @@ from pygarment.meshgen.boxmeshgen import BoxMesh
 from patterna_shell_assembly import arrange_independent_body_aware_panels
 
 
+MINIMUM_INITIAL_TRIANGLE_AREA_CM2 = 0.001
+MAXIMUM_INITIAL_PEAK_STRAIN_RATIO = 2.0
+MAXIMUM_INITIAL_P95_STRAIN_RATIO = 0.25
+MINIMUM_INITIAL_TORSO_CLEARANCE_CM = 0.25
+
+
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as stream:
@@ -41,6 +47,45 @@ def segmentation_row(value: object) -> str:
 def normalized_panel_key(value: str) -> str:
     key = re.sub(r"[^a-z0-9]", "", value.lower())
     return key[:-5] if key.endswith("panel") else key
+
+
+def initial_arrangement_rejection_reasons(
+    arrangement: dict[str, object],
+) -> list[str]:
+    gates = (
+        (
+            "minimumTriangleAreaCm2",
+            lambda value: value >= MINIMUM_INITIAL_TRIANGLE_AREA_CM2,
+            f"at least {MINIMUM_INITIAL_TRIANGLE_AREA_CM2:.3f} cm2",
+        ),
+        (
+            "maximumEdgeStrainRatio",
+            lambda value: value <= MAXIMUM_INITIAL_PEAK_STRAIN_RATIO,
+            f"at most {MAXIMUM_INITIAL_PEAK_STRAIN_RATIO:.3f}",
+        ),
+        (
+            "ninetyFifthPercentileEdgeStrainRatio",
+            lambda value: value <= MAXIMUM_INITIAL_P95_STRAIN_RATIO,
+            f"at most {MAXIMUM_INITIAL_P95_STRAIN_RATIO:.3f}",
+        ),
+        (
+            "minimumTorsoClearanceCm",
+            lambda value: value >= MINIMUM_INITIAL_TORSO_CLEARANCE_CM,
+            f"at least {MINIMUM_INITIAL_TORSO_CLEARANCE_CM:.3f} cm",
+        ),
+    )
+    reasons: list[str] = []
+    for field, accepts, expected in gates:
+        raw_value = arrangement.get(field)
+        if not isinstance(raw_value, (int, float)) or not np.isfinite(raw_value):
+            reasons.append(f"initial arrangement has no finite {field}")
+            continue
+        value = float(raw_value)
+        if not accepts(value):
+            reasons.append(
+                f"initial arrangement {field} is {value:.6f}; expected {expected}"
+            )
+    return reasons
 
 
 def body_aware_vertices(
@@ -197,6 +242,7 @@ def build(
     body_segmentation_path: Path | None = None,
     rigid_body_staging: bool = False,
     rigid_body_staging_clearance_cm: float = 2.0,
+    allow_rejected_initial_arrangement: bool = False,
 ) -> dict[str, object]:
     output_dir = output_dir.resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -317,6 +363,12 @@ def build(
         arrangement = json.loads(
             resolved_initial_arrangement.read_text(encoding="utf-8")
         )
+        arrangement_rejections = initial_arrangement_rejection_reasons(arrangement)
+        if arrangement_rejections and not allow_rejected_initial_arrangement:
+            raise ValueError(
+                "Initial arrangement failed the common solver input gate: "
+                + "; ".join(arrangement_rejections)
+            )
         arranged_vertices = body_aware_vertices(
             arrangement,
             panel_vertex_indices,
@@ -386,6 +438,16 @@ def build(
                 if resolved_initial_arrangement is not None
                 else None
             ),
+            "initial_arrangement_rejection_reasons": (
+                arrangement_rejections
+                if resolved_initial_arrangement is not None
+                else []
+            ),
+            "initial_arrangement_research_override": bool(
+                resolved_initial_arrangement is not None
+                and arrangement_rejections
+                and allow_rejected_initial_arrangement
+            ),
             "body_aware_initial_mesh_path": (
                 str(initial_mesh_path)
                 if resolved_initial_arrangement is not None
@@ -449,6 +511,11 @@ def main() -> int:
     parser.add_argument("--pattern", type=Path)
     parser.add_argument("--body", type=Path)
     parser.add_argument("--initial-arrangement", type=Path)
+    parser.add_argument(
+        "--allow-rejected-initial-arrangement",
+        action="store_true",
+        help="Build a research bundle even when its initial arrangement fails input gates.",
+    )
     parser.add_argument("--body-segmentation", type=Path)
     parser.add_argument("--rigid-body-staging", action="store_true")
     parser.add_argument(
@@ -476,6 +543,9 @@ def main() -> int:
                 rigid_body_staging=args.rigid_body_staging,
                 rigid_body_staging_clearance_cm=(
                     args.rigid_body_staging_clearance_cm
+                ),
+                allow_rejected_initial_arrangement=(
+                    args.allow_rejected_initial_arrangement
                 ),
             ),
             indent=2,

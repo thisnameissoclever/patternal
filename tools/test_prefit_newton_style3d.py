@@ -115,6 +115,50 @@ class NewtonStyle3DAdapterTests(unittest.TestCase):
         self.assertEqual({"seam_link_8"}, shoulders)
         np.testing.assert_array_equal(phases, [2, 1])
 
+    def test_adaptive_torso_shoulders_exclude_collar_join(self) -> None:
+        owners = [
+            "front_torso",
+            "back_torso",
+            "front_torso",
+            "back_torso",
+            "front_torso",
+            "back_torso",
+            "left_collar_front",
+            "left_collar_back",
+        ]
+        named_links = [
+            ("seam_link_12_0", 0, 1),
+            ("seam_link_27_0", 2, 3),
+            ("seam_link_13_0", 4, 5),
+            ("seam_link_0_0", 6, 7),
+        ]
+        material_coordinates = np.asarray(
+            [
+                [0.0, 62.0],
+                [0.0, 61.0],
+                [20.0, 62.0],
+                [20.0, 61.0],
+                [0.0, 8.0],
+                [0.0, 8.0],
+                [0.0, 0.4],
+                [0.0, 0.4],
+            ]
+        )
+
+        shoulders = identify_shoulder_seam_groups(
+            named_links,
+            owners,
+            material_coordinates,
+        )
+        phases = classify_seam_assembly_phases(
+            named_links,
+            owners,
+            material_coordinates,
+        )
+
+        self.assertEqual({"seam_link_12", "seam_link_27"}, shoulders)
+        np.testing.assert_array_equal(phases, [2, 2, 1, 1])
+
     def test_shoulder_pairs_receive_one_shared_lower_target_height(self) -> None:
         owners = [
             "right_front_center",
