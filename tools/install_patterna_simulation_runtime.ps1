@@ -197,6 +197,8 @@ $requiredScripts = @(
     'prepare_charmorph_garmentcode_body.py',
     'charmorph_collision.py',
     'charmorph_character.py',
+    'charmorph_glb.py',
+    'verify_charmorph_glb.py',
     'charmorph_morphs.py',
     'charmorph_profile_controls.py',
     'mesh_torso_arcs.py',

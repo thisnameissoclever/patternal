@@ -17,12 +17,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from charmorph_character import load_character
 from charmorph_morphs import apply_controls, load_packed_morphs
 from charmorph_profile_controls import (
-    FIT_CONTROL_NAMES,
-    FIT_CONTROL_BOUNDS,
     FIT_TARGET_NAMES,
-    PATTERNA_FULL_BUST_CONTROLS,
+    FitControlContract,
     clamp_controls,
     measurement_targets,
+    resolve_fit_control_contract,
 )
 from charmorph_supported_bust import (
     apply_supported_bust_shape,
@@ -154,11 +153,12 @@ def fit_controls(
     target_height_cm: float,
     initial_controls: dict[str, float],
     max_evaluations: int,
+    contract: FitControlContract,
 ) -> tuple[dict[str, float], dict[str, float], object]:
-    names = FIT_CONTROL_NAMES
+    names = contract.fit_control_names
     initial = np.asarray([initial_controls[name] for name in names], dtype=float)
-    lower = np.asarray([FIT_CONTROL_BOUNDS[name][0] for name in names], dtype=float)
-    upper = np.asarray([FIT_CONTROL_BOUNDS[name][1] for name in names], dtype=float)
+    lower = np.asarray([contract.fit_control_bounds[name][0] for name in names], dtype=float)
+    upper = np.asarray([contract.fit_control_bounds[name][1] for name in names], dtype=float)
     cache: dict[tuple[float, ...], dict[str, float]] = {}
 
     def metrics_for(values: np.ndarray) -> dict[str, float]:
@@ -181,7 +181,8 @@ def fit_controls(
     def residuals(values: np.ndarray) -> np.ndarray:
         metrics = metrics_for(values)
         measurement = np.asarray([
-            (metrics[name] - targets[name]) / 1.0
+            (metrics[name] - targets[name])
+            * (contract.bust_separation_weight if name == "bust_separation" else 1.0)
             for name in FIT_TARGET_NAMES
         ])
         regularization = (values - initial) * 0.08
@@ -257,11 +258,12 @@ def refine_bust_after_constraints(
     targets: dict[str, float],
     measurements: dict[str, object],
     target_height_cm: float,
+    contract: FitControlContract,
 ) -> tuple[dict[str, float], np.ndarray, dict[str, float], float, object]:
-    names = ("Torso_BreastMass", "Torso_BreastPosX", "Torso_BreastScaleY")
+    names = contract.bust_refinement_names
     initial = np.asarray([controls[name] for name in names], dtype=float)
-    lower = np.asarray([FIT_CONTROL_BOUNDS[name][0] for name in names], dtype=float)
-    upper = np.asarray([FIT_CONTROL_BOUNDS[name][1] for name in names], dtype=float)
+    lower = np.asarray([contract.fit_control_bounds[name][0] for name in names], dtype=float)
+    upper = np.asarray([contract.fit_control_bounds[name][1] for name in names], dtype=float)
     cache: dict[tuple[float, ...], tuple[np.ndarray, dict[str, float], float]] = {}
 
     def evaluate(values: np.ndarray) -> tuple[np.ndarray, dict[str, float], float]:
@@ -282,7 +284,8 @@ def refine_bust_after_constraints(
         _vertices, metrics, _maximum_displacement = evaluate(values)
         return np.asarray([
             metrics["bust"] - targets["bust"],
-            metrics["bust_separation"] - targets["bust_separation"],
+            (metrics["bust_separation"] - targets["bust_separation"])
+            * contract.bust_separation_weight,
             *((values - initial) * 0.04),
         ])
 
@@ -335,6 +338,7 @@ def main() -> None:
     basis = np.load(basis_path).astype(np.float64)
     faces = triangulate_quads(np.load(faces_path))
     raw_morphs = load_packed_morphs(pack_path)
+    fit_contract = resolve_fit_control_contract(raw_morphs)
     controls, control_metrics, solution = fit_controls(
         basis,
         faces,
@@ -342,8 +346,9 @@ def main() -> None:
         targets,
         measurements,
         target_height_cm,
-        dict(PATTERNA_FULL_BUST_CONTROLS),
+        dict(fit_contract.initial_controls),
         args.max_evaluations,
+        fit_contract,
     )
     controls, corrected, metrics, maximum_displacement_cm, bust_solution = (
         refine_bust_after_constraints(
@@ -354,6 +359,7 @@ def main() -> None:
             targets,
             measurements,
             target_height_cm,
+            fit_contract,
         )
     )
     final_breast_indices = breast_vertex_indices(raw_morphs)
@@ -413,6 +419,7 @@ def main() -> None:
         "sourceBasis": str(basis_path),
         "sourceBasisName": basis_name,
         "characterBackend": character.title,
+        "fitControlContract": fit_contract.backend,
         "characterObject": character.object_name,
         "generatedOutputLicense": character.license_name,
         "characterLicenseFile": str(character.license_path),

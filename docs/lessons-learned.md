@@ -2430,3 +2430,21 @@ Load a fixture runtime whose avatar license file is hash-bound, confirm the reso
 **Prevention rule:** A character is not eligible for a packaged runtime unless its concrete license and attribution artifact is stored with the character, reviewed, and covered by the runtime manifest's SHA-256 integrity boundary. A metadata-only declaration may support research, but not shipping.
 
 **How to verify:** Resolve every candidate through `charmorph_character.load_character`. Confirm Antonia and `mb_female` resolve their local license files, and confirm Reom is rejected while its license artifact remains absent.
+
+## Avatar backends need explicit control contracts and GLB round-trip review
+
+### What happened
+
+Antonia initially accepted the MakeHuman-style control dictionary without applying a single morph. SciPy reported optimizer success after one evaluation even though bust error remained 26.08 cm and the high-chest section crossed the T-pose arms. After a native Antonia control contract produced a numerically accepted body, the first visual result was still rejected because the optimizer concentrated the target into an excessively spherical breast morph. Separately, the in-memory Blender scene rendered cleanly while a fresh import of the exported GLB showed dark mottling across the body because height-map image nodes were packed ambiguously. Antonia's legacy bra and the existing radial sports-bra shell also failed on the customized non-convex bust.
+
+### Root cause
+
+The pipeline treated all CharMorph characters as if they shared control names, useful bounds, body-shape priors, material-node export behavior, and underwear topology. Optimizer termination, an in-memory render, and an asset name such as `bra` were each mistaken for proof of the corresponding product contract.
+
+### Prevention rule
+
+Resolve a backend-specific fit contract before optimization and reject a backend when its required controls are absent. Bind visually reviewed morph bounds and priors to the fit contract so a tape-perfect but anatomically implausible minimum cannot pass. Export only GLB-safe material graphs, import the GLB into a fresh Blender scene, and review all six canonical views from that imported file. Treat inherited underwear as unfitted after body morphing; use an explicitly labeled modesty layer until a real garment-fit process passes.
+
+### How to verify
+
+Require the Antonia contract to fit the full-bust profile within the documented circuit and landmark tolerances while retaining its constrained mixed-morph solution. Require the generated GLB to import as three mesh objects with ten unique body materials, embedded images, 167.0 cm height, and a body-to-collision vertex distance below 0.00001 m after the recorded OBJ axis transform. Review front, rear, both side, and both oblique round-trip renders. Reject mottled materials, reversed camera semantics, spherical detached anatomy, underwear cutouts, back-facing cups, arm-wing geometry, or any claim that the modesty bandeau is fitted cloth.

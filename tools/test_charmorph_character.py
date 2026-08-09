@@ -23,8 +23,13 @@ class CharMorphCharacterTests(unittest.TestCase):
         self.assertEqual("cm_antonia", descriptor.object_name)
         self.assertEqual("Default", descriptor.basis_name)
         self.assertEqual("CC-BY 3.0", descriptor.license_name)
+        self.assertEqual("Olaf Delgado-Friedrichs", descriptor.author)
+        self.assertEqual("https://sites.google.com/site/antoniapolygon/", descriptor.source_url)
         self.assertEqual("L2.npz", descriptor.morph_pack_path.name)
+        self.assertEqual(16, len(descriptor.material_names))
+        self.assertEqual(("panties", "bra"), descriptor.underwear_names)
         self.assertGreaterEqual(len(descriptor.albedo_paths), 4)
+        self.assertGreaterEqual(len(descriptor.texture_paths), 15)
         self.assertIsNone(descriptor.single_body_albedo)
 
     def test_resolves_mb_female_agpl_contract(self) -> None:

@@ -15,17 +15,15 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from charmorph_character import CharacterDescriptor, load_character
+from charmorph_glb import export_glb_candidate
 from charmorph_morphs import apply_controls, load_packed_morphs
-from charmorph_profile_controls import PATTERNA_FULL_BUST_CONTROLS
+from charmorph_profile_controls import resolve_fit_control_contract
 from generate_mpfb_avatar import write_bra_shell_obj, write_solid_texture
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CHARACTER_DIR = REPO_ROOT / "third_party" / "CharMorph-db" / "characters" / "mb_female"
 DEFAULT_PROFILE = REPO_ROOT / "PatternaUnreal" / "SourceAssets" / "Avatar" / "PatternaFullBustDefault.avatar-profile.json"
-
-DEFAULT_CONTROLS = PATTERNA_FULL_BUST_CONTROLS
-
 
 def blender_arguments() -> list[str]:
     return sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
@@ -46,6 +44,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--render-output-dir", type=Path)
+    parser.add_argument("--glb-output", type=Path)
+    parser.add_argument("--glb-render-output-dir", type=Path)
     parser.add_argument("--fit-report", type=Path)
     parser.add_argument("--height-cm", type=float)
     return parser.parse_args(blender_arguments())
@@ -55,8 +55,8 @@ def resolve(path: Path) -> Path:
     return path.resolve() if path.is_absolute() else (REPO_ROOT / path).resolve()
 
 
-def load_controls(path: Path | None) -> dict[str, float]:
-    controls = dict(DEFAULT_CONTROLS)
+def load_controls(path: Path | None, raw_morphs: dict[str, object]) -> dict[str, float]:
+    controls = dict(resolve_fit_control_contract(raw_morphs).initial_controls)
     if path is not None:
         payload = json.loads(resolve(path).read_text(encoding="utf-8"))
         if payload.get("replaceDefaults", False):
@@ -209,13 +209,15 @@ def main() -> None:
     if basis.shape != (len(body.data.vertices), 3):
         raise ValueError(f"Basis shape {basis.shape} does not match mesh vertex count {len(body.data.vertices)}")
     raw_morphs = load_packed_morphs(pack_path)
-    controls = load_controls(args.controls)
+    controls = load_controls(args.controls, raw_morphs)
     vertices, weights = apply_controls(basis, raw_morphs, controls)
 
     profile = json.loads(profile_path.read_text(encoding="utf-8"))
     target_height_cm = float(args.height_cm or profile["measurements"]["height"])
     current_height_m = float(vertices[:, 2].max() - vertices[:, 2].min())
     height_scale = (target_height_cm / 100.0) / current_height_m
+    basis_height_m = float(basis[:, 2].max() - basis[:, 2].min())
+    uniform_asset_scale = (target_height_cm / 100.0) / basis_height_m
     if args.vertices is not None:
         fitted_vertices_path = resolve(args.vertices)
         vertices = np.load(fitted_vertices_path).astype(np.float64)
@@ -259,6 +261,22 @@ def main() -> None:
             output_path,
         )
 
+    if args.glb_render_output_dir is not None and args.glb_output is None:
+        raise ValueError("GLB render output requires --glb-output")
+    glb_manifest = None
+    if args.glb_output is not None:
+        glb_manifest = export_glb_candidate(
+            body,
+            character,
+            output_path,
+            resolve(args.glb_output),
+            resolve(args.glb_render_output_dir) if args.glb_render_output_dir else None,
+            uniform_asset_scale,
+            target_height_cm,
+            fit_report,
+            fit_report_path,
+        )
+
     report = {
         "schemaVersion": "patterna.charmorph-avatar/1.0",
         "backend": character.title,
@@ -284,6 +302,7 @@ def main() -> None:
         "fitReport": str(fit_report_path) if fit_report_path else None,
         "fitReportSha256": sha256(fit_report_path) if fit_report_path else None,
         "displayManifest": display_manifest,
+        "glbCandidateManifest": glb_manifest,
         "accepted": bool(fit_report and fit_report.get("accepted")),
         "anatomicalAcceptance": {
             "requiresDistinctBreastRoots": True,

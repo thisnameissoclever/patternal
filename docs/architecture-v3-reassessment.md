@@ -134,6 +134,21 @@ The first spike must not replace the shipped avatar. It must:
 5. Run the current production shirt through both the current Newton backend and the challenger backend.
 6. Promote nothing until measurement, contact, visual, performance, and license gates pass together.
 
+### Antonia spike result
+
+The local spike now proves that Antonia is a viable replacement foundation, but it does not promote Antonia into the packaged product.
+
+1. The character loader resolves Antonia's object, basis, packed morphs, sixteen configured material slots, texture set, underwear assets, author, source URL, concrete CC-BY 3.0 license file, and license hash without PyYAML or another Blender-side dependency.
+2. A dedicated Antonia fit contract uses direct named morphs instead of the MakeHuman-style signed controls. The accepted full-bust fit reaches a 0.0072 cm maximum closed-circuit residual, effectively zero bust-separation residual, 0.8390 cm maximum bounded surface correction, 7.2115 cm inframammary relief, and 2.0410 cm left and right root curvature.
+3. The exporter produces a 14.3 MB GLB with the 36,030-vertex fitted source body, ten unique body materials after round-trip import, eight embedded images, a generated modesty bandeau, the licensed Antonia panties, and a separately hashed collision OBJ.
+4. Vertex-order comparison after decoding Blender's OBJ `(-x, -y, z)` convention measures a maximum body-to-collision difference below 0.000001 m across all 36,030 source vertices.
+5. A fresh Blender process imports the GLB, verifies three mesh objects, the material and image counts, and the 167.0 cm height, then renders front, rear, both sides, and both obliques. Those six round-tripped views were reviewed, not merely generated.
+6. The first numerically accepted Antonia fit was visually rejected because unconstrained optimization concentrated the bust target into an excessively spherical `Breast big` solution. The production candidate contract now bounds that morph and requires a mixed classic, hang, implant, diameter, and position solution. Numerical acceptance alone remains insufficient.
+7. The first GLB round trip was visually rejected because Blender exported height-map nodes ambiguously and the imported body became dark and mottled. The candidate now exports stable base-color PBR materials and records tangent-space normal conversion as an open gate.
+8. Antonia's legacy bra cannot be called fitted after body customization. The candidate uses a clearly identified convex-envelope modesty bandeau for display only. It is intentionally not described as a bra, pattern, cloth solve, or fit proof.
+
+Open gates remain hair geometry, tangent-space normal textures, a simplified collision body with regional registration, packaged WinUI GLB loading, cloth solved against the fitted Antonia body, and the complete packaged UI acceptance suite. The current candidate is therefore accepted as an architecture foundation and rejected as a production baseline.
+
 ## Cloth solver architecture
 
 ### Why the current metrics were insufficient
@@ -235,10 +250,10 @@ WebView2 may remain because it provides an isolated, easily packaged interactive
 
 ### Phase 1: Antonia measurement and display spike
 
-1. Generalize CharMorph input discovery from `config.yaml`.
-2. Fit the six primary measurements plus the upper-body measurements required by the shirt.
-3. Export a textured GLB and a watertight collision proxy.
-4. Add regional registration and six-view anatomy gates.
+1. Generalize CharMorph input discovery from `config.yaml`. Complete for the locally required scalar and list subset.
+2. Fit the six primary measurements plus the upper-body measurements required by the shirt. Primary closed-circuit and bust-landmark fit is complete; the remaining upper-body values still need explicit gates.
+3. Export a textured GLB and a watertight collision proxy. Textured GLB and exact full-resolution collision pairing are complete; simplification remains open.
+4. Add regional registration and six-view anatomy gates. Six-view fresh-import review is complete; automated regional registration remains open.
 
 ### Phase 2: cloth bake-off
 
