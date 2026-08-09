@@ -2592,3 +2592,39 @@ Resolve and validate every source first, allow an existing installed runtime to 
 ### How to verify
 
 Run the installer from a checkout without local virtual environments while a valid runtime exists. Confirm it selects the installed environments, completes staging before printing the backup path, promotes the new version, and passes both Python plus Blender validation. Force a validation failure in a disposable destination and confirm the prior `current` directory is restored.
+
+## Finishing joins are not sleeve caps
+
+### What happened
+
+The semantic seam scheduler put sleeve-to-cuff joins in the same final phase as sleeve-to-torso armhole joins. Both ends of each sleeve tried to close at once. A corrected run closed 130 cuff links one phase earlier and improved maximum seam separation from `0.545 cm` to `0.518 cm`, but the result still failed body-contact, localized-strain, equilibrium, and six-view acceptance.
+
+### Root cause
+
+The scheduler defined a sleeve cap as any seam containing a sleeve panel and another panel that was not also named sleeve. That incorrectly included cuff and band finishing pieces.
+
+### Prevention rule
+
+Classify construction roles on both sides of every seam. Close sleeve internals first, attach cuff or band finishing next, close shoulders after the torso shell, and reserve the final phase for actual torso-to-sleeve armhole joins. Do not promote a semantically cleaner schedule unless the exact numerical and visual gates also pass.
+
+### How to verify
+
+Require a focused unit test in which sleeve-to-sleeve is phase 0, sleeve-to-cuff is phase 1, and sleeve-to-torso is phase 3. Run the exact Antonia control and compare phase counts, seam separation, body crossings, localized strain, equilibrium, and all six anatomical views against the prior hash-bound rejection.
+
+## Visible pattern anchors need a keyboard and automation path
+
+### What happened
+
+Pattern anchors were draggable ellipses with tooltips. They worked with precise pointer input but exposed no stable control identity or invoke behavior, so keyboard users and the isolated Windows test could not select a point and exercise the coordinate editor.
+
+### Root cause
+
+The canvas treated anchor rendering, hit testing, selection, and accessibility as one mouse-only shape. Visible circles do not automatically become usable Windows controls.
+
+### Prevention rule
+
+Render every editable anchor as a named button with a comfortably larger transparent hit target and a visible inner marker. Preserve pointer dragging, but also handle Invoke so selecting the anchor enables the same coordinate and segment inspector without host input injection.
+
+### How to verify
+
+In the packaged guest, frame `Back Torso`, enter point-edit mode, invoke `Back Torso start` by accessible name, change X through `RangeValuePattern`, prove Undo and Redo, and restore the original coordinate. Review the screenshot to confirm the active anchor, surrounding handles, and coordinate inspector are visible and not clipped.

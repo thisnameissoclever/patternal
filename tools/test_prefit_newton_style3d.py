@@ -86,6 +86,30 @@ class NewtonStyle3DAdapterTests(unittest.TestCase):
 
         np.testing.assert_array_equal(phases, [0, 2, 2, 1, 3])
 
+    def test_sleeve_finishing_closes_before_the_armhole(self) -> None:
+        owners = [
+            "left_sleeve_front",
+            "left_sleeve_back",
+            "sl_left_cuff_front",
+            "front_torso",
+        ]
+        named_links = [
+            ("seam_link_3_0", 0, 1),
+            ("seam_link_5_0", 0, 2),
+            ("seam_link_7_0", 0, 3),
+        ]
+        material_coordinates = np.asarray(
+            [[0.0, 10.0], [0.0, 10.0], [0.0, 1.0], [0.0, 20.0]]
+        )
+
+        phases = classify_seam_assembly_phases(
+            named_links,
+            owners,
+            material_coordinates,
+        )
+
+        np.testing.assert_array_equal(phases, [0, 1, 3])
+
     def test_short_low_side_segment_is_not_misclassified_as_shoulder(self) -> None:
         owners = [
             "right_front_side",

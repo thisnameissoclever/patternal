@@ -406,7 +406,7 @@ def classify_seam_assembly_phases(
     vertex_owners: list[str],
     panel_vertices_cm: np.ndarray,
 ) -> np.ndarray:
-    """Order construction seams, side seams, shoulders, then sleeve caps.
+    """Order construction seams, finishing joins, shoulders, then sleeve caps.
 
     Closing shoulders before the side seams can pull detached side panels over
     the outside of an A-pose arm. Once body collision is active, the arm becomes
@@ -430,12 +430,22 @@ def classify_seam_assembly_phases(
         all_front = all("front" in panel for panel in panel_names)
         all_back = all("back" in panel for panel in panel_names)
         all_sleeve = all("sleeve" in panel for panel in panel_names)
-        torso_to_sleeve = (
-            any("sleeve" in panel for panel in panel_names)
-            and not all_sleeve
+        has_sleeve = any("sleeve" in panel for panel in panel_names)
+        has_finishing = any(
+            token in panel
+            for panel in panel_names
+            for token in ("cuff", "band")
         )
+        sleeve_to_finishing = has_sleeve and has_finishing
+        torso_to_sleeve = has_sleeve and not all_sleeve and not has_finishing
         if all_sleeve:
             phase = 0
+        elif sleeve_to_finishing:
+            # Close each sleeve and its finishing strip before asking the cap
+            # to cross the armhole. Treating a cuff join as a sleeve cap made
+            # both ends of the sleeve close simultaneously in the final phase,
+            # which left the narrow finishing strips visibly open and twisted.
+            phase = 1
         elif torso_to_sleeve:
             phase = 3
         elif all_front or all_back:

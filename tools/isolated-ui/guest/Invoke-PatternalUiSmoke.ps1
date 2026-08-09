@@ -695,6 +695,65 @@ try {
         }
     }
 
+    Invoke-UiCheck -Name '2D accessible point edit undo and redo' -Check {
+        $editMode = Find-UiElement -Root $window -Name 'Edit pattern points'
+        $originalEditState = Get-ToggleState -Element $editMode
+        Set-ToggleState -Element $editMode -State 'On'
+
+        $pointHandle = Find-UiElement -Root $window -Name 'Back Torso start'
+        if (-not $pointHandle.Current.IsEnabled) {
+            throw 'The framed Back Torso start point is not independently selectable.'
+        }
+        Invoke-UiElement -Element $pointHandle
+
+        $xCoordinate = Find-UiElement -Root $window -Name 'Selected pattern point X coordinate in centimeters'
+        $range = Get-UiPattern -Element $xCoordinate -Pattern ([System.Windows.Automation.RangeValuePattern]::Pattern) -PatternName 'RangeValuePattern'
+        if ($range.Current.IsReadOnly) {
+            throw 'The selected pattern point X coordinate is read-only.'
+        }
+        $original = [double]$range.Current.Value
+        $step = [math]::Max([double]$range.Current.SmallChange, 0.1)
+        $changed = if ($original + $step -le [double]$range.Current.Maximum) {
+            $original + $step
+        }
+        else {
+            $original - $step
+        }
+        $range.SetValue($changed)
+
+        $undo = Find-UiElement -Root $window -Name 'Undo pattern geometry edit'
+        Wait-ForCondition -Description 'point edit and Undo command to commit' -Condition {
+            ([math]::Abs([double]$range.Current.Value - $changed) -lt 0.001) -and $undo.Current.IsEnabled
+        } | Out-Null
+        $editShotPath = Join-Path $evidenceDirectory '10-2d-point-edit.png'
+        Save-WindowScreenshot -Window $window -Path $editShotPath
+        $script:screenshots.Add([pscustomobject]@{ name = '2d-point-edit'; file = [IO.Path]::GetFileName($editShotPath) })
+
+        Invoke-UiElement -Element $undo
+        $redo = Find-UiElement -Root $window -Name 'Redo pattern geometry edit'
+        Wait-ForCondition -Description 'point coordinate to restore after Undo' -Condition {
+            ([math]::Abs([double]$range.Current.Value - $original) -lt 0.001) -and $redo.Current.IsEnabled
+        } | Out-Null
+        Invoke-UiElement -Element $redo
+        Wait-ForCondition -Description 'point coordinate to return after Redo' -Condition {
+            ([math]::Abs([double]$range.Current.Value - $changed) -lt 0.001) -and $undo.Current.IsEnabled
+        } | Out-Null
+        Invoke-UiElement -Element $undo
+        Wait-ForCondition -Description 'point coordinate to finish restored' -Condition {
+            [math]::Abs([double]$range.Current.Value - $original) -lt 0.001
+        } | Out-Null
+
+        $restored = [double]$range.Current.Value
+        Set-ToggleState -Element $editMode -State $originalEditState
+        [ordered]@{
+            point = 'Back Torso start'
+            originalX = $original
+            changedX = $changed
+            restoredX = $restored
+            screenshot = [IO.Path]::GetFileName($editShotPath)
+        }
+    }
+
     foreach ($toggleName in @(
         'Show pattern pieces panel',
         'Show avatar and material inspector',

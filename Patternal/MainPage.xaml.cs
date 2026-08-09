@@ -68,7 +68,7 @@ public sealed partial class MainPage : Page
     private PatternPointDocument? _dragStartPoint;
     private PatternPointDocument? _dragPreviewPoint;
     private Point _dragStartPointer;
-    private Ellipse? _draggingHandleVisual;
+    private Button? _draggingHandleVisual;
     private CanvasDraftTool _canvasDraftTool;
     private readonly List<PatternPointDocument> _canvasDraftPoints = [];
     private readonly List<UIElement> _canvasDraftPreviewElements = [];
@@ -1752,26 +1752,52 @@ public sealed partial class MainPage : Page
         PatternPointDocument point)
     {
         bool isControl = handle.Role is PatternPointRole.Control1 or PatternPointRole.Control2;
-        double size = isControl ? 10 : 14;
+        double markerSize = isControl ? 10 : 14;
+        double hitSize = isControl ? 22 : 26;
         Point canvasPoint = ToCanvasPoint(piece, point);
-        Ellipse visual = new()
+        Ellipse marker = new()
         {
-            Width = size,
-            Height = size,
+            Width = markerSize,
+            Height = markerSize,
             Fill = isControl ? ResourceBrush("PatternDimensionBrush") : ResourceBrush("AccentStrongBrush"),
             Stroke = ResourceBrush("PatternCanvasBackgroundBrush"),
-            StrokeThickness = 2,
+            StrokeThickness = 2
+        };
+        Button visual = new()
+        {
+            Width = hitSize,
+            Height = hitSize,
+            Padding = new Thickness(0),
+            Background = new SolidColorBrush(Colors.Transparent),
+            BorderThickness = new Thickness(0),
+            Content = marker,
             Tag = handle,
             CanDrag = false
         };
+        AutomationProperties.SetName(visual, handle.DisplayName);
+        AutomationProperties.SetHelpText(
+            visual,
+            "Select this pattern point for precise coordinate and segment editing");
         ToolTipService.SetToolTip(visual, handle.DisplayName);
+        visual.Click += OnPatternPointHandleClicked;
         visual.PointerPressed += OnPatternPointPointerPressed;
         visual.PointerMoved += OnPatternPointPointerMoved;
         visual.PointerReleased += OnPatternPointPointerReleased;
         visual.PointerCanceled += OnPatternPointPointerCanceled;
-        Canvas.SetLeft(visual, canvasPoint.X - size / 2);
-        Canvas.SetTop(visual, canvasPoint.Y - size / 2);
+        Canvas.SetLeft(visual, canvasPoint.X - hitSize / 2);
+        Canvas.SetTop(visual, canvasPoint.Y - hitSize / 2);
         holder.Children.Add(visual);
+    }
+
+    private void OnPatternPointHandleClicked(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: PatternPointHandle handle })
+        {
+            return;
+        }
+
+        _selectedPatternPoint = handle;
+        UpdatePatternPointInspector();
     }
 
     private void OnEditPatternPointsClicked(object sender, RoutedEventArgs e)
@@ -2077,7 +2103,7 @@ public sealed partial class MainPage : Page
 
     private void OnPatternPointPointerPressed(object sender, PointerRoutedEventArgs e)
     {
-        if (sender is not Ellipse visual || visual.Tag is not PatternPointHandle handle)
+        if (sender is not Button visual || visual.Tag is not PatternPointHandle handle)
         {
             return;
         }

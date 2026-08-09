@@ -35,6 +35,7 @@ This document defines the repeatable process for evaluating cloth backends witho
 | `newton-rigid-0_5-explicit` | 0.50 cm rigid source placement, explicit progressive sewing, incorrect legacy shoulder inference | Rejected. Collar joins were treated as shoulders. 137 body crossings, 0.525 cm maximum seam separation, 0.854 p99.9 strain, and no equilibrium. |
 | `newton-rigid-0_5-explicit-shoulders` | Same bundle with both live torso shoulder seams identified | Rejected. 147 body crossings, 0.535 cm maximum seam separation, 0.818 p99.9 strain, and no equilibrium. Broad strain improved, but sleeve caps and cuffs remained visibly malformed. |
 | `newton-rigid-0_5-explicit-shoulders-dressing` | Same bundle assembled around a topology-identical body at 0.9 radial scale, expanded to exact Antonia, released, and settled for 800 frames | Rejected. 134 body crossings, 0.545 cm maximum seam separation, 0.806 p99.9 strain, 0.002847 high-strain edge fraction, and no equilibrium. Six anatomical views confirm underarm collapse, open or malformed sleeve finishing, and excessive rear folds. |
+| `newton-rigid-0_5-explicit-finishing-order` | Same dressing-body control with sleeve-to-cuff joins closed before the final sleeve-cap phase | Rejected. Maximum seam separation improved to 0.518 cm and p99.9 strain improved to 0.796, but body crossings rose to 137, 1,320 vertices remained non-static, and six views still show malformed sleeve finishing, underarm collapse, and excessive rear folds. |
 
 The 0.50 cm material surface is the current useful control resolution. It reduces the exact surface from 146,874 to 37,287 vertices and clears the minimum-triangle-area gate. It does not make the current pre-warped arrangement acceptable, and it does not make the Newton result production cloth.
 
@@ -47,7 +48,7 @@ The 0.50 cm material surface is the current useful control resolution. It reduce
    PPF's current Snap and Merge contract supports cross-object soft stitches with barycentric anchor evidence and an exact fetched-surface post-snap. The adapter must create anchors from authored seam correspondence and prove raw soft-stitch closure before post-snap; post-processing cannot turn a rejected solve into accepted cloth.
 5. Use IPC Toolkit only as an offline contact oracle if Newton and PPF disagree about a difficult collision case.
 6. Do not use XRTailor as the first challenger. Its documented custom-garment workflow starts with Marvelous Designer sewing and draping and imports a welded template, so it does not test Patterna's panel-assembly problem independently.
-7. Treat the current adaptive sleeve-cap and cuff behavior as a possible pattern or seam-contract defect as well as a solver result. A new solver is not allowed to hide malformed construction input.
+7. Preserve the audited sleeve contract in every challenger. The exact control is left/right symmetric; cap-to-armscye mismatch is below `0.04 cm`, cuff-to-opening mismatch is zero at displayed precision, and the short underarm connector mismatch is below `0.002 cm`. Those measurements rule out a scrambled or materially mismatched sewing graph, but they do not prove a production-quality sleeve silhouette. A new solver is not allowed to hide malformed construction input.
 
 ## Evidence boundary
 
