@@ -910,6 +910,21 @@ Assert(
 string mainPageXamlPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "Patternal", "MainPage.xaml"));
 string mainPageCodePath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "Patternal", "MainPage.xaml.cs"));
 string viewportPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "Patternal", "Assets", "avatar3d.html"));
+string candidateAvatarDirectory = Path.GetFullPath(Path.Combine(
+    Directory.GetCurrentDirectory(),
+    "Patternal",
+    "Assets",
+    "Candidate",
+    "Antonia"));
+string candidateAvatarManifestPath = Path.Combine(candidateAvatarDirectory, "manifest.json");
+string candidateAvatarGeometryPath = Path.Combine(candidateAvatarDirectory, "antonia.glb");
+string candidateAvatarLicensePath = Path.GetFullPath(Path.Combine(
+    Directory.GetCurrentDirectory(),
+    "third_party",
+    "CharMorph-db",
+    "characters",
+    "antonia",
+    "license.txt"));
 string simulationPipelinePath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "Patternal", "SimulationPipeline.cs"));
 string simulationRuntimePath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "Patternal", "SimulationRuntime.cs"));
 string simulationRuntimeInstallerPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "tools", "install_patterna_simulation_runtime.ps1"));
@@ -919,6 +934,15 @@ string viewportSource = File.ReadAllText(viewportPath);
 string simulationPipelineSource = File.ReadAllText(simulationPipelinePath);
 string simulationRuntimeSource = File.ReadAllText(simulationRuntimePath);
 string simulationRuntimeInstallerSource = File.ReadAllText(simulationRuntimeInstallerPath);
+using JsonDocument candidateAvatarManifest = JsonDocument.Parse(File.ReadAllText(candidateAvatarManifestPath));
+JsonElement candidateAvatarRoot = candidateAvatarManifest.RootElement;
+Assert(candidateAvatarRoot.GetProperty("accepted").ValueKind == JsonValueKind.False, "The Antonia candidate crossed the production acceptance boundary.");
+Assert(candidateAvatarRoot.GetProperty("candidateOnly").GetBoolean(), "The Antonia GLB is not explicitly candidate-only.");
+Assert(candidateAvatarRoot.GetProperty("measurementFit").GetProperty("accepted").GetBoolean(), "The packaged Antonia candidate lost its accepted measurement-fit evidence.");
+Assert(candidateAvatarRoot.GetProperty("displayYawDegrees").GetDouble() == 180, "The Antonia candidate no longer faces the semantic front camera.");
+Assert(candidateAvatarRoot.GetProperty("geometryBytes").GetInt64() == new FileInfo(candidateAvatarGeometryPath).Length, "The packaged Antonia GLB byte count does not match its manifest.");
+Assert(candidateAvatarRoot.GetProperty("geometrySha256").GetString() == FileHash(candidateAvatarGeometryPath), "The packaged Antonia GLB hash does not match its manifest.");
+Assert(candidateAvatarRoot.GetProperty("licenseSha256").GetString() == FileHash(candidateAvatarLicensePath), "The packaged Antonia license hash does not match its manifest.");
 Assert(!mainPageXaml.Contains("12 sewn panels", StringComparison.Ordinal), "The packaged 3D overlay retained stale panel metadata.");
 Assert(!mainPageXaml.Contains("24 construction seams", StringComparison.Ordinal), "The packaged 3D overlay retained stale seam metadata.");
 Assert(mainPageXaml.Contains("x:Name=\"AcceptedEquilibriumTopologyText\"", StringComparison.Ordinal), "The packaged 3D overlay is not driven by live topology metadata.");
@@ -987,6 +1011,15 @@ Assert(
         viewportSource.IndexOf("supportedBustY", StringComparison.Ordinal),
     "The procedural-avatar fallback reads yScale before JavaScript initializes it.");
 Assert(viewportSource.Contains("loadDisplayAvatar", StringComparison.Ordinal) && viewportSource.Contains("Production/Avatar/", StringComparison.Ordinal), "The packaged renderer no longer loads the real display-avatar stack.");
+Assert(viewportSource.Contains("fitted GLB candidate", StringComparison.Ordinal), "The Antonia HUD again implies that every editable measurement is mapped into the fixed candidate.");
+Assert(
+    viewportSource.Contains("loadCandidateDisplayAvatar", StringComparison.Ordinal) &&
+        viewportSource.Contains("crypto.subtle.digest('SHA-256'", StringComparison.Ordinal) &&
+        viewportSource.Contains("manifest.accepted!==false||manifest.candidateOnly!==true", StringComparison.Ordinal) &&
+        viewportSource.Contains("Number(manifest.displayYawDegrees)", StringComparison.Ordinal) &&
+        viewportSource.Contains("has an unsupported transform", StringComparison.Ordinal) &&
+        viewportSource.Contains("Antonia candidate · measurement fit accepted · cloth and production visual gates pending", StringComparison.Ordinal),
+    "The packaged renderer no longer loads the hash-bound Antonia GLB behind an explicit candidate boundary.");
 Assert(
     mainPageXaml.Contains("x:Name=\"ShowBraToggle\"", StringComparison.Ordinal) &&
         mainPageXaml.Contains("x:Name=\"BraAvailabilityText\"", StringComparison.Ordinal) &&
@@ -1010,6 +1043,14 @@ Assert(
     mainPageCode.Contains("RefreshAssemblyInspectorAfterHistoryChange();", StringComparison.Ordinal) &&
         mainPageCode.Contains("DispatcherQueue.TryEnqueue(() => UpdateAssemblyInspector(false));", StringComparison.Ordinal),
     "Undo and redo no longer commit the restored assembly-toggle state after WinUI finishes the current input event.");
+Assert(
+    mainPageXaml.Contains("x:Name=\"StaleSimulationNotice\"", StringComparison.Ordinal) &&
+        mainPageXaml.Contains("x:Name=\"SimulationStatusBorder\"", StringComparison.Ordinal) &&
+        mainPageXaml.Contains("HorizontalAlignment=\"Stretch\"", StringComparison.Ordinal) &&
+        mainPageXaml.Contains("MaxLines=\"2\"", StringComparison.Ordinal) &&
+        mainPageCode.Contains("No matching accepted cloth:", StringComparison.Ordinal) &&
+        mainPageCode.Contains("SimulationStatusBorder.Visibility = isCurrent", StringComparison.Ordinal),
+    "The stale-cloth notice again obscures a large part of the 3D inspection surface.");
 Assert(
     mainPageCode.Contains("await LoadBundledSimulationFitEvidenceAsync();", StringComparison.Ordinal) &&
         mainPageCode.Contains("Assets/Production/patterna-production-crew-neck.fit.json", StringComparison.Ordinal),

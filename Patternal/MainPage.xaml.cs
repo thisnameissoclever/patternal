@@ -3190,6 +3190,7 @@ public sealed partial class MainPage : Page
         DrapeWebView.Visibility = isShirt && _webReady ? Visibility.Visible : Visibility.Collapsed;
         AcceptedShirtControls.Visibility = isShirt ? Visibility.Visible : Visibility.Collapsed;
         AcceptedEquilibriumCard.Visibility = isCurrent ? Visibility.Visible : Visibility.Collapsed;
+        SimulationStatusBorder.Visibility = isCurrent ? Visibility.Visible : Visibility.Collapsed;
         UpdateAcceptedEquilibriumTopology();
         StaleSimulationNotice.Visibility = isShirt && !isCurrent ? Visibility.Visible : Visibility.Collapsed;
         UnacceptedGarmentNotice.Visibility = isShirt ? Visibility.Collapsed : Visibility.Visible;
@@ -3213,11 +3214,10 @@ public sealed partial class MainPage : Page
                 ? "pending"
                 : _currentSimulationRevision[..12];
             string? baselineMismatch = GetBundledProductionBaselineMismatch();
-            string mismatchDetail = string.IsNullOrWhiteSpace(baselineMismatch)
-                ? string.Empty
-                : $" Production asset mismatch: {baselineMismatch}.";
             StaleSimulationDetailText.Text =
-                $"Revision {revision} has no accepted 3D result. The old cloth has been hidden because the pattern, body, assembly, or fabric inputs changed.{mismatchDetail}";
+                string.IsNullOrWhiteSpace(baselineMismatch)
+                    ? "This body and 2D pattern have no matching accepted cloth. The old result is hidden."
+                    : $"No matching accepted cloth: {baselineMismatch}. The old result is hidden.";
             SimulationStatusText.Text = $"3D regeneration required · revision {revision}";
         }
     }
@@ -3684,6 +3684,7 @@ public sealed partial class MainPage : Page
         SimulateCommandButton.IsEnabled = false;
         SimulationProgressRing.IsActive = true;
         SimulationProgressRing.Visibility = Visibility.Visible;
+        SimulationStatusBorder.Visibility = Visibility.Visible;
         SimulationStatusText.Text = "Preparing a revisioned same-source cloth job";
         _simulationCancellation?.Cancel();
         _simulationCancellation?.Dispose();
@@ -3753,6 +3754,7 @@ public sealed partial class MainPage : Page
         {
             SimulationProgressRing.IsActive = false;
             SimulationProgressRing.Visibility = Visibility.Collapsed;
+            UpdateSimulationFreshness();
             RunSimulationButton.IsEnabled = true;
             SimulateCommandButton.IsEnabled = true;
         }

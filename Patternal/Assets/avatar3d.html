@@ -242,6 +242,7 @@
         productionGarmentEdgeData: null,
         productionDisplayBody: null,
         productionDisplayAssets: [],
+        displayAvatarMode: null,
         displayBodyTexture: null,
         displayBodyColor: [1,1,1],
         garmentTexture: null,
@@ -621,6 +622,180 @@
         });
       }
 
+      async function sha256Hex(buffer) {
+        const digest=await crypto.subtle.digest('SHA-256',buffer);
+        return Array.from(new Uint8Array(digest),value=>value.toString(16).padStart(2,'0')).join('');
+      }
+
+      function parseGlb(buffer) {
+        const view=new DataView(buffer);
+        if(view.byteLength<20||view.getUint32(0,true)!==0x46546c67)throw new Error('Candidate avatar is not a GLB file.');
+        if(view.getUint32(4,true)!==2)throw new Error(`Unsupported GLB version ${view.getUint32(4,true)}.`);
+        if(view.getUint32(8,true)!==view.byteLength)throw new Error('Candidate GLB length does not match its header.');
+        let offset=12,document=null,binary=null;
+        while(offset+8<=view.byteLength) {
+          const chunkLength=view.getUint32(offset,true),chunkType=view.getUint32(offset+4,true);
+          offset+=8;
+          if(offset+chunkLength>view.byteLength)throw new Error('Candidate GLB chunk exceeds the file boundary.');
+          const chunk=buffer.slice(offset,offset+chunkLength);
+          if(chunkType===0x4e4f534a) {
+            const source=new TextDecoder().decode(chunk).replace(/[\u0000\u0020]+$/g,'');
+            document=JSON.parse(source);
+          } else if(chunkType===0x004e4942)binary=chunk;
+          offset+=chunkLength;
+        }
+        if(!document||!binary)throw new Error('Candidate GLB must contain JSON and binary chunks.');
+        if(document.asset?.version!=='2.0')throw new Error('Candidate GLB does not declare glTF 2.0.');
+        return {document,binary};
+      }
+
+      const glbComponentReaders={
+        5120:{bytes:1,read:(view,offset)=>view.getInt8(offset),normalize:value=>Math.max(value/127,-1)},
+        5121:{bytes:1,read:(view,offset)=>view.getUint8(offset),normalize:value=>value/255},
+        5122:{bytes:2,read:(view,offset)=>view.getInt16(offset,true),normalize:value=>Math.max(value/32767,-1)},
+        5123:{bytes:2,read:(view,offset)=>view.getUint16(offset,true),normalize:value=>value/65535},
+        5125:{bytes:4,read:(view,offset)=>view.getUint32(offset,true),normalize:value=>value/4294967295},
+        5126:{bytes:4,read:(view,offset)=>view.getFloat32(offset,true),normalize:value=>value}
+      };
+      const glbTypeComponents={SCALAR:1,VEC2:2,VEC3:3,VEC4:4,MAT2:4,MAT3:9,MAT4:16};
+
+      function readGlbAccessor(document,binary,accessorIndex,{indices=false}={}) {
+        const accessor=document.accessors?.[accessorIndex],bufferView=document.bufferViews?.[accessor?.bufferView];
+        if(!accessor||!bufferView)throw new Error(`Candidate GLB accessor ${accessorIndex} has no buffer view.`);
+        if(accessor.sparse)throw new Error('Sparse GLB accessors are outside the candidate contract.');
+        const component=glbComponentReaders[accessor.componentType],componentCount=glbTypeComponents[accessor.type];
+        if(!component||!componentCount)throw new Error(`Candidate GLB accessor ${accessorIndex} has an unsupported type.`);
+        const elementBytes=component.bytes*componentCount,stride=bufferView.byteStride||elementBytes;
+        if(stride<elementBytes)throw new Error(`Candidate GLB accessor ${accessorIndex} has an invalid byte stride.`);
+        const viewOffset=bufferView.byteOffset||0,start=viewOffset+(accessor.byteOffset||0);
+        const requiredEnd=start+Math.max(0,accessor.count-1)*stride+elementBytes;
+        if(requiredEnd>viewOffset+bufferView.byteLength||requiredEnd>binary.byteLength)throw new Error(`Candidate GLB accessor ${accessorIndex} exceeds its buffer view.`);
+        const dataView=new DataView(binary),values=indices?new Uint32Array(accessor.count):new Float32Array(accessor.count*componentCount);
+        for(let item=0;item<accessor.count;item++)for(let part=0;part<componentCount;part++) {
+          const value=component.read(dataView,start+item*stride+part*component.bytes);
+          values[item*componentCount+part]=accessor.normalized?component.normalize(value):value;
+        }
+        return values;
+      }
+
+      function glbBufferView(document,binary,index) {
+        const view=document.bufferViews?.[index];
+        if(!view)throw new Error(`Candidate GLB image buffer view ${index} is missing.`);
+        const start=view.byteOffset||0,end=start+view.byteLength;
+        if(end>binary.byteLength)throw new Error(`Candidate GLB image buffer view ${index} exceeds the binary chunk.`);
+        return binary.slice(start,end);
+      }
+
+      async function loadEmbeddedGlbTexture(document,binary,textureIndex) {
+        const texture=document.textures?.[textureIndex],image=document.images?.[texture?.source];
+        if(!texture||!image||image.bufferView===undefined||!image.mimeType)throw new Error(`Candidate GLB texture ${textureIndex} is not an embedded image.`);
+        const objectUrl=URL.createObjectURL(new Blob([glbBufferView(document,binary,image.bufferView)],{type:image.mimeType}));
+        try{return await loadTexture(objectUrl);}finally{URL.revokeObjectURL(objectUrl);}
+      }
+
+      function candidatePrimitiveData(document,binary,primitive,floorOffsetM,displayYawDegrees) {
+        if((primitive.mode??4)!==4)throw new Error('Candidate GLB contains a non-triangle primitive.');
+        if(primitive.indices===undefined||primitive.attributes?.POSITION===undefined||primitive.attributes?.NORMAL===undefined)throw new Error('Candidate GLB primitive is missing indexed positions or normals.');
+        const sourcePositions=readGlbAccessor(document,binary,primitive.attributes.POSITION);
+        const sourceNormals=readGlbAccessor(document,binary,primitive.attributes.NORMAL);
+        const texcoords=primitive.attributes.TEXCOORD_0===undefined
+          ?new Float32Array(sourcePositions.length/3*2)
+          :readGlbAccessor(document,binary,primitive.attributes.TEXCOORD_0);
+        if(sourcePositions.length!==sourceNormals.length||texcoords.length!==sourcePositions.length/3*2)throw new Error('Candidate GLB primitive attribute counts do not match.');
+        const yaw=Number(displayYawDegrees)*Math.PI/180;
+        if(!Number.isFinite(yaw))throw new Error('Candidate GLB display yaw is invalid.');
+        const cosine=Math.cos(yaw),sine=Math.sin(yaw);
+        const positions=new Float32Array(sourcePositions.length),normals=new Float32Array(sourceNormals.length);
+        for(let index=0;index<sourcePositions.length;index+=3) {
+          positions[index]=(sourcePositions[index]*cosine+sourcePositions[index+2]*sine)*2;
+          positions[index+1]=(sourcePositions[index+1]-floorOffsetM)*2-1.67;
+          positions[index+2]=(-sourcePositions[index]*sine+sourcePositions[index+2]*cosine)*2;
+          normals[index]=sourceNormals[index]*cosine+sourceNormals[index+2]*sine;
+          normals[index+1]=sourceNormals[index+1];
+          normals[index+2]=-sourceNormals[index]*sine+sourceNormals[index+2]*cosine;
+        }
+        return {
+          positions,
+          normals,
+          texcoords,
+          stress:new Float32Array(sourcePositions.length/3),
+          indices:readGlbAccessor(document,binary,primitive.indices,{indices:true})
+        };
+      }
+
+      async function decodeCandidateGlb(buffer,manifest) {
+        const {document,binary}=parseGlb(buffer),scene=document.scenes?.[document.scene??0];
+        if(!scene||!Array.isArray(scene.nodes))throw new Error('Candidate GLB has no active scene.');
+        const textureIndices=new Set(),entries=[];
+        function visitNode(nodeIndex) {
+          const node=document.nodes?.[nodeIndex];
+          if(!node)throw new Error(`Candidate GLB node ${nodeIndex} is missing.`);
+          if(node.matrix||node.translation||node.rotation||node.scale)throw new Error(`Candidate GLB node ${node.name||nodeIndex} has an unsupported transform.`);
+          if(node.mesh!==undefined) {
+            const mesh=document.meshes?.[node.mesh];
+            if(!mesh)throw new Error(`Candidate GLB mesh ${node.mesh} is missing.`);
+            for(const [primitiveIndex,primitive] of (mesh.primitives||[]).entries()) {
+              const material=document.materials?.[primitive.material??-1]||{},pbr=material.pbrMetallicRoughness||{};
+              const color=Array.isArray(pbr.baseColorFactor)?pbr.baseColorFactor:[1,1,1,1];
+              if(color[3]<=.001)continue;
+              const textureIndex=pbr.baseColorTexture?.index;
+              if(textureIndex!==undefined)textureIndices.add(textureIndex);
+              entries.push({
+                nodeName:node.name||mesh.name||`mesh-${node.mesh}`,
+                primitiveIndex,
+                materialName:material.name||`material-${primitive.material??'none'}`,
+                data:candidatePrimitiveData(document,binary,primitive,Number(manifest.floorOffsetM),Number(manifest.displayYawDegrees)),
+                textureIndex,
+                color:color.slice(0,3).map(value=>clamp(Number(value),0,1)),
+                roughness:clamp(Number(pbr.roughnessFactor??.72),.04,1),
+                alphaCutoff:material.alphaMode==='MASK'?Number(material.alphaCutoff??.5):0
+              });
+            }
+          }
+          for(const child of node.children||[])visitNode(child);
+        }
+        for(const nodeIndex of scene.nodes)visitNode(nodeIndex);
+        const textureMap=new Map(await Promise.all(Array.from(textureIndices).map(async index=>[index,await loadEmbeddedGlbTexture(document,binary,index)])));
+        for(const entry of entries)entry.texture=entry.textureIndex===undefined?null:textureMap.get(entry.textureIndex);
+        const bodyEntry=entries.find(entry=>entry.nodeName==='Patterna_Antonia_Body'&&entry.materialName==='cm_antonia_body');
+        if(!bodyEntry)throw new Error('Candidate GLB has no primary Antonia body material.');
+        const assets=entries.filter(entry=>entry!==bodyEntry).map((entry,index)=>({
+          key:entry.nodeName==='Patterna_Antonia_Panties'
+            ?'panties'
+            :entry.nodeName==='Patterna_Antonia_ModestyBandeau'
+              ?'modesty-bandeau'
+              :`antonia-${index}-${entry.materialName}`,
+          data:entry.data,
+          texture:entry.texture,
+          color:entry.color,
+          roughness:entry.roughness,
+          alphaCutoff:entry.alphaCutoff
+        }));
+        return {
+          bodyData:bodyEntry.data,
+          bodyTexture:bodyEntry.texture,
+          bodyColor:bodyEntry.color,
+          assets,
+          mode:'antonia-candidate'
+        };
+      }
+
+      async function loadCandidateDisplayAvatar(baseUrl='Candidate/Antonia/') {
+        const manifestResponse=await fetch(`${baseUrl}manifest.json`);
+        if(!manifestResponse.ok)throw new Error(`Candidate avatar manifest HTTP ${manifestResponse.status}`);
+        const manifest=await manifestResponse.json();
+        if(manifest.schemaVersion!=='patterna.display-avatar-glb/1.0'||manifest.accepted!==false||manifest.candidateOnly!==true)throw new Error('Candidate avatar manifest crosses the production acceptance boundary.');
+        const [geometryResponse,licenseResponse]=await Promise.all([fetch(`${baseUrl}${manifest.geometry}`),fetch(`${baseUrl}${manifest.licenseFile}`)]);
+        if(!geometryResponse.ok||!licenseResponse.ok)throw new Error(`Candidate avatar HTTP ${geometryResponse.status}/${licenseResponse.status}`);
+        const [geometryBuffer,licenseBuffer]=await Promise.all([geometryResponse.arrayBuffer(),licenseResponse.arrayBuffer()]);
+        if(geometryBuffer.byteLength!==manifest.geometryBytes)throw new Error('Candidate avatar byte count does not match its manifest.');
+        const [geometryHash,licenseHash]=await Promise.all([sha256Hex(geometryBuffer),sha256Hex(licenseBuffer)]);
+        if(geometryHash!==String(manifest.geometrySha256).toLowerCase())throw new Error('Candidate avatar geometry hash does not match its manifest.');
+        if(licenseHash!==String(manifest.licenseSha256).toLowerCase())throw new Error('Candidate avatar license hash does not match its manifest.');
+        if(manifest.measurementFit?.accepted!==true)throw new Error('Candidate avatar measurement fit is not accepted.');
+        return decodeCandidateGlb(geometryBuffer,manifest);
+      }
+
       let fabricTexturePromise=null;
       function loadFabricTexture() {
         if(!fabricTexturePromise)fabricTexturePromise=loadTexture('Production/fabric-texture.png',{repeat:true});
@@ -662,8 +837,12 @@
 
       function discardDisplayAvatar(displayAvatar) {
         if(!displayAvatar)return;
-        if(displayAvatar.bodyTexture)gl.deleteTexture(displayAvatar.bodyTexture);
-        for(const asset of displayAvatar.assets||[])if(asset.texture)gl.deleteTexture(asset.texture);
+        deleteDisplayTextures(displayAvatar.bodyTexture,displayAvatar.assets||[]);
+      }
+
+      function deleteDisplayTextures(bodyTexture,assets) {
+        const textures=new Set([bodyTexture,...assets.map(asset=>asset.texture)].filter(Boolean));
+        for(const texture of textures)gl.deleteTexture(texture);
       }
 
       function reportBraAvailability() {
@@ -672,9 +851,9 @@
       }
 
       function applyDisplayAvatar(displayAvatar) {
-        if(state.displayBodyTexture)gl.deleteTexture(state.displayBodyTexture);
-        for(const asset of state.productionDisplayAssets)if(asset.texture)gl.deleteTexture(asset.texture);
+        deleteDisplayTextures(state.displayBodyTexture,state.productionDisplayAssets);
         state.productionDisplayBody=displayAvatar.bodyData;
+        state.displayAvatarMode=displayAvatar.mode||'production';
         state.displayBodyTexture=displayAvatar.bodyTexture;
         state.displayBodyColor=displayAvatar.bodyColor;
         state.productionDisplayAssets=displayAvatar.assets;
@@ -682,9 +861,9 @@
       }
 
       function clearDisplayAvatar() {
-        if(state.displayBodyTexture)gl.deleteTexture(state.displayBodyTexture);
-        for(const asset of state.productionDisplayAssets)if(asset.texture)gl.deleteTexture(asset.texture);
+        deleteDisplayTextures(state.displayBodyTexture,state.productionDisplayAssets);
         state.productionDisplayBody=null;
+        state.displayAvatarMode=null;
         state.displayBodyTexture=null;
         state.displayBodyColor=[1,1,1];
         state.productionDisplayAssets=[];
@@ -707,14 +886,14 @@
         if(state.productionDisplayBody)return;
         const requestSequence=++state.assetRequestSequence;
         try {
-          const displayAvatar=await loadDisplayAvatar();
+          const displayAvatar=await loadCandidateDisplayAvatar();
           if(requestSequence!==state.assetRequestSequence){discardDisplayAvatar(displayAvatar);return;}
           applyDisplayAvatar(displayAvatar);
-          state.acceptedBuildLabel='Editable full-bust measurement avatar · cloth pending';
+          state.acceptedBuildLabel='Antonia candidate · measurement fit accepted · cloth and production visual gates pending';
           scheduleRebuild();
         } catch(error) {
           if(requestSequence!==state.assetRequestSequence)return;
-          document.getElementById('buildLabel').textContent=`Editable avatar unavailable · ${error.message}`;
+          document.getElementById('buildLabel').textContent=`Antonia candidate unavailable · ${error.message}`;
         }
       }
 
@@ -1500,7 +1679,9 @@
         }
 
         const numericCount=Object.entries(a).filter(([key,value])=>key!=='photos'&&typeof value==='number').length;
-        document.getElementById('bodyLabel').textContent=`${Math.round(a.height)} cm · ${numericCount} mapped values`;
+        document.getElementById('bodyLabel').textContent=state.displayAvatarMode==='antonia-candidate'
+          ?`${Math.round(a.height)} cm · fitted GLB candidate`
+          :`${Math.round(a.height)} cm · ${numericCount} mapped values`;
         const name={silk:'Silk charmeuse',cotton:'Lightweight cotton jersey',linen:'Linen twill',wool:'Wool crepe'}[f.key]||'Custom fabric';
         document.getElementById('fabricLabel').innerHTML=`${name}<br>${Math.round(f.weight)} g/m² · ${Math.round(f.stretch)}% stretch`;
         document.getElementById('buildLabel').textContent=useProduction

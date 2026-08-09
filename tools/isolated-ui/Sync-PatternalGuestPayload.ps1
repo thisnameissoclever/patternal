@@ -104,6 +104,9 @@ $identityFiles = @(
     'Patternal.dll',
     'resources.pri',
     'Assets\avatar3d.html',
+    'Assets\Candidate\Antonia\antonia.glb',
+    'Assets\Candidate\Antonia\manifest.json',
+    'Assets\Candidate\Antonia\license.txt',
     'Assets\Production\patterna-production-crew-neck.obj',
     'Assets\Production\fabric-texture.png'
 )

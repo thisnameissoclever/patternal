@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "patterna.display-avatar-glb/1.0",
+  "accepted": false,
+  "candidateOnly": true,
+  "source": "Antonia Polygon",
+  "author": "Olaf Delgado-Friedrichs",
+  "additionalAuthors": "phantom3D, MikeJ, DieTrying, Fenrissa, and others",
+  "sourceUrl": "https://sites.google.com/site/antoniapolygon/",
+  "outputLicense": "CC-BY 3.0",
+  "licenseFile": "license.txt",
+  "licenseSha256": "b7331aa0d295f54bd4c8ea88d5d315d7ded4d7416fae7fa9324921e09824fa3e",
+  "geometry": "antonia.glb",
+  "geometrySha256": "6b6315f3e3dc31eb085f1b0007f7b0802ba9b1dd7bb27b088134cbe3defe1ce5",
+  "geometryBytes": 14281288,
+  "heightTargetCm": 167.0,
+  "heightMeasuredCm": 167.00000376440585,
+  "floorOffsetM": 0.002127328421920538,
+  "displayYawDegrees": 180.0,
+  "measurementFit": {
+    "accepted": true,
+    "maximumAbsoluteResidualCm": 0.007112400468002988,
+    "bustSeparationResidualCm": 3.921047628807628e-7
+  },
+  "registration": {
+    "method": "vertex-order comparison after OBJ negative-X and negative-Y decoding",
+    "maximumBodyToCollisionDistanceM": 8.390094807352183e-7,
+    "comparedVertexCount": 36030
+  },
+  "openGates": [
+    "underwear is body-conformed but not pattern-sized",
+    "hair geometry is unavailable",
+    "height maps have not been converted to tangent-space normal maps",
+    "collision simplification and regional registration are not implemented",
+    "cloth has not been solved on this body",
+    "packaged multi-angle visual acceptance is not complete"
+  ]
+}

@@ -654,35 +654,43 @@
 
                             <Border
                                 x:Name="StaleSimulationNotice"
-                                Width="430"
                                 Margin="20"
-                                Padding="16"
-                                HorizontalAlignment="Left"
+                                Padding="12"
+                                HorizontalAlignment="Stretch"
                                 VerticalAlignment="Bottom"
                                 Background="#F2191A21"
                                 BorderBrush="#8056C7FF"
                                 BorderThickness="1"
                                 CornerRadius="8"
                                 Visibility="Collapsed">
-                                <StackPanel Spacing="12">
-                                    <TextBlock
-                                        AutomationProperties.AutomationId="DrapeStaleSimulationState"
-                                        FontFamily="Segoe UI Variable Display"
-                                        FontSize="18"
-                                        FontWeight="SemiBold"
-                                        Foreground="White"
-                                        Text="3D cloth is out of date" />
-                                    <TextBlock
-                                        x:Name="StaleSimulationDetailText"
-                                        Foreground="#D8FFFFFF"
-                                        Text="The current pattern, measurements, seams, or fabric differ from the accepted simulation. Patternal has hidden the old result because it is no longer truthful."
-                                        TextWrapping="Wrap" />
+                                <Grid ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Spacing="4">
+                                        <TextBlock
+                                            AutomationProperties.AutomationId="DrapeStaleSimulationState"
+                                            FontFamily="Segoe UI Variable Display"
+                                            FontSize="16"
+                                            FontWeight="SemiBold"
+                                            Foreground="White"
+                                            Text="3D cloth is out of date" />
+                                        <TextBlock
+                                            x:Name="StaleSimulationDetailText"
+                                            Foreground="#D8FFFFFF"
+                                            MaxLines="2"
+                                            Text="This body and 2D pattern have no matching accepted cloth. The old result is hidden."
+                                            TextTrimming="CharacterEllipsis"
+                                            TextWrapping="Wrap" />
+                                    </StackPanel>
                                     <Button
-                                        HorizontalAlignment="Left"
+                                        Grid.Column="1"
+                                        VerticalAlignment="Center"
                                         AutomationProperties.Name="Regenerate current cloth simulation"
                                         Click="OnRunSimulationClicked"
                                         Content="Regenerate current cloth" />
-                                </StackPanel>
+                                </Grid>
                             </Border>
 
                             <StackPanel
@@ -769,6 +777,7 @@
                             </Border>
 
                             <Border
+                                x:Name="SimulationStatusBorder"
                                 Margin="20"
                                 Padding="10,7"
                                 HorizontalAlignment="Left"

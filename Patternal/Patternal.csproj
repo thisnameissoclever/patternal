@@ -36,6 +36,8 @@
     <Content Include="Assets\Production\patterna-production-front.png" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
     <Content Include="..\third_party\GarmentCode\assets\img\fabric_texture.png" Link="Assets\Production\fabric-texture.png" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
     <Content Include="Assets\Production\Avatar\**\*" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
+    <Content Include="Assets\Candidate\Antonia\**\*" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
+    <Content Include="..\third_party\CharMorph-db\characters\antonia\license.txt" Link="Assets\Candidate\Antonia\license.txt" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
     <Content Include="Assets\MAKEHUMAN-ASSET-NOTICE.md" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\PatternaUnreal\SourceAssets\GarmentCode\PatternaProductionCrewNeck.specification.json" Link="Assets\GarmentCode\PatternaProductionCrewNeck.specification.json" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
     <Content Include="..\PatternaUnreal\Saved\Patterna\ShirtAcceptanceViews\PatternaShirt-01-front.png" Link="Assets\UnrealPreview\Patterna-01-front.png" CopyToOutputDirectory="PreserveNewest" Condition="Exists('..\PatternaUnreal\Saved\Patterna\ShirtAcceptanceViews\PatternaShirt-01-front.png')" />

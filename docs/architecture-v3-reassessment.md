@@ -147,7 +147,9 @@ The local spike now proves that Antonia is a viable replacement foundation, but 
 7. The first GLB round trip was visually rejected because Blender exported height-map nodes ambiguously and the imported body became dark and mottled. The candidate now exports stable base-color PBR materials and records tangent-space normal conversion as an open gate.
 8. Antonia's legacy bra cannot be called fitted after body customization. The candidate uses a clearly identified convex-envelope modesty bandeau for display only. It is intentionally not described as a bra, pattern, cloth solve, or fit proof.
 
-Open gates remain hair geometry, tangent-space normal textures, a simplified collision body with regional registration, packaged WinUI GLB loading, cloth solved against the fitted Antonia body, and the complete packaged UI acceptance suite. The current candidate is therefore accepted as an architecture foundation and rejected as a production baseline.
+Packaged WinUI GLB loading is now proven for the candidate. The application ships the 14.3 MB GLB, a candidate-only manifest, and the exact CC-BY 3.0 license through the AppX recipe. The embedded renderer verifies the geometry and license hashes, rejects unsupported GLB transforms, decodes the known indexed triangle and embedded-image contract, and applies a manifest-bound 180 degree display yaw so the existing semantic cameras remain correct. Isolated run `20260809-022804-172d9cb7` used payload `8f91cf5a410a9f2378a37c86efe2d093451aa5780bfa5a24a805013c9e5d04e7`; 25 non-cloth interactions passed, host input injection and VMConnect use remained false, and all six camera screenshots were reviewed. The run correctly failed only because no accepted cloth matches the current revision.
+
+The packaged review also rejected several remaining production-quality details. Antonia still has visible texture-region transitions on the limbs and crown, no hair geometry, a coarse display-only bandeau, and no accepted cloth. The compact stale-cloth banner no longer hides most of the body, but the 2D screenshot still shows clipped labels, tiny collar and cuff pieces, excessive unused layout space, and no obvious pan or zoom controls. The current candidate is therefore accepted as a packaged architecture foundation and rejected as a production baseline.
 
 ## Cloth solver architecture
 
@@ -252,8 +254,8 @@ WebView2 may remain because it provides an isolated, easily packaged interactive
 
 1. Generalize CharMorph input discovery from `config.yaml`. Complete for the locally required scalar and list subset.
 2. Fit the six primary measurements plus the upper-body measurements required by the shirt. Primary closed-circuit and bust-landmark fit is complete; the remaining upper-body values still need explicit gates.
-3. Export a textured GLB and a watertight collision proxy. Textured GLB and exact full-resolution collision pairing are complete; simplification remains open.
-4. Add regional registration and six-view anatomy gates. Six-view fresh-import review is complete; automated regional registration remains open.
+3. Export a textured GLB and a watertight collision proxy. Textured GLB, exact full-resolution collision pairing, hash-bound AppX packaging, and the narrow packaged loader are complete; simplification remains open.
+4. Add regional registration and six-view anatomy gates. Six-view fresh-import and packaged semantic-camera review are complete; automated regional registration remains open.
 
 ### Phase 2: cloth bake-off
 

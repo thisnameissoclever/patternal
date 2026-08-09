@@ -2448,3 +2448,21 @@ Resolve a backend-specific fit contract before optimization and reject a backend
 ### How to verify
 
 Require the Antonia contract to fit the full-bust profile within the documented circuit and landmark tolerances while retaining its constrained mixed-morph solution. Require the generated GLB to import as three mesh objects with ten unique body materials, embedded images, 167.0 cm height, and a body-to-collision vertex distance below 0.00001 m after the recorded OBJ axis transform. Review front, rear, both side, and both oblique round-trip renders. Reject mottled materials, reversed camera semantics, spherical detached anatomy, underwear cutouts, back-facing cups, arm-wing geometry, or any claim that the modesty bandeau is fitted cloth.
+
+## A valid GLB can still violate the packaged camera and status contracts
+
+### What happened
+
+The first packaged Antonia GLB loaded successfully, rendered every embedded material, and passed the existing camera-button automation. The screenshots nevertheless showed the avatar's back under Front and its face under Rear. The packaged HUD also claimed that 151 values were mapped into a fixed fitted candidate, while a large stale-cloth card and a separate status chip obscured each other and much of the lower viewport.
+
+### Root cause
+
+Blender's GLB used Y-up coordinates but retained the source body's opposite anatomical depth direction from the existing packaged display stack. Button invocation proved only that the JavaScript API ran. The HUD derived its count from editable application state instead of the active display-asset capability, and two independent native overlays occupied the same bottom layer.
+
+### Prevention rule
+
+Bind display orientation to the candidate manifest and visually verify semantic camera labels after packaging. Describe fixed fitted assets as fixed fitted assets; do not reuse dynamic measurement-capability labels. Give stale, progress, and accepted states one visible status surface at a time, with bounded text and an unobscured regeneration action.
+
+### How to verify
+
+Install the exact hash-identified AppX payload in the isolated VM. Capture Front, Right, Rear, Left, Oblique, and Fit. Confirm Front shows the face, Rear shows the back, the sides are distinct, and the HUD says `fitted GLB candidate`. Confirm the stale banner has no overlapping status text and does not hide the torso. Require all non-cloth interactions to pass, with the accepted-cloth gate remaining failed until cloth for the exact current revision exists.
