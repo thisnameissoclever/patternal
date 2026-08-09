@@ -424,6 +424,30 @@ GarmentDocument acceptedShirt = GarmentCodePatternImporter.Import(
         SourceRevision: "e3469c92cdc0ae6e019527ff90f32f8c096884a35f95696a5e3f4c325891b3e3"));
 PatternTopologyCompilation acceptedShirtTopology = PatternTopologyCompiler.Compile(acceptedShirt);
 Assert(acceptedShirt.Pieces.Count == 14, "The production shirt source did not import all 14 pattern pieces.");
+PatternCanvasLayoutResult acceptedShirtLayout = PatternCanvasLayoutEngine.Arrange(
+    acceptedShirt.Pieces,
+    960,
+    720,
+    4);
+PatternCanvasPlacement[] acceptedShirtPlacements = acceptedShirtLayout.Placements.Values.ToArray();
+Assert(acceptedShirtPlacements.Length == 14, "The 2D auto layout dropped a production shirt piece.");
+Assert(
+    acceptedShirtPlacements.All(item =>
+        item.Left >= 0 &&
+        item.Top >= 0 &&
+        item.Left + item.Width <= acceptedShirtLayout.CanvasWidth &&
+        item.Top + item.Height <= acceptedShirtLayout.CanvasHeight),
+    "The 2D auto layout placed a production shirt piece outside the canvas.");
+Assert(
+    acceptedShirtPlacements.SelectMany((first, firstIndex) =>
+        acceptedShirtPlacements.Skip(firstIndex + 1).Select(second => (First: first, Second: second)))
+        .All(pair =>
+            pair.First.Left + pair.First.Width <= pair.Second.Left ||
+            pair.Second.Left + pair.Second.Width <= pair.First.Left ||
+            pair.First.Top + pair.First.Height <= pair.Second.Top ||
+            pair.Second.Top + pair.Second.Height <= pair.First.Top),
+    "The 2D auto layout overlaps production shirt piece cells.");
+Assert(acceptedShirtLayout.CanvasHeight <= 720, "The 14-piece production shirt no longer fits the baseline 2D canvas.");
 Assert(acceptedShirt.Seams.Count == 34, "The production shirt source did not import all 34 construction seams.");
 Assert(acceptedShirtTopology.Panels.Count == 14, "The production shirt source did not compile all 14 panels.");
 Assert(acceptedShirtTopology.Seams.Count == 34, "The production shirt topology lost a construction seam.");
@@ -945,6 +969,16 @@ Assert(candidateAvatarRoot.GetProperty("geometrySha256").GetString() == FileHash
 Assert(candidateAvatarRoot.GetProperty("licenseSha256").GetString() == FileHash(candidateAvatarLicensePath), "The packaged Antonia license hash does not match its manifest.");
 Assert(!mainPageXaml.Contains("12 sewn panels", StringComparison.Ordinal), "The packaged 3D overlay retained stale panel metadata.");
 Assert(!mainPageXaml.Contains("24 construction seams", StringComparison.Ordinal), "The packaged 3D overlay retained stale seam metadata.");
+Assert(
+    mainPageXaml.Contains("x:Name=\"PatternScrollViewer\"", StringComparison.Ordinal) &&
+        mainPageXaml.Contains("ZoomMode=\"Enabled\"", StringComparison.Ordinal) &&
+        mainPageXaml.Contains("AutomationProperties.AutomationId=\"PatternZoomOutButton\"", StringComparison.Ordinal) &&
+        mainPageXaml.Contains("AutomationProperties.AutomationId=\"PatternZoomText\"", StringComparison.Ordinal) &&
+        mainPageXaml.Contains("AutomationProperties.AutomationId=\"PatternZoomInButton\"", StringComparison.Ordinal) &&
+        mainPageXaml.Contains("AutomationProperties.AutomationId=\"PatternFitButton\"", StringComparison.Ordinal) &&
+        !mainPageXaml.Contains("86% FABRIC USE", StringComparison.Ordinal) &&
+        mainPageCode.Contains("PatternCanvasLayoutEngine.Arrange", StringComparison.Ordinal),
+    "The 2D workspace lost deterministic packing or its visible pan and zoom contract.");
 Assert(mainPageXaml.Contains("x:Name=\"AcceptedEquilibriumTopologyText\"", StringComparison.Ordinal), "The packaged 3D overlay is not driven by live topology metadata.");
 Assert(
     mainPageXaml.Contains("x:Name=\"ShoulderSlider\"", StringComparison.Ordinal) &&

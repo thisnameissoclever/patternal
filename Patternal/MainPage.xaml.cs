@@ -23,6 +23,8 @@ namespace Patterna;
 public sealed partial class MainPage : Page
 {
     private const double PatternPixelsPerCentimeter = 4.0;
+    private const double MinimumPatternCanvasWidth = 960;
+    private const double MinimumPatternCanvasHeight = 720;
     private const double DefaultHeight = 167;
     private const double DefaultChest = 112;
     private const double DefaultWaist = 82;
@@ -73,6 +75,8 @@ public sealed partial class MainPage : Page
     private PatternPointDocument? _canvasDraftPointer;
     private bool _updatingPatternPointInspector;
     private bool _updatingAssemblyInspector;
+    private bool _patternViewInitialized;
+    private float _patternZoomTarget = 1f;
     private readonly SemaphoreSlim _unrealBridgeWriteLock = new(1, 1);
     private string? _currentSimulationRevision;
     private string? _acceptedSimulationRevision;
@@ -574,17 +578,26 @@ public sealed partial class MainPage : Page
             return;
         }
 
+        _garmentDocument = BuildCurrentGarmentDocument();
+        PatternCanvasLayoutResult layout = PatternCanvasLayoutEngine.Arrange(
+            _garmentDocument.Pieces,
+            MinimumPatternCanvasWidth,
+            MinimumPatternCanvasHeight,
+            PatternPixelsPerCentimeter);
+        PatternCanvas.Width = layout.CanvasWidth;
+        PatternCanvas.Height = layout.CanvasHeight;
         PatternCanvas.Children.Clear();
         DrawGrid();
-
-        _garmentDocument = BuildCurrentGarmentDocument();
+        SmartLayoutText.Text = string.Create(
+            CultureInfo.InvariantCulture,
+            $"AUTO LAYOUT · {_garmentDocument.Pieces.Count} PIECES · {layout.Utilization:P0} CANVAS USE");
         for (int index = 0; index < _garmentDocument.Pieces.Count; index++)
         {
             PatternPieceDocument piece = _garmentDocument.Pieces[index];
             Brush fill = index % 2 == 0
                 ? ResourceBrush("PatternPieceFillBrush")
                 : ResourceBrush("PatternPieceSecondaryFillBrush");
-            DrawPiece(piece, fill);
+            DrawPiece(piece, fill, layout.Placements[piece.Id]);
         }
 
         if (_garmentTemplateKey == WrapDressTemplate)
@@ -1173,25 +1186,27 @@ public sealed partial class MainPage : Page
     private void DrawGrid()
     {
         Brush gridBrush = ResourceBrush("PatternGridBrush");
-        for (int x = 0; x <= 960; x += 40)
+        int canvasWidth = (int)Math.Ceiling(PatternCanvas.Width);
+        int canvasHeight = (int)Math.Ceiling(PatternCanvas.Height);
+        for (int x = 0; x <= canvasWidth; x += 40)
         {
             PatternCanvas.Children.Add(new Line
             {
                 X1 = x,
                 X2 = x,
                 Y1 = 0,
-                Y2 = 720,
+                Y2 = canvasHeight,
                 Stroke = gridBrush,
                 StrokeThickness = x % 200 == 0 ? 1.2 : 0.6
             });
         }
 
-        for (int y = 0; y <= 720; y += 40)
+        for (int y = 0; y <= canvasHeight; y += 40)
         {
             PatternCanvas.Children.Add(new Line
             {
                 X1 = 0,
-                X2 = 960,
+                X2 = canvasWidth,
                 Y1 = y,
                 Y2 = y,
                 Stroke = gridBrush,
@@ -1200,22 +1215,32 @@ public sealed partial class MainPage : Page
         }
     }
 
-    private void DrawPiece(PatternPieceDocument piece, Brush fill)
+    private void DrawPiece(
+        PatternPieceDocument piece,
+        Brush fill,
+        PatternCanvasPlacement placement)
     {
         PathGeometry geometry = BuildGeometry(piece);
-        Point labelPoint = ToCanvasPoint(piece, new(piece.Layout.LabelX / PatternPixelsPerCentimeter, piece.Layout.LabelY / PatternPixelsPerCentimeter));
         Canvas holder = new()
         {
-            Width = 370,
-            Height = 310
+            Width = placement.Width,
+            Height = placement.Height
         };
+        Canvas geometryLayer = new()
+        {
+            Width = placement.Width,
+            Height = placement.Height
+        };
+        Canvas.SetLeft(geometryLayer, placement.ContentOffsetX);
+        Canvas.SetTop(geometryLayer, placement.ContentOffsetY);
+        holder.Children.Add(geometryLayer);
 
         bool isSelected = string.Equals(_selectedPieceId, piece.Id, StringComparison.OrdinalIgnoreCase);
         Brush stroke = isSelected ? ResourceBrush("AccentStrongBrush") : ResourceBrush("PatternPieceStrokeBrush");
 
         if (SeamAllowanceToggle.IsOn)
         {
-            holder.Children.Add(new Microsoft.UI.Xaml.Shapes.Path
+            geometryLayer.Children.Add(new Microsoft.UI.Xaml.Shapes.Path
             {
                 Data = CloneGeometry(geometry),
                 Fill = null,
@@ -1226,7 +1251,7 @@ public sealed partial class MainPage : Page
             });
         }
 
-        holder.Children.Add(new Microsoft.UI.Xaml.Shapes.Path
+        geometryLayer.Children.Add(new Microsoft.UI.Xaml.Shapes.Path
         {
             Data = geometry,
             Fill = fill,
@@ -1235,51 +1260,21 @@ public sealed partial class MainPage : Page
             Opacity = 0.96
         });
 
-        DrawConstructionGeometry(holder, piece);
+        DrawConstructionGeometry(geometryLayer, piece);
 
         if (isSelected && EditPatternPointsButton.IsChecked == true)
         {
-            DrawPatternPointHandles(holder, piece);
+            DrawPatternPointHandles(geometryLayer, piece);
         }
 
         if (EditAssemblyButton.IsChecked == true)
         {
-            DrawAssemblyOverlays(holder, piece);
+            DrawAssemblyOverlays(geometryLayer, piece);
         }
 
         if (GrainlinesToggle.IsOn && piece.Layout.ShowGrainline)
         {
-            Line grainline = new()
-            {
-                X1 = labelPoint.X + 42,
-                X2 = labelPoint.X + 42,
-                Y1 = labelPoint.Y + 32,
-                Y2 = labelPoint.Y + 105,
-                Stroke = ResourceBrush("PatternDimensionBrush"),
-                StrokeThickness = 1.4
-            };
-            holder.Children.Add(grainline);
-
-            holder.Children.Add(new Polygon
-            {
-                Points = new PointCollection
-                {
-                    new(labelPoint.X + 36, labelPoint.Y + 40),
-                    new(labelPoint.X + 42, labelPoint.Y + 28),
-                    new(labelPoint.X + 48, labelPoint.Y + 40)
-                },
-                Fill = ResourceBrush("PatternDimensionBrush")
-            });
-
-            holder.Children.Add(new Line
-            {
-                X1 = 8,
-                X2 = 18,
-                Y1 = 142,
-                Y2 = 148,
-                Stroke = ResourceBrush("PatternPieceStrokeBrush"),
-                StrokeThickness = 2
-            });
+            DrawPieceGrainline(geometryLayer, piece);
         }
 
         TextBlock labelBlock = new()
@@ -1288,15 +1283,72 @@ public sealed partial class MainPage : Page
             FontSize = 12,
             FontWeight = FontWeights.SemiBold,
             Foreground = ResourceBrush("PatternPieceStrokeBrush"),
-            CharacterSpacing = 60
+            CharacterSpacing = 30,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            Width = Math.Max(40, placement.Width - 16)
         };
-        Canvas.SetLeft(labelBlock, labelPoint.X);
-        Canvas.SetTop(labelBlock, labelPoint.Y);
+        ToolTipService.SetToolTip(labelBlock, $"{piece.Name} · Cut {piece.CutQuantity}");
+        Canvas.SetLeft(labelBlock, 8);
+        Canvas.SetTop(labelBlock, 4);
         holder.Children.Add(labelBlock);
 
-        Canvas.SetLeft(holder, piece.Layout.Left);
-        Canvas.SetTop(holder, piece.Layout.Top);
+        Canvas.SetLeft(holder, placement.Left);
+        Canvas.SetTop(holder, placement.Top);
         PatternCanvas.Children.Add(holder);
+    }
+
+    private void DrawPieceGrainline(Canvas holder, PatternPieceDocument piece)
+    {
+        Point start;
+        Point end;
+        if (piece.Grainline is not null)
+        {
+            start = ToCanvasPoint(piece, piece.Grainline.Start);
+            end = ToCanvasPoint(piece, piece.Grainline.End);
+        }
+        else
+        {
+            (double minX, double minY, double maxX, double maxY) = GetPatternPieceBounds(piece);
+            double centerX = (minX + maxX) * 0.5;
+            double height = Math.Max(0.1, maxY - minY);
+            start = ToCanvasPoint(piece, new PatternPointDocument(centerX, minY + height * 0.2));
+            end = ToCanvasPoint(piece, new PatternPointDocument(centerX, maxY - height * 0.2));
+        }
+
+        Brush brush = ResourceBrush("PatternDimensionBrush");
+        holder.Children.Add(new Line
+        {
+            X1 = start.X,
+            Y1 = start.Y,
+            X2 = end.X,
+            Y2 = end.Y,
+            Stroke = brush,
+            StrokeThickness = 1.4
+        });
+        double deltaX = end.X - start.X;
+        double deltaY = end.Y - start.Y;
+        double length = Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
+        if (length < 0.001)
+        {
+            return;
+        }
+        double unitX = deltaX / length;
+        double unitY = deltaY / length;
+        double perpendicularX = -unitY;
+        double perpendicularY = unitX;
+        double arrowLength = Math.Min(8, Math.Max(4, length * 0.22));
+        double arrowHalfWidth = arrowLength * 0.48;
+        Point basePoint = new(start.X + unitX * arrowLength, start.Y + unitY * arrowLength);
+        holder.Children.Add(new Polygon
+        {
+            Points = new PointCollection
+            {
+                start,
+                new(basePoint.X + perpendicularX * arrowHalfWidth, basePoint.Y + perpendicularY * arrowHalfWidth),
+                new(basePoint.X - perpendicularX * arrowHalfWidth, basePoint.Y - perpendicularY * arrowHalfWidth)
+            },
+            Fill = brush
+        });
     }
 
     private void DrawConstructionGeometry(Canvas holder, PatternPieceDocument piece)
@@ -1775,7 +1827,7 @@ public sealed partial class MainPage : Page
     {
         bool editing = EditAssemblyButton.IsChecked == true;
         AssemblyInspector.Visibility = editing ? Visibility.Visible : Visibility.Collapsed;
-        PatternViewbox.Margin = editing
+        PatternScrollViewer.Margin = editing
             ? new Thickness(12, 12, 324, 12)
             : new Thickness(12);
         if (!editing)
@@ -5397,9 +5449,64 @@ public sealed partial class MainPage : Page
 
     private void OnFitPatternClicked(object sender, RoutedEventArgs e)
     {
-        PatternViewbox.Stretch = Stretch.Uniform;
-        CanvasScaleText.Text = "Fit · 12.5 mm grid";
+        FitPatternToViewport(disableAnimation: true);
         ShowStatus("Pattern fitted", "All pieces are visible at the current window size.", InfoBarSeverity.Informational);
+    }
+
+    private void OnPatternZoomInClicked(object sender, RoutedEventArgs e)
+        => ChangePatternZoom(0.2f);
+
+    private void OnPatternZoomOutClicked(object sender, RoutedEventArgs e)
+        => ChangePatternZoom(-0.2f);
+
+    private void ChangePatternZoom(float delta)
+    {
+        float target = Math.Clamp(
+            _patternZoomTarget + delta,
+            PatternScrollViewer.MinZoomFactor,
+            PatternScrollViewer.MaxZoomFactor);
+        _patternZoomTarget = target;
+        PatternScrollViewer.ChangeView(null, null, target, disableAnimation: true);
+        UpdatePatternZoomLabel(target);
+    }
+
+    private void OnPatternScrollViewerViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
+    {
+        if (!e.IsIntermediate)
+        {
+            _patternZoomTarget = PatternScrollViewer.ZoomFactor;
+        }
+        UpdatePatternZoomLabel(PatternScrollViewer.ZoomFactor);
+    }
+
+    private void OnPatternScrollViewerSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (_patternViewInitialized || e.NewSize.Width < 100 || e.NewSize.Height < 100)
+        {
+            return;
+        }
+        _patternViewInitialized = true;
+        DispatcherQueue.TryEnqueue(() => FitPatternToViewport(disableAnimation: true));
+    }
+
+    private void FitPatternToViewport(bool disableAnimation)
+    {
+        double viewportWidth = Math.Max(1, PatternScrollViewer.ViewportWidth - 24);
+        double viewportHeight = Math.Max(1, PatternScrollViewer.ViewportHeight - 24);
+        float target = (float)Math.Clamp(
+            Math.Min(viewportWidth / PatternCanvas.Width, viewportHeight / PatternCanvas.Height),
+            PatternScrollViewer.MinZoomFactor,
+            PatternScrollViewer.MaxZoomFactor);
+        _patternZoomTarget = target;
+        PatternScrollViewer.ChangeView(0, 0, target, disableAnimation);
+        UpdatePatternZoomLabel(target);
+    }
+
+    private void UpdatePatternZoomLabel(float zoomFactor)
+    {
+        PatternZoomText.Text = $"{zoomFactor:P0}";
+        PatternZoomOutButton.IsEnabled = zoomFactor > PatternScrollViewer.MinZoomFactor + 0.001f;
+        PatternZoomInButton.IsEnabled = zoomFactor < PatternScrollViewer.MaxZoomFactor - 0.001f;
     }
 
     private void OnTogglePiecesClicked(object sender, RoutedEventArgs e)

@@ -284,12 +284,18 @@
                         Header="2D FLAT"
                         IsClosable="False">
                         <Grid Background="{ThemeResource PatternCanvasBackgroundBrush}">
-                            <Viewbox
-                                x:Name="PatternViewbox"
+                            <ScrollViewer
+                                x:Name="PatternScrollViewer"
                                 Margin="12"
-                                HorizontalAlignment="Stretch"
-                                VerticalAlignment="Stretch"
-                                Stretch="Uniform">
+                                HorizontalScrollBarVisibility="Auto"
+                                HorizontalScrollMode="Enabled"
+                                MaxZoomFactor="3"
+                                MinZoomFactor="0.5"
+                                SizeChanged="OnPatternScrollViewerSizeChanged"
+                                VerticalScrollBarVisibility="Auto"
+                                VerticalScrollMode="Enabled"
+                                ViewChanged="OnPatternScrollViewerViewChanged"
+                                ZoomMode="Enabled">
                                 <Canvas
                                     x:Name="PatternCanvas"
                                     Width="960"
@@ -297,7 +303,7 @@
                                     AutomationProperties.Name="Interactive two dimensional pattern layout"
                                     PointerMoved="OnPatternCanvasPointerMoved"
                                     PointerPressed="OnPatternCanvasPointerPressed" />
-                            </Viewbox>
+                            </ScrollViewer>
 
                             <StackPanel
                                 Margin="20"
@@ -310,9 +316,10 @@
                                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                     CornerRadius="4">
                                     <TextBlock
+                                        x:Name="SmartLayoutText"
                                         FontSize="12"
                                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                        Text="SMART LAYOUT · 86% FABRIC USE" />
+                                        Text="AUTO LAYOUT · ALL PIECES VISIBLE" />
                                 </Border>
                             </StackPanel>
 
@@ -597,13 +604,51 @@
                             <Border
                                 Margin="20"
                                 Padding="10,6"
-                                HorizontalAlignment="Right"
+                                HorizontalAlignment="Left"
                                 VerticalAlignment="Bottom"
                                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                 CornerRadius="4">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <FontIcon FontSize="14" Glyph="&#xE82D;" />
-                                    <TextBlock x:Name="CanvasScaleText" Text="1:4 · 12.5 mm grid" />
+                                    <TextBlock x:Name="CanvasScaleText" Text="12.5 mm grid" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border
+                                Margin="20"
+                                Padding="6"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Bottom"
+                                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                CornerRadius="4">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <Button
+                                        x:Name="PatternZoomOutButton"
+                                        Width="34"
+                                        AutomationProperties.AutomationId="PatternZoomOutButton"
+                                        AutomationProperties.Name="Zoom pattern out"
+                                        Click="OnPatternZoomOutClicked"
+                                        Content="-" />
+                                    <TextBlock
+                                        x:Name="PatternZoomText"
+                                        Width="52"
+                                        AutomationProperties.AutomationId="PatternZoomText"
+                                        HorizontalTextAlignment="Center"
+                                        Text="100%"
+                                        VerticalAlignment="Center" />
+                                    <Button
+                                        x:Name="PatternZoomInButton"
+                                        Width="34"
+                                        AutomationProperties.AutomationId="PatternZoomInButton"
+                                        AutomationProperties.Name="Zoom pattern in"
+                                        Click="OnPatternZoomInClicked"
+                                        Content="+" />
+                                    <Button
+                                        x:Name="PatternFitButton"
+                                        AutomationProperties.AutomationId="PatternFitButton"
+                                        AutomationProperties.Name="Fit all pattern pieces"
+                                        Click="OnFitPatternClicked"
+                                        Content="Fit" />
                                 </StackPanel>
                             </Border>
                         </Grid>

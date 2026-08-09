@@ -2466,3 +2466,21 @@ Bind display orientation to the candidate manifest and visually verify semantic 
 ### How to verify
 
 Install the exact hash-identified AppX payload in the isolated VM. Capture Front, Right, Rear, Left, Oblique, and Fit. Confirm Front shows the face, Rear shows the back, the sides are distinct, and the HUD says `fitted GLB candidate`. Confirm the stale banner has no overlapping status text and does not hide the torso. Require all non-cloth interactions to pass, with the accepted-cloth gate remaining failed until cloth for the exact current revision exists.
+
+## A fitted 2D workspace needs geometry-aware packing and explicit zoom state
+
+### What happened
+
+The packaged 2D view used fixed row spacing and screen-placement offsets. Lower pieces fell outside the visible canvas, long labels collided with geometry, physically small collar and cuff pieces occupied oversized cells, and every piece received decorative slash and notch marks whether or not the source defined them. After replacing that layout, the first zoom test exposed a second defect: rapid Zoom in and Zoom out commands calculated from WinUI's asynchronously committed zoom factor, so the visible percentage could fail to return to the user's starting scale.
+
+### Root cause
+
+Pattern geometry, display decoration, cell placement, and viewport scaling were coupled inside one drawing path. The layout knew neither each piece's actual extents nor a minimum readable label width. Zoom commands treated the ScrollViewer's last committed factor as command intent even though the label and view transition could be ahead of that value.
+
+### Prevention rule
+
+Compute piece extents outside the UI, pack deterministic non-overlapping cells, reserve a separate label header, and draw only source-authored grainlines, notches, darts, and internal paths. Keep the canvas scrollable and expose visible zoom controls. Track the requested zoom target explicitly so sequential commands compose from user intent rather than an asynchronously updated framework property.
+
+### How to verify
+
+Require the 14-piece adaptive shirt to pack inside the bounded canvas with no overlapping placement rectangles. Build the packaged app, capture startup and post-Fit 2D views at 1920 by 1080, and confirm all 14 pieces and labels are visible. Invoke Zoom in, Zoom out, and Fit by stable automation ID; require the visible percentage to increase, return, and then decrease from a zoomed view. Reviewed run `20260809-025650-0625b0e8` demonstrated 89 percent, 109 percent, 89 percent, and a final fitted 89 percent without host input injection.

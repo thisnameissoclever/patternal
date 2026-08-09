@@ -16,6 +16,7 @@
     <Compile Include="..\Patternal\GarmentCodeBodyMapper.cs" Link="GarmentCodeBodyMapper.cs" />
     <Compile Include="..\Patternal\PatternTopologyCompiler.cs" Link="PatternTopologyCompiler.cs" />
     <Compile Include="..\Patternal\PatternDraftFactory.cs" Link="PatternDraftFactory.cs" />
+    <Compile Include="..\Patternal\PatternCanvasLayoutEngine.cs" Link="PatternCanvasLayoutEngine.cs" />
     <Compile Include="..\Patternal\PatternSvgExporter.cs" Link="PatternSvgExporter.cs" />
     <Compile Include="..\Patternal\PatternStructuralEditor.cs" Link="PatternStructuralEditor.cs" />
     <Compile Include="..\Patternal\PatternPhysicalDartCompiler.cs" Link="PatternPhysicalDartCompiler.cs" />

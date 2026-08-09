@@ -127,12 +127,13 @@ The current guest suite performs these checks in order:
 2. Launches the packaged AUMID and verifies a responsive Patternal window.
 3. Captures the startup 2D view and a bounded UI Automation tree.
 4. Before changing any simulation input, enters 3D and locates the six camera controls by stable automation ID. It captures Front, Right, Rear, Left, Oblique, and Fit views, then returns to 2D. If the cloth is stale, the files are labeled `3d-stale-avatar` and the freshness gate fails while the remaining 2D interaction coverage continues.
-5. Round-trips the Pieces panel, Inspector panel, seam allowance, and grainline toggles.
-6. Temporarily disables linked proportional estimates, round-trips Height, Full bust, Waist, Hip, Shoulder, and Torso sliders, then restores the link state.
-7. Round-trips Fabric weight and Fabric stretch.
-8. Round-trips the fitted-bra toggle when available, or verifies that it is disabled when no matching fitted asset exists.
-9. Enters Assembly mode, changes reverse side B, invokes Undo, and verifies that the visible toggle returns to the original state.
-10. Writes the result bundle and closes the guest app unless `-KeepAppOpen` was requested.
+5. Invokes 2D Zoom in, Zoom out, and Fit by stable automation ID. It verifies the visible zoom direction and round trip, then captures a post-Fit screenshot for all-pieces-visible review.
+6. Round-trips the Pieces panel, Inspector panel, seam allowance, and grainline toggles.
+7. Temporarily disables linked proportional estimates, round-trips Height, Full bust, Waist, Hip, Shoulder, and Torso sliders, then restores the link state.
+8. Round-trips Fabric weight and Fabric stretch.
+9. Round-trips the fitted-bra toggle when available, or verifies that it is disabled when no matching fitted asset exists.
+10. Enters Assembly mode, changes reverse side B, invokes Undo, and verifies that the visible toggle returns to the original state.
+11. Writes the result bundle and closes the guest app unless `-KeepAppOpen` was requested.
 
 Expand this list whenever a new user-facing toggle, slider, authoring command, camera, persistence behavior, or acceptance gate is added. UI contracts rot if they are treated as museum pieces.
 
@@ -142,6 +143,6 @@ Windows Sandbox is suitable for a disposable install or launch smoke test when H
 
 ## Current setup status
 
-As of 2026-08-08, the host audit confirms Windows 11 Pro, Hyper-V services, Windows Sandbox, 64 GB RAM, an RTX 4090, and sufficient disk space. The persistent Windows 11 guest launches the registered AppX as a responsive top-level window without taking over the host desktop. Reviewed run `20260809-022804-172d9cb7` used payload `8f91cf5a410a9f2378a37c86efe2d093451aa5780bfa5a24a805013c9e5d04e7`, passed all 25 non-cloth interaction checks, and captured anatomically correct Antonia Front, Rear, Right, Left, Oblique, and Fit views. Host input injection and VMConnect use remained false. The run correctly failed the freshness gate because the current pattern, body, assembly, and fabric revision has no accepted cloth, so CLO-class 3D acceptance remains open. The packaged Antonia display is explicitly a candidate; visible texture transitions, missing hair, the modesty bandeau, and absent cloth remain open visual gates.
+As of 2026-08-08, the host audit confirms Windows 11 Pro, Hyper-V services, Windows Sandbox, 64 GB RAM, an RTX 4090, and sufficient disk space. The persistent Windows 11 guest launches the registered AppX as a responsive top-level window without taking over the host desktop. Reviewed run `20260809-025650-0625b0e8` used payload `f2a14b455d5f6088fedc8a9bac4cc363733a5f08fe77294213a7aed7c15aefb8`, passed all 26 non-cloth interaction checks, and captured anatomically correct Antonia Front, Rear, Right, Left, Oblique, and Fit views. The packaged 2D Fit view showed all 14 source pieces with separate readable labels, and the visible zoom controls round-tripped from 89 percent to 109 percent and back before Fit restored 89 percent. Host input injection and VMConnect use remained false. The run correctly failed the freshness gate because the current pattern, body, assembly, and fabric revision has no accepted cloth, so CLO-class 3D acceptance remains open. The packaged Antonia display is explicitly a candidate; visible texture transitions, missing hair, the modesty bandeau, and absent cloth remain open visual gates.
 
-The persistent guest and its signed application prerequisites are operational. This proves the isolated packaged interaction lane, not the visual quality of the current product. The 2D layout usability, current accepted cloth, physical-GPU rendering, and CLO-class multi-view gates remain open.
+The persistent guest and its signed application prerequisites are operational. This proves the isolated packaged interaction lane, not the visual quality of the current product. The current 2D all-pieces layout and zoom controls pass at 1920 by 1080; broader authoring-tool interaction, actual-size and selection framing, current accepted cloth, physical-GPU rendering, and CLO-class multi-view gates remain open.

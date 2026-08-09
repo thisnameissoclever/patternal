@@ -603,6 +603,71 @@ try {
 
     Invoke-ThreeDimensionalChecks -Window $window -EvidenceDirectory $evidenceDirectory
 
+    Invoke-UiCheck -Name '2D zoom controls round trip' -Check {
+        $zoomOut = Find-UiElementByAutomationId -Root $window -AutomationId 'PatternZoomOutButton'
+        $zoomLabel = Find-UiElementByAutomationId -Root $window -AutomationId 'PatternZoomText'
+        $zoomIn = Find-UiElementByAutomationId -Root $window -AutomationId 'PatternZoomInButton'
+        $fit = Find-UiElementByAutomationId -Root $window -AutomationId 'PatternFitButton'
+        $originalZoom = $zoomLabel.Current.Name
+        $originalZoomValue = [double]::Parse(
+            $originalZoom.TrimEnd('%'),
+            [Globalization.CultureInfo]::InvariantCulture)
+        if (-not $zoomIn.Current.IsEnabled) {
+            throw 'The pattern zoom-in control is disabled at the initial fitted view.'
+        }
+
+        Invoke-UiElement -Element $zoomIn
+        $zoomedIn = Wait-ForCondition -Description 'pattern zoom label to increase' -Condition {
+            $current = $zoomLabel.Current.Name
+            $currentValue = [double]::Parse(
+                $current.TrimEnd('%'),
+                [Globalization.CultureInfo]::InvariantCulture)
+            if ($currentValue -gt $originalZoomValue) { $current } else { $null }
+        }
+        if (-not $zoomOut.Current.IsEnabled) {
+            throw 'The pattern zoom-out control did not enable after zooming in.'
+        }
+
+        Invoke-UiElement -Element $zoomOut
+        Wait-ForCondition -Description 'pattern zoom label to return to its original value' -Condition {
+            $zoomLabel.Current.Name -eq $originalZoom
+        } | Out-Null
+
+        Invoke-UiElement -Element $zoomIn
+        $zoomedBeforeFit = Wait-ForCondition -Description 'pattern zoom label to increase before fitting' -Condition {
+            $current = $zoomLabel.Current.Name
+            $currentValue = [double]::Parse(
+                $current.TrimEnd('%'),
+                [Globalization.CultureInfo]::InvariantCulture)
+            if ($currentValue -gt $originalZoomValue) { $current } else { $null }
+        }
+        $zoomedBeforeFitValue = [double]::Parse(
+            $zoomedBeforeFit.TrimEnd('%'),
+            [Globalization.CultureInfo]::InvariantCulture)
+        if (-not $fit.Current.IsEnabled) {
+            throw 'The fit-all-pattern-pieces control is disabled.'
+        }
+        Invoke-UiElement -Element $fit
+        $fittedZoom = Wait-ForCondition -Description 'fit command to reduce the zoomed pattern view' -Condition {
+            $current = $zoomLabel.Current.Name
+            $currentValue = [double]::Parse(
+                $current.TrimEnd('%'),
+                [Globalization.CultureInfo]::InvariantCulture)
+            if ($currentValue -lt $zoomedBeforeFitValue) { $current } else { $null }
+        }
+        Start-Sleep -Milliseconds 300
+        $fitShotPath = Join-Path $evidenceDirectory '08-2d-fit.png'
+        Save-WindowScreenshot -Window $window -Path $fitShotPath
+        $script:screenshots.Add([pscustomobject]@{ name = '2d-fit'; file = [IO.Path]::GetFileName($fitShotPath) })
+
+        [ordered]@{
+            original = $originalZoom
+            zoomedIn = $zoomedIn
+            fitted = $fittedZoom
+            screenshot = [IO.Path]::GetFileName($fitShotPath)
+        }
+    }
+
     foreach ($toggleName in @(
         'Show pattern pieces panel',
         'Show avatar and material inspector',
