@@ -57,6 +57,11 @@ if (-not $hostModule.Contains('function Export-PatternalGuestCredentialNote') -o
     -not $guestProvisioner.Contains('Export-PatternalGuestCredentialNote -VmName $VmName')) {
     throw 'Guest provisioning no longer creates the machine-local plaintext credential note required for manual VMConnect login.'
 }
+if (-not $guestProvisioner.Contains('VM root ''$normalizedVmRoot'' must end with the exact VM name ''$VmName''.') -or
+    -not $guestProvisioner.Contains('Dedicated to the Patternal project isolated UI lane.') -or
+    -not $guestProvisioner.Contains('Do not reuse for unrelated work.')) {
+    throw 'Guest provisioning no longer enforces a dedicated, unmistakably owned VM directory and metadata note.'
+}
 
 $guestRunnerPath = Join-Path $PSScriptRoot 'guest\Invoke-PatternalUiSmoke.ps1'
 $guestRunner = Get-Content -LiteralPath $guestRunnerPath -Raw

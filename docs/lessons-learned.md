@@ -3092,3 +3092,21 @@ For round-trip display verification, compare the unique world-space position set
 ### How to verify
 
 Import the exact hashed GLB in a fresh Blender scene with the expected fitted vertex array. Require 36,030 expected unique positions, 36,030 round-tripped unique positions, zero missing positions, zero unexpected positions, matching bounds, 167 cm height, and six new renders. Deliberately perturb one GLB position and require verification to fail.
+
+## A partitionable desktop GPU is not a supported Hyper-V GPU product lane
+
+### What happened
+
+The host's `Get-VMHostPartitionableGpu` result exposed the RTX 4090 as a GPU-P device with 32 valid partitions. Earlier discussion compressed the support boundary into wording that sounded like partitioning was impossible. Hyper-V can technically attach a partition on this machine, but Microsoft does not support GPU-P on this Windows 11 Pro desktop host and consumer RTX 4090 combination.
+
+### Root cause
+
+Technical capability, current configuration, and vendor support were treated as one question. They are three separate facts: the host reports a partitionable device, `Patternal-UI` currently has no GPU partition adapter, and the officially supported platform requires Windows Server 2025 with supported server hardware.
+
+### Prevention rule
+
+Report all three boundaries explicitly before making a GPU virtualization recommendation. Do not call an exposed but unsupported GPU-P path impossible. Do not use community driver-copying workarounds as CLO-class release evidence merely because the guest can launch a CUDA process.
+
+### How to verify
+
+Record the host OS and build, `Get-VMHostPartitionableGpu`, and `Get-VMGpuPartitionAdapter -VMName Patternal-UI` separately. Require official Microsoft and GPU-vendor support for the exact host OS, guest OS, and GPU model before treating a partitioned guest as physical-GPU acceptance evidence.

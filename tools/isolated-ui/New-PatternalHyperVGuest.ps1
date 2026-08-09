@@ -32,6 +32,15 @@ $ErrorActionPreference = 'Stop'
 
 Import-Module (Join-Path $PSScriptRoot 'Patternal.IsolatedUi.psm1') -Force
 
+$normalizedVmRoot = [IO.Path]::GetFullPath($VmRoot).TrimEnd(
+    [IO.Path]::DirectorySeparatorChar,
+    [IO.Path]::AltDirectorySeparatorChar)
+$vmRootLeaf = [IO.Path]::GetFileName($normalizedVmRoot)
+if (-not [string]::Equals($vmRootLeaf, $VmName, [StringComparison]::OrdinalIgnoreCase)) {
+    throw "VM root '$normalizedVmRoot' must end with the exact VM name '$VmName'. Use a dedicated project and purpose directory for every VM."
+}
+$VmRoot = $normalizedVmRoot
+
 $resolvedIsoPath = (Resolve-Path -LiteralPath $IsoPath).Path
 $actualIsoHash = Get-PatternalFileSha256 -Path $resolvedIsoPath
 if ($actualIsoHash -ine $ExpectedIsoSha256) {
@@ -186,6 +195,7 @@ try {
     $vhdPath = Join-Path $VmRoot "$VmName.vhdx"
     $vm = New-VM -Name $VmName -Generation 2 -MemoryStartupBytes ($MemoryGb * 1GB) -NewVHDPath $vhdPath -NewVHDSizeBytes ($DiskGb * 1GB) -SwitchName $SwitchName -Path $VmRoot
     Set-VM -Name $VmName -ProcessorCount $ProcessorCount -AutomaticCheckpointsEnabled $false -CheckpointType Production
+    Set-VM -Name $VmName -Notes "Dedicated to the Patternal project isolated UI lane. Storage root: $VmRoot. Do not reuse for unrelated work."
     Set-VMMemory -VMName $VmName -DynamicMemoryEnabled $true -MinimumBytes 8GB -StartupBytes ($MemoryGb * 1GB) -MaximumBytes 24GB
     Set-VMFirmware -VMName $VmName -EnableSecureBoot On -SecureBootTemplate MicrosoftWindows
     Set-VMKeyProtector -VMName $VmName -NewLocalKeyProtector

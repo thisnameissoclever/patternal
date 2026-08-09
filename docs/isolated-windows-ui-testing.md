@@ -74,6 +74,12 @@ Set-Location 'D:\VIBES\patternal'
 
 The script creates a Generation 2 VM named `Patternal-UI` under `D:\VMs\Patternal-UI`, with Secure Boot, virtual TPM, dynamic memory, eight virtual processors, a 180 GB dynamic disk, and the Default Switch. It selects the Enterprise image, installs unattended, creates a generated local administrator, enables Developer Mode, keeps the console session awake, verifies PowerShell Direct, detaches installation media, and creates a clean checkpoint.
 
+### VM storage and ownership isolation
+
+Every project-owned VM must have an unmistakable project-and-purpose name and a dedicated storage root whose final directory name exactly matches the VM name. The provisioner refuses a differently named root, refuses to replace an existing VM, and refuses any non-empty root. It also writes a Hyper-V Notes value identifying the guest as dedicated to Patternal's isolated UI lane and warning against unrelated reuse.
+
+The current guest is `Patternal-UI` and its exclusive root is `D:\VMs\Patternal-UI`. Hyper-V stores its configuration, snapshots, and runtime state under `D:\VMs\Patternal-UI\Patternal-UI`. Its 180 GB dynamic base disk is `D:\VMs\Patternal-UI\Patternal-UI.vhdx`; the current clean-checkpoint differencing disk is in the same exclusive root. Do not attach either disk to another VM, store another VM under this root, or reuse this guest for an unrelated project. Future VMs must use their own `D:\VMs\<Project>-<Purpose>` root and matching VM name.
+
 The generated guest credential is encrypted with Windows Data Protection API for the current host user and stored at:
 
 ```text
