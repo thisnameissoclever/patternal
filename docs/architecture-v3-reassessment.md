@@ -39,6 +39,8 @@ The packaged 1920 by 1080 workspace now uses geometry-aware deterministic packin
 
 Packaged run `20260809-124751-67e8517b` used payload `f260ae82d66f2570db88ca224f5ae656040a5ca586d3d2922e37db874717c126`, ran 46 checks, captured 23 screenshots, passed 45 checks, and failed only the truthful current-cloth freshness gate. Keyboard-only coverage proved toolbar focus order, Enter and Escape behavior in the real Save As and Open dialogs, Space activation for the four primary display toggles, 2D and 3D tab selection, a reversible Fabric weight edit, and visible focus. The UI Automation audit found 126 keyboard-focusable 2D controls and 39 keyboard-focusable 3D controls with zero missing accessible names. Manual review confirmed the complete 2D authoring sequence remained usable. Host input injection and VMConnect use remained false.
 
+Focused packaged runs now cover the actual Windows Light, Dark, High Contrast Black, High Contrast White, High Contrast 1, and High Contrast 2 themes. Each run passed keyboard toggle and slider interaction, accessible-name, SVG export, named-project, and local-recovery checks; manual screenshot review confirmed readable pattern geometry, panels, focus, controls, and status messages. Full High Contrast 2 run `20260809-131811-0ced925b` passed every 2D and 3D interaction check and failed only the independent current-cloth freshness gate. The guest restored its exact original theme after every run. This closes the packaged theme-contrast gate, not the Narrator, avatar-quality, cloth-quality, or physical-GPU gates.
+
 Remaining accessibility gate:
 
 1. Verify actual screen-reader announcements and task completion with Windows Narrator. UI Automation names are now proven, but that is not evidence of what Narrator speaks or whether its reading order is useful.
@@ -55,6 +57,7 @@ Observed problems:
 6. The camera labels were initially reversed for Front and Rear. Packaged screenshot review caught and corrected the production-avatar yaw mapping; interaction success alone had not proved camera semantics.
 7. Existing collision, seam, strain, hash, and equilibrium gates all passed for an asset that still fails an ordinary visual review.
 8. Returning to 3D after a long 2D authoring session initially left the WebGL canvas white while XAML state labels continued to update. The packaged renderer now starts one generation-owned render loop whenever 3D becomes visible, invalidates any suspended hidden-tab loop, reloads only after a reported WebGL context loss, and rejects blank late screenshots. Run `20260809-113435-c2c13a96` recorded a 1.0 non-white sample ratio for both edited and restored avatar views.
+9. Full High Contrast 2 review proved the native 3D chrome, stale-state message, camera controls, visible focus, and six distinct camera results remain usable under Windows contrast overrides. It also reconfirmed that the fitted Antonia presentation and editable fallback are not production-quality avatars and that no current accepted cloth exists.
 
 Required correction:
 

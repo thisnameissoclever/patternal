@@ -27,6 +27,8 @@ public static class PatternalDisplayMode
     private const int DM_PELSHEIGHT = 0x00100000;
     private const uint WM_SETTINGCHANGE = 0x001A;
     private const uint SMTO_ABORTIFHUNG = 0x0002;
+    private const uint SPI_GETHIGHCONTRAST = 0x0042;
+    private const uint HCF_HIGHCONTRASTON = 0x00000001;
     private static readonly IntPtr HWND_BROADCAST = new IntPtr(0xffff);
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
@@ -64,11 +66,26 @@ public static class PatternalDisplayMode
         public int dmPanningHeight;
     }
 
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    private struct HIGHCONTRAST
+    {
+        public uint cbSize;
+        public uint dwFlags;
+        public IntPtr lpszDefaultScheme;
+    }
+
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern bool EnumDisplaySettings(string deviceName, int modeNum, ref DEVMODE devMode);
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern int ChangeDisplaySettings(ref DEVMODE devMode, int flags);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern bool SystemParametersInfo(
+        uint action,
+        uint parameter,
+        ref HIGHCONTRAST highContrast,
+        uint updateFlags);
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern IntPtr SendMessageTimeout(
@@ -106,6 +123,17 @@ public static class PatternalDisplayMode
             SMTO_ABORTIFHUNG,
             5000,
             out result);
+    }
+
+    public static bool IsHighContrastEnabled()
+    {
+        var state = new HIGHCONTRAST();
+        state.cbSize = (uint)Marshal.SizeOf(typeof(HIGHCONTRAST));
+        if (!SystemParametersInfo(SPI_GETHIGHCONTRAST, state.cbSize, ref state, 0))
+        {
+            throw new Win32Exception(Marshal.GetLastWin32Error(), "Windows did not report the contrast-theme state.");
+        }
+        return (state.dwFlags & HCF_HIGHCONTRASTON) != 0;
     }
 }
 
@@ -175,6 +203,41 @@ public static class PatternalGuestPointerInput
     }
 }
 '@
+}
+
+function Set-GuestTheme {
+    param(
+        [Parameter(Mandatory)]
+        [string]$ThemePath,
+        [Parameter(Mandatory)]
+        [bool]$ExpectedHighContrast
+    )
+
+    if (-not (Test-Path -LiteralPath $ThemePath -PathType Leaf)) {
+        throw "Guest theme file does not exist: $ThemePath"
+    }
+    Start-Process -FilePath $ThemePath | Out-Null
+    Wait-ForCondition -Description "Windows theme '$ThemePath'" -TimeoutSeconds 30 -Condition {
+        $currentThemePath = [string](Get-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes' -Name CurrentTheme -ErrorAction Stop).CurrentTheme
+        $themePathMatches = [string]::Equals(
+            [IO.Path]::GetFullPath($currentThemePath),
+            [IO.Path]::GetFullPath($ThemePath),
+            [StringComparison]::OrdinalIgnoreCase)
+        $themePathMatches -and [PatternalDisplayMode]::IsHighContrastEnabled() -eq $ExpectedHighContrast
+    } | Out-Null
+    Start-Sleep -Milliseconds 1500
+    Get-Process -Name SystemSettings -ErrorAction SilentlyContinue | Stop-Process -Force
+}
+
+function Restore-GuestTheme {
+    param(
+        [Parameter(Mandatory)]
+        [string]$ThemePath,
+        [Parameter(Mandatory)]
+        [bool]$ExpectedHighContrast
+    )
+
+    Set-GuestTheme -ThemePath $ThemePath -ExpectedHighContrast $ExpectedHighContrast
 }
 
 function Wait-ForCondition {
@@ -999,8 +1062,39 @@ $textScaleRegistryPath = 'HKCU:\Software\Microsoft\Accessibility'
 $originalTextScaleExists = $false
 $originalTextScalePercent = 100
 $textScaleChanged = $false
+$themeRegistryPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes'
+$originalThemePath = [string](Get-ItemProperty -Path $themeRegistryPath -Name CurrentTheme -ErrorAction Stop).CurrentTheme
+$originalHighContrast = [PatternalDisplayMode]::IsHighContrastEnabled()
+$requestedWindowsTheme = 'Current'
+$requestedThemePath = $originalThemePath
+$themeChanged = $false
+$themeRestoreError = $null
 
 try {
+    $requestedWindowsTheme = if ($request.PSObject.Properties.Name -contains 'windowsTheme') {
+        [string]$request.windowsTheme
+    }
+    else {
+        'Current'
+    }
+    $windowsThemePaths = @{
+        Light = 'C:\Windows\Resources\Themes\aero.theme'
+        Dark = 'C:\Windows\Resources\Themes\dark.theme'
+        HighContrastBlack = 'C:\Windows\Resources\Ease of Access Themes\hcblack.theme'
+        HighContrastWhite = 'C:\Windows\Resources\Ease of Access Themes\hcwhite.theme'
+        HighContrast1 = 'C:\Windows\Resources\Ease of Access Themes\hc1.theme'
+        HighContrast2 = 'C:\Windows\Resources\Ease of Access Themes\hc2.theme'
+    }
+    if ($requestedWindowsTheme -ne 'Current') {
+        if (-not $windowsThemePaths.ContainsKey($requestedWindowsTheme)) {
+            throw "Unsupported guest Windows theme: $requestedWindowsTheme"
+        }
+        $requestedThemePath = [string]$windowsThemePaths[$requestedWindowsTheme]
+        $expectsHighContrast = $requestedWindowsTheme.StartsWith('HighContrast', [StringComparison]::Ordinal)
+        Set-GuestTheme -ThemePath $requestedThemePath -ExpectedHighContrast $expectsHighContrast
+        $themeChanged = $true
+    }
+
     $requestedTextScalePercent = if ($request.PSObject.Properties.Name -contains 'textScalePercent') {
         [int]$request.textScalePercent
     }
@@ -1050,6 +1144,14 @@ try {
         requestedPercent = $requestedTextScalePercent
         registryPercent = [int](Get-ItemProperty -Path $textScaleRegistryPath -Name TextScaleFactor -ErrorAction Stop).TextScaleFactor
         originalPercent = $originalTextScalePercent
+    }) -ErrorMessage $null
+    Add-ActionResult -Name 'Guest Windows theme request' -Passed $true -Details ([ordered]@{
+        requestedTheme = $requestedWindowsTheme
+        requestedThemePath = $requestedThemePath
+        currentThemePath = [string](Get-ItemProperty -Path $themeRegistryPath -Name CurrentTheme -ErrorAction Stop).CurrentTheme
+        highContrast = [PatternalDisplayMode]::IsHighContrastEnabled()
+        originalThemePath = $originalThemePath
+        originalHighContrast = $originalHighContrast
     }) -ErrorMessage $null
 
     Get-Process -Name Patternal -ErrorAction SilentlyContinue | Stop-Process -Force
@@ -2708,6 +2810,24 @@ finally {
         [PatternalDisplayMode]::BroadcastAccessibilityChange()
     }
 
+    if ($themeChanged) {
+        try {
+            Restore-GuestTheme -ThemePath $originalThemePath -ExpectedHighContrast $originalHighContrast
+        }
+        catch {
+            $themeRestoreError = $_.Exception.Message
+            Add-ActionResult -Name 'Guest Windows theme restoration' -Passed $false -Details ([ordered]@{
+                expectedThemePath = $originalThemePath
+                expectedHighContrast = $originalHighContrast
+            }) -ErrorMessage $themeRestoreError
+            if (-not $fatalError) {
+                $fatalError = $themeRestoreError
+                $fatalErrorType = $_.Exception.GetType().FullName
+                $fatalScriptStackTrace = $_.ScriptStackTrace
+            }
+        }
+    }
+
     $finishedAt = [DateTimeOffset]::UtcNow
     $result = [ordered]@{
         schema = 'patternal.isolated-ui-result/1.0'
@@ -2725,6 +2845,10 @@ finally {
             } else { $null }
             requestedTextScalePercent = $requestedTextScalePercent
             restoredTextScalePercent = $originalTextScalePercent
+            requestedWindowsTheme = $requestedWindowsTheme
+            originalThemePath = $originalThemePath
+            restoredThemePath = [string](Get-ItemProperty -Path $themeRegistryPath -Name CurrentTheme -ErrorAction Stop).CurrentTheme
+            restoredHighContrast = [PatternalDisplayMode]::IsHighContrastEnabled()
         }
         process = if ($process) { [ordered]@{ id = $process.Id; responding = $process.Responding } } else { $null }
         hostInputInjected = $false

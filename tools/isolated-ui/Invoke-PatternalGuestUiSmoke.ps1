@@ -12,6 +12,8 @@ param(
     [int]$DisplayHeight = 1080,
     [ValidateRange(100, 225)]
     [int]$TextScalePercent = 100,
+    [ValidateSet('Current', 'Light', 'Dark', 'HighContrastBlack', 'HighContrastWhite', 'HighContrast1', 'HighContrast2')]
+    [string]$WindowsTheme = 'Current',
     [switch]$KeepAppOpen
 )
 
@@ -44,6 +46,7 @@ $request = [ordered]@{
     displayWidth = $DisplayWidth
     displayHeight = $DisplayHeight
     textScalePercent = $TextScalePercent
+    windowsTheme = $WindowsTheme
     requestedAtUtc = [DateTimeOffset]::UtcNow.ToString('O')
 }
 $request | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $localRequestPath -Encoding utf8

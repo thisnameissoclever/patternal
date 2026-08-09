@@ -117,9 +117,13 @@ Request an exact supported guest resolution without opening VMConnect:
 .\tools\isolated-ui\Invoke-PatternalGuestUiSmoke.ps1 -Mode persistence-only -DisplayWidth 1600 -DisplayHeight 900
 .\tools\isolated-ui\Invoke-PatternalGuestUiSmoke.ps1 -Mode persistence-only -DisplayWidth 1920 -DisplayHeight 1080
 .\tools\isolated-ui\Invoke-PatternalGuestUiSmoke.ps1 -Mode persistence-only -DisplayWidth 1920 -DisplayHeight 1080 -TextScalePercent 200
+.\tools\isolated-ui\Invoke-PatternalGuestUiSmoke.ps1 -Mode persistence-only -WindowsTheme Dark
+.\tools\isolated-ui\Invoke-PatternalGuestUiSmoke.ps1 -Mode full -WindowsTheme HighContrast2
 ```
 
 The guest rejects the run when Windows does not apply the requested mode exactly. For a text-scale run, it records the current per-user value, requests the selected percentage before launching the packaged app, broadcasts the accessibility setting change, and restores or removes the value in `finally`. Always inspect the screenshot because a registry value alone does not prove the application rendered larger text.
+
+`-WindowsTheme` accepts `Current`, `Light`, `Dark`, `HighContrastBlack`, `HighContrastWhite`, `HighContrast1`, and `HighContrast2`. The guest applies the real built-in Windows `.theme` file before launch, verifies both the active theme path and the `SPI_GETHIGHCONTRAST` state, captures the packaged UI, and restores the exact original theme in `finally`. Always inspect the screenshots. A registry path or high-contrast flag proves configuration, not readable pixels.
 
 3. Inspect `result.json`, both UI trees, and every PNG under:
 
@@ -135,7 +139,7 @@ Do not treat a passing JSON result as camera-orientation or cloth-quality proof 
 
 The current guest suite performs these checks in order:
 
-1. Requests a 1920 by 1080 guest display and rejects anything below 1280 by 720.
+1. Requests a 1920 by 1080 guest display and rejects anything below 1280 by 720. Optional text-scale and Windows-theme requests are applied and verified before launch, then restored in `finally`.
 2. Launches the packaged AUMID and verifies a responsive Patternal window.
 3. Captures the startup 2D view and a bounded UI Automation tree.
 4. Deliberately changes Height with linked proportions disabled, invokes New through guest-local pointer input, confirms the dialog, and requires the dedicated test profile to return to the 167 cm linked-proportion bundled baseline. This makes persistent guest state deterministic without deleting the app profile behind the product's back.
@@ -179,6 +183,10 @@ Focused persistence run `20260809-113015-a9372bba` used payload `aa0885fc8f1dd48
 Responsive focused runs `20260809-114717-6c40d65f`, `20260809-114949-6daea43a`, and `20260809-115049-2d9f1687` used payload `c6a5b159a89c0b89f71efd5bc0dcbb12f9400c0b5332b2f97f7c88816128222e` at exact 1280 by 720, 1600 by 900, and 1920 by 1080 modes. All six actions passed in each run. Manual review confirmed the command bar remained reachable, the pattern workspace remained readable, the named-project confirmation was visible, and the scale footer no longer ran underneath the zoom controls at the minimum size. Host input injection and VMConnect use remained false.
 
 Text-scale run `20260809-115542-513678bc` used payload `a183c6d57a18002148e28162ec18cd3a4563c853aac9fcde4114af259b6f4d3b` at 1920 by 1080 with Windows text scaling requested at 200 percent. All seven actions passed and three screenshots were captured. Manual review confirmed the larger type was visibly applied, command-bar overflow remained available, the 2D canvas and footer controls remained distinct, the inspector remained scrollable, and the named-project confirmation remained readable. The guest registry returned to its original absent `TextScaleFactor` value after the run. Host input injection and VMConnect use remained false.
+
+Theme runs `20260809-130609-c8328deb`, `20260809-130911-2fd5a99d`, `20260809-131007-8b197083`, `20260809-131157-b91530a7`, `20260809-133025-9f0724f9`, and `20260809-132449-2c2b51e0` exercised High Contrast Black, High Contrast White, High Contrast 1, High Contrast 2, Dark, and Light respectively at 1920 by 1080. Each focused run passed all 10 actions, captured four screenshots, proved keyboard toggles, a reversible slider edit, SVG export, named project persistence, local snapshot persistence, and 126 named keyboard-focusable 2D controls. Manual review confirmed readable pattern geometry, labels, side panels, status messages, toggle states, and visible keyboard focus in every theme. Each run restored the exact original `aero.theme` state with high contrast disabled. Host input injection and VMConnect use remained false. The final Dark run used the completed exact-path assertion and preserved-result restoration handling.
+
+Full High Contrast 2 run `20260809-131811-0ced925b` used the same hash-identified packaged application payload, completed 47 actions, passed 46, and captured 23 screenshots. It proved the complete 2D authoring sequence, all six 3D camera commands, 126 named 2D controls, 39 named 3D controls, body and fabric edits, display toggles, avatar edit and restore, SVG export, named project persistence, and local snapshot persistence. Manual review confirmed that 2D points, lines, darts, seam graph, focus, XAML 3D chrome, and all six camera views remained readable. The only failure was the truthful current-cloth freshness gate. The avatar and absent cloth remain visually rejected; high-contrast usability does not make them CLO-class assets. The guest restored `aero.theme` with high contrast disabled, and host input injection and VMConnect use remained false.
 
 Keyboard and accessibility run `20260809-124751-67e8517b` used payload `f260ae82d66f2570db88ca224f5ae656040a5ca586d3d2922e37db874717c126` at 1920 by 1080. It completed 46 actions, passed 45, captured 23 screenshots, and failed only because no accepted cloth matches the bundled current revision. The keyboard-only workflow proved toolbar focus order, real Windows dialog activation and dismissal, Space activation for Pieces, Inspector, Seam allowance, and Grainlines, 2D and 3D tab selection, an exact Fabric weight edit and restore, and visible focus. All 126 keyboard-focusable 2D controls and all 39 keyboard-focusable 3D controls exposed non-empty accessible names. The full authoring, SVG export, named project, local recovery, late editable-avatar, and late fitted-avatar checks passed. Manual 2D and 3D screenshot review was completed. Actual Narrator speech remains unobserved; automation names do not prove spoken reading order. Host input injection and VMConnect use remained false.
 

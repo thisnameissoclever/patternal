@@ -2948,3 +2948,21 @@ Copy each request to a run-ID-specific staging path. Inside one guest command, c
 ### How to verify
 
 Start one guest smoke task, invoke the host launcher again, and require the second call to reject without changing the canonical run ID. Confirm the first run writes evidence under its original ID and the rejected staging file is removed.
+
+## Theme flags are not visual proof, and guest themes must always be restored
+
+### What happened
+
+Patterna had automation-name and keyboard coverage, but no packaged evidence under the real Windows dark and high-contrast themes. A future test could also leave the persistent guest in a contrast theme if an assertion or app launch failed after changing it.
+
+### Root cause
+
+Theme configuration, rendered contrast, and cleanup are separate contracts. Reading a theme name or a high-contrast Boolean does not prove that pattern geometry, focus, status messages, WebView chrome, toggles, or sliders remain readable. Applying a persistent user setting without unconditional restoration also makes later evidence depend on whichever run failed last.
+
+### Prevention rule
+
+Apply the built-in Windows `.theme` file before packaged launch, verify both the active theme path and `SPI_GETHIGHCONTRAST`, capture real 2D and 3D pixels, and restore the exact original theme in `finally`. Treat Light, Dark, High Contrast Black, High Contrast White, High Contrast 1, and High Contrast 2 as distinct visual gates. Do not infer one from another.
+
+### How to verify
+
+Run the packaged persistence workflow under all six themes and the complete 2D and 3D workflow under at least one high-contrast theme. Inspect every screenshot for readable geometry, text, control state, focus, status, and camera chrome. Require the result bundle to record the requested theme, original theme, restored theme, and restored high-contrast state. Confirm host input injection and VMConnect use remain false.

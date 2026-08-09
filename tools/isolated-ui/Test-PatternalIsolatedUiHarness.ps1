@@ -286,6 +286,19 @@ foreach ($stagedRequestContract in @(
         throw "Host runner no longer protects an active guest run from request overwrite: '$stagedRequestContract'."
     }
 }
+foreach ($windowsThemeContract in @(
+    "[ValidateSet('Current', 'Light', 'Dark', 'HighContrastBlack', 'HighContrastWhite', 'HighContrast1', 'HighContrast2')]",
+    'windowsTheme = $WindowsTheme',
+    "'Guest Windows theme request'",
+    'IsHighContrastEnabled',
+    'Restore-GuestTheme',
+    '$themePathMatches',
+    "'Guest Windows theme restoration'"
+)) {
+    if (-not ($hostRunner.Contains($windowsThemeContract) -or $guestRunner.Contains($windowsThemeContract))) {
+        throw "Isolated runner no longer proves Windows-theme contract '$windowsThemeContract'."
+    }
+}
 foreach ($earlyExitContract in @(
     'LastTaskResult',
     'exited before writing result.json'
