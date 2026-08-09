@@ -888,12 +888,32 @@ $fatalScriptStackTrace = $null
 $failureDiagnostics = $null
 
 try {
-    [void][PatternalDisplayMode]::TrySet(1920, 1080)
+    $requestedDisplayWidth = if ($request.PSObject.Properties.Name -contains 'displayWidth') {
+        [int]$request.displayWidth
+    }
+    else {
+        1920
+    }
+    $requestedDisplayHeight = if ($request.PSObject.Properties.Name -contains 'displayHeight') {
+        [int]$request.displayHeight
+    }
+    else {
+        1080
+    }
+    [void][PatternalDisplayMode]::TrySet($requestedDisplayWidth, $requestedDisplayHeight)
     $screen = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
     if ($screen.Width -lt 1280 -or $screen.Height -lt 720) {
         throw "Guest display is too small for acceptance evidence: $($screen.Width) x $($screen.Height)."
     }
-    Add-ActionResult -Name 'Guest display resolution' -Passed $true -Details ([ordered]@{ width = $screen.Width; height = $screen.Height }) -ErrorMessage $null
+    if ($screen.Width -ne $requestedDisplayWidth -or $screen.Height -ne $requestedDisplayHeight) {
+        throw "Guest display did not apply the requested $requestedDisplayWidth x $requestedDisplayHeight mode. Actual mode is $($screen.Width) x $($screen.Height)."
+    }
+    Add-ActionResult -Name 'Guest display resolution' -Passed $true -Details ([ordered]@{
+        requestedWidth = $requestedDisplayWidth
+        requestedHeight = $requestedDisplayHeight
+        width = $screen.Width
+        height = $screen.Height
+    }) -ErrorMessage $null
 
     Get-Process -Name Patternal -ErrorAction SilentlyContinue | Stop-Process -Force
     $launchedSession = Start-PatternalUiSession -Aumid $request.aumid -ExpectedWindowTitle $request.expectedWindowTitle
@@ -2188,6 +2208,7 @@ try {
                 throw
             }
             Find-UiElement -Root $activeWindow -Name 'Project opened' | Out-Null
+            Start-Sleep -Milliseconds 350
 
             $projectShotPath = Join-Path $evidenceDirectory '15-named-project-restored.png'
             Save-WindowScreenshot -Window $activeWindow -Path $projectShotPath

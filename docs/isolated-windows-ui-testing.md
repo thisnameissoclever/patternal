@@ -110,6 +110,16 @@ The host applies an execution-policy bypass only to the current PowerShell Direc
 .\tools\isolated-ui\Invoke-PatternalGuestUiSmoke.ps1
 ```
 
+Request an exact supported guest resolution without opening VMConnect:
+
+```powershell
+.\tools\isolated-ui\Invoke-PatternalGuestUiSmoke.ps1 -Mode persistence-only -DisplayWidth 1280 -DisplayHeight 720
+.\tools\isolated-ui\Invoke-PatternalGuestUiSmoke.ps1 -Mode persistence-only -DisplayWidth 1600 -DisplayHeight 900
+.\tools\isolated-ui\Invoke-PatternalGuestUiSmoke.ps1 -Mode persistence-only -DisplayWidth 1920 -DisplayHeight 1080
+```
+
+The guest rejects the run when Windows does not apply the requested mode exactly. Resolution evidence does not prove a 200 percent text-scaling session.
+
 3. Inspect `result.json`, both UI trees, and every PNG under:
 
 ```text
@@ -163,5 +173,7 @@ As of 2026-08-09, the host audit confirms Windows 11 Pro, Hyper-V services, Wind
 The same run exported a real 11,685-byte SVG through Windows Save As and parsed 14 simulation panels plus 38 seams from its embedded `patterna.garment/1.1` document. It saved a 13,481-byte named project with schema `patterna.project/1.0`, disturbed the live state, and restored Height 167.5 cm, linked proportions Off, and custom fabric weight 185 g/m² through the packaged Open picker. It separately saved Height 167.5 cm with linked proportions Off to the local recovery snapshot, terminated the app, restored both values after packaged relaunch, then restored and re-saved the 167 cm linked baseline. Large JSON state now lives in a versioned, atomically replaced file under the package LocalFolder instead of exceeding the per-value `LocalSettings` limit. Legacy settings remain readable. The end-to-end measurement check proved the visible viewport switched to the 151-value editable measurement mesh and returned to the textured fitted Antonia candidate. Both late 3D captures passed a 1.0 non-white sample ratio after the new hidden-tab render-loop recovery, and manual review confirmed that neither image was blank. Visual review still rejects the editable fallback as a product avatar because its anatomy, hands, feet, surface detail, and materials remain far below the fitted candidate. Manual six-view review also rejects Antonia as the final CLO-class avatar because the asymmetric raised-arm pose, bald presentation, modesty assets, and customization depth remain inadequate. Host input injection and VMConnect use remained false. CLO-class completion remains open because accepted cloth, a realistic revision-matched customizable avatar, fitted hair, improved modesty clothing, and physical-GPU proof are still missing.
 
 Focused persistence run `20260809-113015-a9372bba` used payload `aa0885fc8f1dd486e078c5129a8a0dcc4097d570dacf0ef95a1df5a34e74d013`, passed all six actions, and captured three screenshots. It saved a 10,590-byte `.patterna` project through the real Save As picker, required schema `patterna.project/1.0` plus all editable construction payloads, disturbed the live state, opened the file through the real Open picker, and restored Height 167.5 cm, linked proportions Off, and custom fabric weight 185 g/m² exactly. The toolbar remained readable at 1920 by 1080 with distinct New, Open, Save As, and Quick save commands. The independent local recovery snapshot and SVG export checks also passed. Host input injection and VMConnect use remained false.
+
+Responsive focused runs `20260809-114717-6c40d65f`, `20260809-114949-6daea43a`, and `20260809-115049-2d9f1687` used payload `c6a5b159a89c0b89f71efd5bc0dcbb12f9400c0b5332b2f97f7c88816128222e` at exact 1280 by 720, 1600 by 900, and 1920 by 1080 modes. All six actions passed in each run. Manual review confirmed the command bar remained reachable, the pattern workspace remained readable, the named-project confirmation was visible, and the scale footer no longer ran underneath the zoom controls at the minimum size. Host input injection and VMConnect use remained false. A 200 percent text-scaling session remains unproved.
 
 The persistent guest and its signed application prerequisites are operational. This proves the isolated packaged interaction lane, not the visual quality of the current product. The current 2D all-pieces layout, zoom controls, calibrated 1:1 scale, accessible piece, anchor, and edge selection, precise point entry, numeric and pointer polygon drafting, internal-line and guide-dart create, update, delete, Undo, and Redo workflows, sewn-edge and free-edge physical darts, free sewing, and Frame selected command pass at 1920 by 1080. Current accepted cloth, physical-GPU rendering, and CLO-class multi-view gates remain open.

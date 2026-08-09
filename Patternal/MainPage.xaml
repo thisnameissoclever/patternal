@@ -655,31 +655,43 @@
                                 </StackPanel>
                             </Border>
 
-                            <Border
-                                MaxWidth="360"
+                            <Grid
                                 Margin="20"
-                                Padding="10,6"
-                                HorizontalAlignment="Left"
-                                VerticalAlignment="Bottom"
-                                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                CornerRadius="4">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <FontIcon FontSize="14" Glyph="&#xE82D;" />
-                                    <TextBlock
-                                        x:Name="CanvasScaleText"
-                                        AutomationProperties.AutomationId="CanvasScaleText"
-                                        Text="10 cm grid | 50 cm major | screen uncalibrated" />
-                                </StackPanel>
-                            </Border>
+                                ColumnSpacing="12"
+                                VerticalAlignment="Bottom">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Border
+                                    Grid.Column="0"
+                                    MaxWidth="360"
+                                    Padding="10,6"
+                                    HorizontalAlignment="Left"
+                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                    CornerRadius="4">
+                                    <Grid ColumnSpacing="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <FontIcon FontSize="14" Glyph="&#xE82D;" />
+                                        <TextBlock
+                                            x:Name="CanvasScaleText"
+                                            Grid.Column="1"
+                                            AutomationProperties.AutomationId="CanvasScaleText"
+                                            Text="10 cm grid | 50 cm major | screen uncalibrated"
+                                            TextTrimming="CharacterEllipsis" />
+                                    </Grid>
+                                </Border>
 
-                            <Border
-                                Margin="20"
-                                Padding="6"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Bottom"
-                                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                CornerRadius="4">
-                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                <Border
+                                    Grid.Column="1"
+                                    Padding="6"
+                                    HorizontalAlignment="Right"
+                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                    CornerRadius="4">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
                                     <Button
                                         x:Name="PatternZoomOutButton"
                                         Width="34"
@@ -726,8 +738,9 @@
                                         AutomationProperties.Name="Calibrate pattern physical scale"
                                         Click="OnCalibratePatternScaleClicked"
                                         Content="Calibrate" />
-                                </StackPanel>
-                            </Border>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
                         </Grid>
                     </TabViewItem>
 

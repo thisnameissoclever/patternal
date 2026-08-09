@@ -2876,3 +2876,21 @@ Treat each nested serialized value as a versioned boundary with its own serializ
 ### How to verify
 
 Save a named project through the packaged Save As picker with one custom measurement present. Parse the file, disturb scalar state, select the file in the packaged Open picker, and require the project to restore without an error InfoBar. Verify the exact Height, linked-proportion state, and non-preset fabric weight, then inspect the restored 2D workspace screenshot.
+
+## Independent canvas overlays collide at laptop width
+
+### What happened
+
+The 1280 by 720 packaged run passed every persistence action, but its screenshot showed the scale description running underneath the zoom and calibration controls. Both surfaces were independently aligned to the bottom of the same canvas overlay, so neither reserved space for the other.
+
+### Root cause
+
+The wide desktop layout happened to provide enough empty space between two unrelated bottom-aligned borders. That accidental gap was mistaken for responsive layout behavior.
+
+### Prevention rule
+
+Place neighboring overlay controls in one shared layout container with explicit columns and spacing. Give descriptive text the flexible column and enable ellipsis; keep commands in the auto-sized column. Do not rely on opposite alignment inside the same grid to prevent overlap.
+
+### How to verify
+
+Request exact 1280 by 720, 1600 by 900, and 1920 by 1080 guest modes. Run the packaged persistence workflow at each size and inspect the startup and named-project screenshots. Require the footer text and every zoom command to remain distinct and readable, and keep 200 percent text scaling as a separate unproved gate.

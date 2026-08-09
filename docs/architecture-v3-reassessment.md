@@ -39,7 +39,7 @@ The packaged 1920 by 1080 workspace now uses geometry-aware deterministic packin
 
 Remaining gates:
 
-1. Add screenshot gates at 1280 by 720, 1600 by 900, 1920 by 1080, and 200 percent text scaling.
+1. Add a 200 percent text-scaling gate. Focused packaged runs now pass and have reviewed screenshots at 1280 by 720, 1600 by 900, and 1920 by 1080 on payload `c6a5b159a89c0b89f71efd5bc0dcbb12f9400c0b5332b2f97f7c88816128222e`.
 2. Verify keyboard navigation, focus order, automation names, and screen-reader labels across the complete authoring workflow.
 
 ### 3D interface review

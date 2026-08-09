@@ -6,6 +6,10 @@ param(
     [int]$TimeoutSeconds = 600,
     [ValidateSet('full', 'persistence-only')]
     [string]$Mode = 'full',
+    [ValidateRange(1280, 3840)]
+    [int]$DisplayWidth = 1920,
+    [ValidateRange(720, 2160)]
+    [int]$DisplayHeight = 1080,
     [switch]$KeepAppOpen
 )
 
@@ -34,6 +38,8 @@ $request = [ordered]@{
     evidenceRoot = $guestEvidenceRoot
     keepAppOpen = $KeepAppOpen.IsPresent
     mode = $Mode
+    displayWidth = $DisplayWidth
+    displayHeight = $DisplayHeight
     requestedAtUtc = [DateTimeOffset]::UtcNow.ToString('O')
 }
 $request | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $localRequestPath -Encoding utf8
