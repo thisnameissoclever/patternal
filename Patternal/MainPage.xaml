@@ -288,7 +288,7 @@
                                 Margin="12"
                                 HorizontalScrollBarVisibility="Auto"
                                 HorizontalScrollMode="Enabled"
-                                MaxZoomFactor="3"
+                                MaxZoomFactor="16"
                                 MinZoomFactor="0.5"
                                 SizeChanged="OnPatternScrollViewerSizeChanged"
                                 VerticalScrollBarVisibility="Auto"
@@ -643,7 +643,10 @@
                                 CornerRadius="4">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <FontIcon FontSize="14" Glyph="&#xE82D;" />
-                                    <TextBlock x:Name="CanvasScaleText" Text="12.5 mm grid" />
+                                    <TextBlock
+                                        x:Name="CanvasScaleText"
+                                        AutomationProperties.AutomationId="CanvasScaleText"
+                                        Text="10 cm grid | 50 cm major | screen uncalibrated" />
                                 </StackPanel>
                             </Border>
 
@@ -688,6 +691,19 @@
                                         AutomationProperties.Name="Frame selected pattern piece"
                                         Click="OnFrameSelectedPatternClicked"
                                         Content="Frame" />
+                                    <Button
+                                        x:Name="PatternActualSizeButton"
+                                        AutomationProperties.AutomationId="PatternActualSizeButton"
+                                        AutomationProperties.Name="Show pattern at calibrated actual size"
+                                        Click="OnPatternActualSizeClicked"
+                                        Content="1:1"
+                                        IsEnabled="False" />
+                                    <Button
+                                        x:Name="PatternCalibrateScaleButton"
+                                        AutomationProperties.AutomationId="PatternCalibrateScaleButton"
+                                        AutomationProperties.Name="Calibrate pattern physical scale"
+                                        Click="OnCalibratePatternScaleClicked"
+                                        Content="Calibrate" />
                                 </StackPanel>
                             </Border>
                         </Grid>

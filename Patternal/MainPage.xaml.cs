@@ -23,6 +23,10 @@ namespace Patterna;
 public sealed partial class MainPage : Page
 {
     private const double PatternPixelsPerCentimeter = 4.0;
+    private const double PatternCalibrationRulerDips = 320.0;
+    private const double MinimumCalibratedDipsPerCentimeter = 16.0;
+    private const double MaximumCalibratedDipsPerCentimeter = 64.0;
+    private const string PatternScaleCalibrationSettingsKey = "PatternScaleDipsPerCentimeter";
     private const double MinimumPatternCanvasWidth = 960;
     private const double MinimumPatternCanvasHeight = 720;
     private const double DefaultHeight = 167;
@@ -77,6 +81,7 @@ public sealed partial class MainPage : Page
     private bool _updatingAssemblyInspector;
     private bool _patternViewInitialized;
     private float _patternZoomTarget = 1f;
+    private double? _patternDipsPerCentimeter;
     private PatternCanvasLayoutResult? _patternCanvasLayout;
     private readonly SemaphoreSlim _unrealBridgeWriteLock = new(1, 1);
     private string? _currentSimulationRevision;
@@ -291,6 +296,8 @@ public sealed partial class MainPage : Page
     private async void OnPageLoaded(object sender, RoutedEventArgs e)
     {
         RestoreSnapshot();
+        RestorePatternScaleCalibration();
+        UpdatePatternPhysicalScaleControls(PatternScrollViewer.ZoomFactor);
         ApplySelectedFabricPreset();
         await LoadAuthoritativeGarmentSourcesAsync();
         await LoadBundledSimulationFitEvidenceAsync();
@@ -5547,6 +5554,163 @@ public sealed partial class MainPage : Page
     private void OnPatternZoomOutClicked(object sender, RoutedEventArgs e)
         => ChangePatternZoom(-0.2f);
 
+    private void RestorePatternScaleCalibration()
+    {
+        object? stored = ApplicationData.Current.LocalSettings.Values[PatternScaleCalibrationSettingsKey];
+        _patternDipsPerCentimeter = stored is double value &&
+            double.IsFinite(value) &&
+            value is >= MinimumCalibratedDipsPerCentimeter and <= MaximumCalibratedDipsPerCentimeter
+                ? value
+                : null;
+    }
+
+    private async void OnCalibratePatternScaleClicked(object sender, RoutedEventArgs e)
+    {
+        double measuredLengthCm = _patternDipsPerCentimeter is double calibratedDips
+            ? PatternCalibrationRulerDips / calibratedDips
+            : 8.5;
+        NumberBox measuredLengthBox = new()
+        {
+            Header = "Measured blue ruler length (cm)",
+            Minimum = PatternCalibrationRulerDips / MaximumCalibratedDipsPerCentimeter,
+            Maximum = PatternCalibrationRulerDips / MinimumCalibratedDipsPerCentimeter,
+            SmallChange = 0.1,
+            LargeChange = 1,
+            Value = measuredLengthCm,
+            SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact
+        };
+        AutomationProperties.SetName(measuredLengthBox, "Measured calibration ruler length in centimeters");
+
+        Canvas ruler = new()
+        {
+            Width = PatternCalibrationRulerDips,
+            Height = 32,
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
+        Brush rulerBrush = ResourceBrush("AccentFillColorDefaultBrush");
+        ruler.Children.Add(new Line
+        {
+            X1 = 0,
+            X2 = PatternCalibrationRulerDips,
+            Y1 = 16,
+            Y2 = 16,
+            Stroke = rulerBrush,
+            StrokeThickness = 3
+        });
+        ruler.Children.Add(new Line
+        {
+            X1 = 0,
+            X2 = 0,
+            Y1 = 4,
+            Y2 = 28,
+            Stroke = rulerBrush,
+            StrokeThickness = 2
+        });
+        ruler.Children.Add(new Line
+        {
+            X1 = PatternCalibrationRulerDips,
+            X2 = PatternCalibrationRulerDips,
+            Y1 = 4,
+            Y2 = 28,
+            Stroke = rulerBrush,
+            StrokeThickness = 2
+        });
+
+        StackPanel content = new() { Width = 440, Spacing = 12 };
+        content.Children.Add(new TextBlock
+        {
+            Text = "Measure the blue line on this screen with a physical ruler, then enter that measured length. Patterna will not call ordinary 100% zoom actual size.",
+            TextWrapping = TextWrapping.Wrap
+        });
+        content.Children.Add(ruler);
+        content.Children.Add(measuredLengthBox);
+        content.Children.Add(new TextBlock
+        {
+            Text = "Recalibrate after changing monitors, display scaling, resolution, or remote-display software.",
+            Foreground = ResourceBrush("TextFillColorSecondaryBrush"),
+            TextWrapping = TextWrapping.Wrap
+        });
+
+        ContentDialog dialog = new()
+        {
+            Title = "Calibrate physical pattern scale",
+            Content = content,
+            PrimaryButtonText = "Save and show 1:1",
+            SecondaryButtonText = "Clear calibration",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary,
+            XamlRoot = XamlRoot
+        };
+        ContentDialogResult result = await dialog.ShowAsync();
+        if (result == ContentDialogResult.Secondary)
+        {
+            ApplicationData.Current.LocalSettings.Values.Remove(PatternScaleCalibrationSettingsKey);
+            _patternDipsPerCentimeter = null;
+            FitPatternToViewport(disableAnimation: true);
+            UpdatePatternPhysicalScaleControls(PatternScrollViewer.ZoomFactor);
+            ShowStatus(
+                "Physical scale calibration cleared",
+                "Patterna returned to fit-to-view and no longer offers a calibrated 1:1 display.",
+                InfoBarSeverity.Informational);
+            return;
+        }
+        if (result != ContentDialogResult.Primary)
+        {
+            return;
+        }
+
+        double measured = measuredLengthBox.Value;
+        double dipsPerCentimeter = PatternCalibrationRulerDips / measured;
+        if (!double.IsFinite(dipsPerCentimeter) ||
+            dipsPerCentimeter is < MinimumCalibratedDipsPerCentimeter or > MaximumCalibratedDipsPerCentimeter)
+        {
+            ShowStatus(
+                "Calibration measurement is outside the supported range",
+                "Measure the complete blue line and enter a value from 5 to 20 centimeters.",
+                InfoBarSeverity.Warning);
+            return;
+        }
+        _patternDipsPerCentimeter = dipsPerCentimeter;
+        ApplicationData.Current.LocalSettings.Values[PatternScaleCalibrationSettingsKey] = dipsPerCentimeter;
+        ApplyPatternActualSize();
+    }
+
+    private void OnPatternActualSizeClicked(object sender, RoutedEventArgs e)
+        => ApplyPatternActualSize();
+
+    private void ApplyPatternActualSize()
+    {
+        if (_patternDipsPerCentimeter is not double dipsPerCentimeter)
+        {
+            return;
+        }
+        float target = (float)Math.Clamp(
+            dipsPerCentimeter / PatternPixelsPerCentimeter,
+            PatternScrollViewer.MinZoomFactor,
+            PatternScrollViewer.MaxZoomFactor);
+        _patternZoomTarget = target;
+        PatternScrollViewer.ChangeView(null, null, target, disableAnimation: true);
+        UpdatePatternPhysicalScaleControls(target);
+        ShowStatus(
+            "Calibrated actual size",
+            $"One pattern centimeter now spans {dipsPerCentimeter:0.##} display-independent pixels. Recheck with a ruler after any display change.",
+            InfoBarSeverity.Success);
+    }
+
+    private void UpdatePatternPhysicalScaleControls(float zoomFactor)
+    {
+        bool calibrated = _patternDipsPerCentimeter is not null;
+        PatternActualSizeButton.IsEnabled = calibrated;
+        bool actualSize = calibrated &&
+            Math.Abs(zoomFactor - (_patternDipsPerCentimeter!.Value / PatternPixelsPerCentimeter)) < 0.01;
+        CanvasScaleText.Text = actualSize
+            ? "10 cm grid | 50 cm major | calibrated 1:1"
+            : calibrated
+                ? "10 cm grid | 50 cm major | screen calibrated"
+                : "10 cm grid | 50 cm major | screen uncalibrated";
+        AutomationProperties.SetName(CanvasScaleText, CanvasScaleText.Text);
+    }
+
     private void OnFrameSelectedPatternClicked(object sender, RoutedEventArgs e)
     {
         if (_patternCanvasLayout is null ||
@@ -5621,6 +5785,7 @@ public sealed partial class MainPage : Page
         PatternZoomText.Text = $"{zoomFactor:P0}";
         PatternZoomOutButton.IsEnabled = zoomFactor > PatternScrollViewer.MinZoomFactor + 0.001f;
         PatternZoomInButton.IsEnabled = zoomFactor < PatternScrollViewer.MaxZoomFactor - 0.001f;
+        UpdatePatternPhysicalScaleControls(zoomFactor);
     }
 
     private void OnTogglePiecesClicked(object sender, RoutedEventArgs e)

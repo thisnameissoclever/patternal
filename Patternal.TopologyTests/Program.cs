@@ -996,12 +996,18 @@ Assert(
         mainPageXaml.Contains("AutomationProperties.AutomationId=\"PatternZoomInButton\"", StringComparison.Ordinal) &&
         mainPageXaml.Contains("AutomationProperties.AutomationId=\"PatternFitButton\"", StringComparison.Ordinal) &&
         mainPageXaml.Contains("AutomationProperties.AutomationId=\"PatternFrameSelectedButton\"", StringComparison.Ordinal) &&
+        mainPageXaml.Contains("AutomationProperties.AutomationId=\"PatternActualSizeButton\"", StringComparison.Ordinal) &&
+        mainPageXaml.Contains("AutomationProperties.AutomationId=\"PatternCalibrateScaleButton\"", StringComparison.Ordinal) &&
+        mainPageXaml.Contains("Text=\"10 cm grid | 50 cm major | screen uncalibrated\"", StringComparison.Ordinal) &&
+        !mainPageXaml.Contains("12.5 mm grid", StringComparison.Ordinal) &&
         mainPageXaml.Contains("SelectionChanged=\"OnPatternPieceSelectionChanged\"", StringComparison.Ordinal) &&
         !mainPageXaml.Contains("86% FABRIC USE", StringComparison.Ordinal) &&
         mainPageCode.Contains("PatternCanvasLayoutEngine.Arrange", StringComparison.Ordinal) &&
         mainPageCode.Contains("PatternCanvasLayoutEngine.Frame", StringComparison.Ordinal) &&
+        mainPageCode.Contains("PatternScaleDipsPerCentimeter", StringComparison.Ordinal) &&
+        mainPageCode.Contains("PatternCalibrationRulerDips / measured", StringComparison.Ordinal) &&
         mainPageCode.Contains("public override string ToString() => Name;", StringComparison.Ordinal),
-    "The 2D workspace lost deterministic packing or its visible pan and zoom contract.");
+    "The 2D workspace lost deterministic packing, visible pan and zoom, or truthful calibrated-scale controls.");
 Assert(mainPageXaml.Contains("x:Name=\"AcceptedEquilibriumTopologyText\"", StringComparison.Ordinal), "The packaged 3D overlay is not driven by live topology metadata.");
 Assert(
     mainPageXaml.Contains("x:Name=\"ShoulderSlider\"", StringComparison.Ordinal) &&

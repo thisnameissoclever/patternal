@@ -33,12 +33,11 @@ The preserved reviewed run is `artifacts/isolated-ui/runs/20260808-234620-27d56b
 
 The packaged 1920 by 1080 workspace now uses geometry-aware deterministic packing, separate label headers, a scrollable canvas, and visible Zoom out, Zoom in, Fit, and Frame selected controls. Reviewed isolated run `20260809-041233-0852a5fd` shows all 14 exact pieces without overlap or clipping. Its automation sequence proved Zoom in and Fit against committed `ScrollViewer` state, restored the full layout at 89 percent, selected `Back Torso` through UI Automation, and framed that exact piece at 223 percent without host input injection.
 
-Open gates:
+Remaining gates:
 
-1. Add a calibrated physical-scale command without presenting the canvas pixel scale as actual size. Frame selected is now implemented and isolated automation covers selection plus framing.
-2. Cover selection, curve and point editing, seam authoring, save, load, Undo, Redo, and export round trips in the isolated guest.
-3. Add screenshot gates at 1280 by 720, 1600 by 900, 1920 by 1080, and 200 percent text scaling.
-4. Verify keyboard navigation, focus order, automation names, and screen-reader labels across the complete authoring workflow.
+1. Cover save, load, and export round trips in the isolated guest. Selection, point editing, numeric and pointer polygon drafting, free sewing, internal-line and guide-dart lifecycle, Undo, Redo, Fit, Frame, and calibrated 1:1 scale now pass in reviewed run `20260809-081331-84385b75`.
+2. Add screenshot gates at 1280 by 720, 1600 by 900, 1920 by 1080, and 200 percent text scaling.
+3. Verify keyboard navigation, focus order, automation names, and screen-reader labels across the complete authoring workflow.
 
 ### 3D interface review
 
@@ -145,7 +144,7 @@ The live simulation route now uses the same Antonia character directory and GLB 
 
 The first live-contract six-view render used exact fitted Antonia and the existing production crew-neck OBJ. The numerical registration gate accepted it. Human review rejected it immediately: both breasts and the abdomen protrude through large holes, the rear neckline is open, sleeves appear detached, and the underarm and side surfaces are severely distorted. This is evidence about the existing production garment asset, not a claim that a new Newton result was produced. Product proof now requires an explicit `visual_quality.accepted` decision whose six reviewed hashes match the exact six render hashes. Every rerender resets that decision because Blender output is not assumed byte-deterministic. Numerical registration, collision, strain, or equilibrium evidence cannot promote a visually rejected result.
 
-The packaged review still rejects several production-quality details. Antonia has visible texture-region transitions on the limbs and crown, no hair geometry, a coarse display-only bandeau, and no accepted cloth. The 2D workspace now packs the exact piece extents into deterministic shelves, keeps labels in dedicated headers, exposes pan through the ScrollViewer, and provides visible Zoom out, Zoom in, Fit, and Frame selected controls. The reviewed 1920 by 1080 Fit screenshot shows all 14 pieces without clipping or overlap, including physically small collar and cuff pieces. A physical-scale command remains absent because four canvas pixels per centimeter is not a calibrated monitor measurement, and the broader authoring workflow still needs isolated interaction coverage. The current candidate is therefore accepted as a packaged architecture foundation and rejected as a production baseline.
+The packaged review still rejects several production-quality details. Antonia has visible texture-region transitions on the limbs and crown, no hair geometry, a coarse display-only bandeau, and no accepted cloth. The 2D workspace now packs the exact piece extents into deterministic shelves, keeps labels in dedicated headers, exposes pan through the ScrollViewer, and provides visible Zoom out, Zoom in, Fit, Frame selected, calibrated 1:1, and scale-calibration controls. The ordinary percentage remains explicitly a viewport zoom. A user must measure the on-screen 320-DIP ruler before 1:1 becomes available, and the stored calibration warns that monitor, display-scaling, resolution, or remote-display changes require recalibration. Reviewed run `20260809-081331-84385b75` proved Fit, calibration, 1:1 restoration, and cleanup at 1920 by 1080. The current candidate is therefore accepted as a packaged architecture foundation and rejected as a production baseline.
 
 ## Cloth solver architecture
 

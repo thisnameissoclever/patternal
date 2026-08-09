@@ -2768,3 +2768,21 @@ Compile embedded guest C# through Windows PowerShell 5.1 during the repository h
 ### How to verify
 
 Run `Test-PatternalIsolatedUiHarness.ps1` and require `GuestCSharpCompiler` to report `Windows PowerShell 5.1 passed`. Run the normal guest suite and confirm a valid result bundle is copied. A deliberately invalid guest C# probe must fail the harness before sync, while an early guest task exit must stop the host poller without waiting for its full timeout.
+
+## Viewport pixels are not physical pattern scale
+
+### What happened
+
+The 2D footer claimed `12.5 mm grid`, while the canvas drew minor lines every 40 canvas pixels using four canvas pixels per authored centimeter. The actual document spacing was 10 cm, or 100 mm. The same uncalibrated pixel transform could not truthfully make ordinary 100% zoom mean physical size on an unknown monitor.
+
+### Root cause
+
+An old display label survived after the document-to-canvas transform changed. No invariant bound the grid interval, unit label, zoom semantics, and monitor calibration workflow together.
+
+### Prevention rule
+
+Label authored grid spacing from document units, never from an assumed monitor scale. Keep viewport percentage separate from physical 1:1. Enable actual size only after the user measures a known on-screen ruler, persist display-independent pixels per centimeter, and require recalibration after any monitor, scaling, resolution, or remote-display change.
+
+### How to verify
+
+Require the source grid interval to remain 40 canvas pixels at four pixels per centimeter and the UI to name it as a 10 cm minor and 50 cm major grid. In the packaged guest, enter 10 cm for the 320-DIP calibration ruler, require 32 DIPs per centimeter and 800% actual-size zoom, leave through Fit, return through 1:1, capture the scale UI, clear the test calibration, and restore the original fitted zoom.

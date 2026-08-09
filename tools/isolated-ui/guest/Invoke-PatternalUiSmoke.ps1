@@ -1062,6 +1062,74 @@ try {
         $pointerDraftResult
     }
 
+    Invoke-UiCheck -Name '2D calibrated actual-size workflow' -Check {
+        $fit = Find-UiElementByAutomationId -Root $window -AutomationId 'PatternFitButton'
+        Invoke-UiElement -Element $fit
+        $zoomText = Find-UiElementByAutomationId -Root $window -AutomationId 'PatternZoomText'
+        $originalFitZoom = $zoomText.Current.Name
+        $actualSizeButton = Find-UiElement -Root $window -Name 'Show pattern at calibrated actual size'
+        $originalCalibrationAvailable = $actualSizeButton.Current.IsEnabled
+
+        Invoke-UiElement -Element (Find-UiElement -Root $window -Name 'Calibrate pattern physical scale')
+        $measurementBox = Find-UiElement -Root $window -Name 'Measured calibration ruler length in centimeters'
+        $measurementRange = Get-UiPattern -Element $measurementBox -Pattern ([System.Windows.Automation.RangeValuePattern]::Pattern) -PatternName 'RangeValuePattern'
+        $originalMeasuredLength = [double]$measurementRange.Current.Value
+        $measurementRange.SetValue(10.0)
+        Wait-ForCondition -Description 'calibration ruler measurement to become 10 centimeters' -Condition {
+            [math]::Abs([double]$measurementRange.Current.Value - 10.0) -lt 0.001
+        } | Out-Null
+        Invoke-UiElement -Element (Find-UiElement -Root $window -Name 'Save and show 1:1')
+
+        Wait-ForCondition -Description 'calibrated actual-size zoom to reach 800 percent' -Condition {
+            (Find-UiElementByAutomationId -Root $window -AutomationId 'PatternZoomText').Current.Name -eq '800%'
+        } | Out-Null
+        $calibratedScaleName = '10 cm grid | 50 cm major | calibrated 1:1'
+        Wait-ForCondition -Description 'scale label to report calibrated 1:1' -Condition {
+            (Find-UiElementByAutomationId -Root $window -AutomationId 'CanvasScaleText').Current.Name -eq $calibratedScaleName
+        } | Out-Null
+
+        Invoke-UiElement -Element $fit
+        Wait-ForCondition -Description 'Fit to leave calibrated actual size' -Condition {
+            (Find-UiElementByAutomationId -Root $window -AutomationId 'PatternZoomText').Current.Name -eq $originalFitZoom
+        } | Out-Null
+        Invoke-UiElement -Element $actualSizeButton
+        Wait-ForCondition -Description '1:1 command to restore calibrated actual size' -Condition {
+            (Find-UiElementByAutomationId -Root $window -AutomationId 'PatternZoomText').Current.Name -eq '800%'
+        } | Out-Null
+
+        $actualSizeShotPath = Join-Path $evidenceDirectory '11-2d-calibrated-actual-size.png'
+        Save-WindowScreenshot -Window $window -Path $actualSizeShotPath
+        $script:screenshots.Add([pscustomobject]@{ name = '2d-calibrated-actual-size'; file = [IO.Path]::GetFileName($actualSizeShotPath) })
+
+        Invoke-UiElement -Element (Find-UiElement -Root $window -Name 'Calibrate pattern physical scale')
+        if ($originalCalibrationAvailable) {
+            $restoreMeasurementBox = Find-UiElement -Root $window -Name 'Measured calibration ruler length in centimeters'
+            $restoreMeasurementRange = Get-UiPattern -Element $restoreMeasurementBox -Pattern ([System.Windows.Automation.RangeValuePattern]::Pattern) -PatternName 'RangeValuePattern'
+            $restoreMeasurementRange.SetValue($originalMeasuredLength)
+            Invoke-UiElement -Element (Find-UiElement -Root $window -Name 'Save and show 1:1')
+        }
+        else {
+            Invoke-UiElement -Element (Find-UiElement -Root $window -Name 'Clear calibration')
+        }
+        Invoke-UiElement -Element $fit
+        Wait-ForCondition -Description 'scale calibration test to restore the fitted zoom' -Condition {
+            (Find-UiElementByAutomationId -Root $window -AutomationId 'PatternZoomText').Current.Name -eq $originalFitZoom
+        } | Out-Null
+        Wait-ForCondition -Description 'scale calibration availability to restore' -Condition {
+            (Find-UiElementByAutomationId -Root $window -AutomationId 'PatternActualSizeButton').Current.IsEnabled -eq $originalCalibrationAvailable
+        } | Out-Null
+
+        [ordered]@{
+            calibrationRulerDips = 320
+            enteredMeasuredLengthCm = 10.0
+            calibratedDipsPerCentimeter = 32.0
+            actualSizeZoom = '800%'
+            originalCalibrationAvailable = $originalCalibrationAvailable
+            restoredFitZoom = $originalFitZoom
+            screenshot = [IO.Path]::GetFileName($actualSizeShotPath)
+        }
+    }
+
     Invoke-UiCheck -Name '2D internal line create update delete undo and redo' -Check {
         $piece = Find-UiElement -Root $window -Name 'Back Torso'
         Invoke-UiElement -Element $piece
