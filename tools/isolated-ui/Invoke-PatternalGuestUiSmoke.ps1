@@ -4,6 +4,8 @@ param(
     [string]$VmName = 'Patternal-UI',
     [ValidateRange(60, 1800)]
     [int]$TimeoutSeconds = 600,
+    [ValidateSet('full', 'persistence-only')]
+    [string]$Mode = 'full',
     [switch]$KeepAppOpen
 )
 
@@ -31,6 +33,7 @@ $request = [ordered]@{
     expectedWindowTitle = 'Patternal'
     evidenceRoot = $guestEvidenceRoot
     keepAppOpen = $KeepAppOpen.IsPresent
+    mode = $Mode
     requestedAtUtc = [DateTimeOffset]::UtcNow.ToString('O')
 }
 $request | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $localRequestPath -Encoding utf8

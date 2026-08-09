@@ -48,11 +48,15 @@
                 </StackPanel>
             </CommandBar.Content>
             <AppBarButton
+                x:Name="NewPatternButton"
+                AutomationProperties.AutomationId="NewPatternButton"
                 AutomationProperties.Name="Create a new pattern"
                 Click="OnNewPatternClicked"
                 Icon="Add"
                 Label="New" />
             <AppBarButton
+                x:Name="SavePatternSnapshotButton"
+                AutomationProperties.AutomationId="SavePatternSnapshotButton"
                 AutomationProperties.Name="Save pattern snapshot"
                 Click="OnSavePatternClicked"
                 Icon="Save"
@@ -259,8 +263,10 @@
                             Click="OnFitPatternClicked"
                             Content="Fit view" />
                         <Button
+                            x:Name="ExportPatternButton"
                             Grid.Column="1"
                             HorizontalAlignment="Stretch"
+                            AutomationProperties.AutomationId="ExportPatternButton"
                             AutomationProperties.Name="Export pattern"
                             Click="OnExportClicked"
                             Content="Export" />
@@ -274,6 +280,7 @@
                     AutomationProperties.Name="Pattern workspace views"
                     HorizontalContentAlignment="Stretch"
                     IsAddTabButtonVisible="False"
+                    SelectionChanged="OnWorkspaceTabsSelectionChanged"
                     SizeChanged="OnWorkspaceTabsSizeChanged"
                     TabWidthMode="Equal"
                     VerticalContentAlignment="Stretch">
@@ -725,6 +732,7 @@
                                 x:Name="DrapeWebView"
                                 AutomationProperties.HelpText="Drag to orbit and use the mouse wheel to zoom"
                                 AutomationProperties.Name="Internal browser cloth diagnostic"
+                                DefaultBackgroundColor="#090B10"
                                 Visibility="Collapsed" />
 
                             <Border

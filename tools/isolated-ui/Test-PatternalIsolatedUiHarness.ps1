@@ -183,6 +183,28 @@ foreach ($patternLifecycleContract in @(
         throw "Guest runner no longer proves the full 2D construction lifecycle contract $patternLifecycleContract."
     }
 }
+foreach ($persistenceContract in @(
+    "'Dedicated test profile reset to bundled baseline'",
+    "'NewPatternButton'",
+    "'SVG export through packaged file picker'",
+    "'ExportPatternButton'",
+    "'pattern-round-trip.svg'",
+    "'Local snapshot save and startup restore round trip'",
+    "'SavePatternSnapshotButton'",
+    "'15-local-snapshot-restored.png'"
+)) {
+    if (-not $guestRunner.Contains($persistenceContract)) {
+        throw "Guest runner no longer proves packaged persistence contract $persistenceContract."
+    }
+}
+if (-not $guestRunner.Contains('Assert-RenderedScreenshotRegion')) {
+    throw 'Guest runner no longer rejects visually blank avatar proof screenshots.'
+}
+foreach ($persistenceAutomationId in @('NewPatternButton', 'ExportPatternButton', 'SavePatternSnapshotButton')) {
+    if (-not $xaml.Contains(('AutomationProperties.AutomationId="{0}"' -f $persistenceAutomationId))) {
+        throw "MainPage.xaml no longer exposes persistence automation ID '$persistenceAutomationId'."
+    }
+}
 foreach ($dialogLifecycleContract in @(
     'Select a new or existing straight internal line',
     'PatternInternalPathUpdateCommand',

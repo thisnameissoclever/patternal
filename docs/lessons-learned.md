@@ -2804,3 +2804,57 @@ Assert rendered dart legs while the 2D construction surface is active. Then ente
 ### How to verify
 
 In the packaged guest, edit and restore one existing sewn-edge dart. Create a temporary polygon and a free-edge dart, require both rendered legs, require the permanent-seam count to increase from 38 to 39, prove Undo and Redo, and restore 14 pieces and 38 seams. Run the subsequent free-sewing check in the same application session to prove no temporary state leaked forward.
+
+## LocalSettings is not document storage
+
+### What happened
+
+The packaged Save command threw `0x80073DC8` because the serialized garment document exceeded the Windows application-setting value limit. The same handler stored several other JSON collections as independent setting values, so deleting only the largest redundant value would merely postpone the next failure.
+
+### Root cause
+
+Small scalar preferences and expandable document payloads shared one persistence mechanism. `ApplicationData.LocalSettings` is appropriate for numbers, booleans, and short strings; it is not a database wearing a tiny hat.
+
+### Prevention rule
+
+Keep scalar preferences in LocalSettings. Store expandable structured state in a versioned file under the package LocalFolder, write it to a temporary file, and atomically replace the prior snapshot only after serialization succeeds. Read the file first and fall back to legacy setting values so an upgrade does not discard an existing snapshot. Report I/O failure instead of claiming success.
+
+### How to verify
+
+In the packaged guest, change Height with linked proportions disabled, save, terminate the process, relaunch the AUMID, and require both values to restore. Restore the originals, save again, relaunch again, and verify cleanup. Inspect the saved payload path and require the obsolete document-sized LocalSettings value to be removed.
+
+## File pickers must leave the input-synchronous callback
+
+### What happened
+
+Windows Save As and Open initially failed with `An outgoing call cannot be made since the application is dispatching an input-synchronous call` when the toolbar button was activated through UI Automation. The picker worked with ordinary manual timing, which made the failure look like a test-only nuisance even though accessibility activation is a supported product input path.
+
+### Root cause
+
+The async WinUI handler opened a system picker before yielding out of the input-synchronous dispatch. The picker requires an outgoing COM call that Windows forbids in that phase.
+
+### Prevention rule
+
+At the beginning of an async handler that opens a Windows picker, yield once to the dispatcher before constructing or showing the picker. Exercise the command through real guest-local pointer input and UI Automation activation; neither input path gets to be a second-class citizen.
+
+### How to verify
+
+Launch the packaged AUMID, activate Export, require the real Windows Save As dialog, enter a unique file name, and click Save. Parse the SVG and require its embedded `patterna.garment/1.1` document to contain the expected panel and seam counts. Repeat the boundary for photo import without relying on host input.
+
+## Hidden WebView state is not visible 3D proof
+
+### What happened
+
+After a long 2D authoring session, Patterna updated the accessible avatar-state label when Height changed and restored, but both late 3D screenshots contained a white canvas. The automation action passed because it asserted the label and never checked rendered pixels.
+
+### Root cause
+
+WebView2 suspended a requestAnimationFrame loop while its TabView item was hidden. Returning to 3D could leave the old scheduled frame stranded even though JavaScript state and XAML overlays continued to update. A successful camera command did not prove the WebGL surface had repainted.
+
+### Prevention rule
+
+Own render-loop generations explicitly. When 3D becomes visible, invalidate the old generation and schedule a new frame loop after layout. Query `gl.isContextLost()` and reload the renderer only when recovery requires rebuilding GPU resources. Give WebView2 a dark native background, and never accept an avatar-state label as visual proof by itself.
+
+### How to verify
+
+Enter 3D and capture the six semantic cameras, spend a full authoring sequence in 2D, change a measurement, return to 3D, activate Fit, and capture the editable avatar. Restore the measurement and repeat for the fitted candidate. Sample the central WebView region and reject fewer than 5 percent non-white pixels, then manually inspect both images for an actual body, correct state, and usable framing.

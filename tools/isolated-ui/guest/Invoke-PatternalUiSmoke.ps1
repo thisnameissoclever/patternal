@@ -265,6 +265,49 @@ function Find-UiElementByAutomationId {
     }
 }
 
+function Find-UiDescendantByAutomationId {
+    param(
+        [Parameter(Mandatory)]
+        [System.Windows.Automation.AutomationElement]$Root,
+        [Parameter(Mandatory)]
+        [string]$AutomationId
+    )
+
+    $walker = [System.Windows.Automation.TreeWalker]::ControlViewWalker
+    $pending = [System.Collections.Generic.Stack[System.Windows.Automation.AutomationElement]]::new()
+    $pending.Push($Root)
+    while ($pending.Count -gt 0) {
+        $parent = $pending.Pop()
+        try {
+            $child = $walker.GetFirstChild($parent)
+        }
+        catch {
+            continue
+        }
+        $children = [System.Collections.Generic.List[System.Windows.Automation.AutomationElement]]::new()
+        while ($child) {
+            try {
+                if ($child.Current.AutomationId -eq $AutomationId) {
+                    return $child
+                }
+                $children.Add($child)
+            }
+            catch {
+            }
+            try {
+                $child = $walker.GetNextSibling($child)
+            }
+            catch {
+                $child = $null
+            }
+        }
+        for ($index = $children.Count - 1; $index -ge 0; $index--) {
+            $pending.Push($children[$index])
+        }
+    }
+    return $null
+}
+
 function Get-UiPattern {
     param(
         [Parameter(Mandatory)]
@@ -313,6 +356,79 @@ function Set-UiTextValue {
     $valuePattern.SetValue($Value)
     Wait-ForCondition -Description "'$($Element.Current.Name)' to contain '$Value'" -Condition {
         $valuePattern.Current.Value -eq $Value
+    } | Out-Null
+}
+
+function Invoke-GuestPointerElement {
+    param(
+        [Parameter(Mandatory)]
+        [System.Windows.Automation.AutomationElement]$Window,
+        [Parameter(Mandatory)]
+        [System.Windows.Automation.AutomationElement]$Element
+    )
+
+    if ($Element.Current.ProcessId -ne $Window.Current.ProcessId) {
+        throw "Refusing to click '$($Element.Current.Name)' outside the Patternal process."
+    }
+    $windowBounds = $Window.Current.BoundingRectangle
+    $elementBounds = $Element.Current.BoundingRectangle
+    $x = [int][math]::Round($elementBounds.Left + ($elementBounds.Width / 2.0))
+    $y = [int][math]::Round($elementBounds.Top + ($elementBounds.Height / 2.0))
+    if ($x -lt $windowBounds.Left -or $x -gt $windowBounds.Right -or
+        $y -lt $windowBounds.Top -or $y -gt $windowBounds.Bottom) {
+        throw "Refusing to click '$($Element.Current.Name)' outside the Patternal window."
+    }
+    [void][PatternalGuestPointerInput]::BringToFront($Window.Current.NativeWindowHandle)
+    Start-Sleep -Milliseconds 100
+    [PatternalGuestPointerInput]::Click($x, $y)
+}
+
+function Start-PatternalUiSession {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Aumid,
+        [Parameter(Mandatory)]
+        [string]$ExpectedWindowTitle
+    )
+
+    Start-Process -FilePath explorer.exe -ArgumentList "shell:AppsFolder\$Aumid"
+    $launchedProcess = Wait-ForCondition -Description 'Patternal process' -TimeoutSeconds 60 -Condition {
+        Get-Process -Name Patternal -ErrorAction SilentlyContinue | Select-Object -First 1
+    }
+    $root = [System.Windows.Automation.AutomationElement]::RootElement
+    $launchedWindow = Wait-ForCondition -Description 'Patternal top-level window' -TimeoutSeconds 60 -Condition {
+        $nameCondition = [System.Windows.Automation.PropertyCondition]::new(
+            [System.Windows.Automation.AutomationElement]::NameProperty,
+            $ExpectedWindowTitle)
+        $root.FindFirst([System.Windows.Automation.TreeScope]::Children, $nameCondition)
+    }
+    $windowPattern = Get-UiPattern -Element $launchedWindow -Pattern ([System.Windows.Automation.WindowPattern]::Pattern) -PatternName 'WindowPattern'
+    $windowPattern.SetWindowVisualState([System.Windows.Automation.WindowVisualState]::Maximized)
+    Find-UiElement -Root $launchedWindow -Name 'Pattern workspace views' -TimeoutSeconds 60 | Out-Null
+    return [pscustomobject]@{
+        Process = $launchedProcess
+        Window = $launchedWindow
+    }
+}
+
+function Stop-PatternalUiSession {
+    param(
+        [Parameter(Mandatory)]
+        [System.Windows.Automation.AutomationElement]$Window,
+        [int]$ProcessId
+    )
+
+    try {
+        $windowPattern = Get-UiPattern -Element $Window -Pattern ([System.Windows.Automation.WindowPattern]::Pattern) -PatternName 'WindowPattern'
+        $windowPattern.Close()
+    }
+    catch {
+        if ($ProcessId -gt 0) {
+            Get-Process -Id $ProcessId -ErrorAction SilentlyContinue | Stop-Process -Force
+        }
+    }
+    Wait-ForCondition -Description 'Patternal process to exit' -TimeoutSeconds 30 -Condition {
+        -not (Get-Process -Name Patternal -ErrorAction SilentlyContinue)
     } | Out-Null
 }
 
@@ -470,6 +586,57 @@ function Save-WindowScreenshot {
     }
     finally {
         $graphics.Dispose()
+        $bitmap.Dispose()
+    }
+}
+
+function Assert-RenderedScreenshotRegion {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Path,
+        [Parameter(Mandatory)]
+        [System.Windows.Automation.AutomationElement]$Window,
+        [Parameter(Mandatory)]
+        [System.Windows.Automation.AutomationElement]$Element,
+        [Parameter(Mandatory)]
+        [string]$Description
+    )
+
+    $windowBounds = $Window.Current.BoundingRectangle
+    $elementBounds = $Element.Current.BoundingRectangle
+    $bitmap = [System.Drawing.Bitmap]::new($Path)
+    try {
+        $left = [int][math]::Max(0, [math]::Floor($elementBounds.Left - $windowBounds.Left + ($elementBounds.Width * 0.2)))
+        $top = [int][math]::Max(0, [math]::Floor($elementBounds.Top - $windowBounds.Top + ($elementBounds.Height * 0.2)))
+        $right = [int][math]::Min($bitmap.Width - 1, [math]::Ceiling($elementBounds.Right - $windowBounds.Left - ($elementBounds.Width * 0.2)))
+        $bottom = [int][math]::Min($bitmap.Height - 1, [math]::Ceiling($elementBounds.Bottom - $windowBounds.Top - ($elementBounds.Height * 0.2)))
+        if ($right -le $left -or $bottom -le $top) {
+            throw "$Description has invalid screenshot bounds."
+        }
+
+        $sampleStep = [int][math]::Max(8, [math]::Floor([math]::Min($right - $left, $bottom - $top) / 60))
+        $sampleCount = 0
+        $nonWhiteCount = 0
+        for ($y = $top; $y -le $bottom; $y += $sampleStep) {
+            for ($x = $left; $x -le $right; $x += $sampleStep) {
+                $pixel = $bitmap.GetPixel($x, $y)
+                $sampleCount++
+                if ($pixel.R -lt 235 -or $pixel.G -lt 235 -or $pixel.B -lt 235) {
+                    $nonWhiteCount++
+                }
+            }
+        }
+        $nonWhiteRatio = if ($sampleCount -gt 0) { $nonWhiteCount / $sampleCount } else { 0 }
+        if ($nonWhiteRatio -lt 0.05) {
+            throw "$Description is visually blank or has not repainted. Non-white sample ratio was $([math]::Round($nonWhiteRatio, 4))."
+        }
+        return [ordered]@{
+            sampledPixels = $sampleCount
+            nonWhitePixels = $nonWhiteCount
+            nonWhiteRatio = [math]::Round($nonWhiteRatio, 4)
+        }
+    }
+    finally {
         $bitmap.Dispose()
     }
 }
@@ -714,6 +881,7 @@ $script:uiTreeNodeCount = 0
 $startedAt = [DateTimeOffset]::UtcNow
 $window = $null
 $process = $null
+$script:finalWindow = $null
 $fatalError = $null
 $fatalErrorType = $null
 $fatalScriptStackTrace = $null
@@ -728,20 +896,10 @@ try {
     Add-ActionResult -Name 'Guest display resolution' -Passed $true -Details ([ordered]@{ width = $screen.Width; height = $screen.Height }) -ErrorMessage $null
 
     Get-Process -Name Patternal -ErrorAction SilentlyContinue | Stop-Process -Force
-    Start-Process -FilePath explorer.exe -ArgumentList "shell:AppsFolder\$($request.aumid)"
-    $process = Wait-ForCondition -Description 'Patternal process' -TimeoutSeconds 60 -Condition {
-        Get-Process -Name Patternal -ErrorAction SilentlyContinue | Select-Object -First 1
-    }
+    $launchedSession = Start-PatternalUiSession -Aumid $request.aumid -ExpectedWindowTitle $request.expectedWindowTitle
+    $process = $launchedSession.Process
+    $window = $launchedSession.Window
     $automationRoot = [System.Windows.Automation.AutomationElement]::RootElement
-    $window = Wait-ForCondition -Description 'Patternal top-level window' -TimeoutSeconds 60 -Condition {
-        $nameCondition = [System.Windows.Automation.PropertyCondition]::new(
-            [System.Windows.Automation.AutomationElement]::NameProperty,
-            [string]$request.expectedWindowTitle)
-        $automationRoot.FindFirst([System.Windows.Automation.TreeScope]::Children, $nameCondition)
-    }
-    $windowPattern = Get-UiPattern -Element $window -Pattern ([System.Windows.Automation.WindowPattern]::Pattern) -PatternName 'WindowPattern'
-    $windowPattern.SetWindowVisualState([System.Windows.Automation.WindowVisualState]::Maximized)
-    Find-UiElement -Root $window -Name 'Pattern workspace views' -TimeoutSeconds 60 | Out-Null
     Add-ActionResult -Name 'Packaged launch' -Passed $true -Details ([ordered]@{ processId = $process.Id; title = $window.Current.Name; responsive = $process.Responding }) -ErrorMessage $null
 
     Start-Sleep -Seconds 2
@@ -752,7 +910,47 @@ try {
     $script:uiTreeNodeCount = 0
     Convert-UiTreeNode -Element $window | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath (Join-Path $evidenceDirectory 'ui-tree-2d.json') -Encoding utf8
 
-    Invoke-ThreeDimensionalChecks -Window $window -EvidenceDirectory $evidenceDirectory
+    Invoke-UiCheck -Name 'Dedicated test profile reset to bundled baseline' -Check {
+        $preResetHeight = Find-UiElement -Root $window -Name 'Height in centimeters'
+        $preResetHeightRange = Get-UiPattern -Element $preResetHeight -Pattern ([System.Windows.Automation.RangeValuePattern]::Pattern) -PatternName 'RangeValuePattern'
+        $preResetLink = Find-UiElement -Root $window -Name 'Link proportional measurements'
+        Set-ToggleState -Element $preResetLink -State 'Off'
+        $disturbedHeight = if ([double]$preResetHeightRange.Current.Value + 0.5 -le [double]$preResetHeightRange.Current.Maximum) {
+            [double]$preResetHeightRange.Current.Value + 0.5
+        }
+        else {
+            [double]$preResetHeightRange.Current.Value - 0.5
+        }
+        $preResetHeightRange.SetValue($disturbedHeight)
+        Wait-ForCondition -Description 'deliberately disturbed test profile height' -Condition {
+            [math]::Abs([double]$preResetHeightRange.Current.Value - $disturbedHeight) -lt 0.001
+        } | Out-Null
+
+        $newPattern = Find-UiElementByAutomationId -Root $window -AutomationId 'NewPatternButton'
+        Invoke-GuestPointerElement -Window $window -Element $newPattern
+        $confirmNewPattern = Find-UiElement -Root $window -Name 'Create pattern'
+        Invoke-GuestPointerElement -Window $window -Element $confirmNewPattern
+        $baselineHeight = Find-UiElement -Root $window -Name 'Height in centimeters'
+        $baselineHeightRange = Get-UiPattern -Element $baselineHeight -Pattern ([System.Windows.Automation.RangeValuePattern]::Pattern) -PatternName 'RangeValuePattern'
+        $baselineLink = Find-UiElement -Root $window -Name 'Link proportional measurements'
+        Wait-ForCondition -Description 'New to restore the bundled test profile' -Condition {
+            if ([math]::Abs([double]$baselineHeightRange.Current.Value - 167) -lt 0.001 -and
+                (Get-ToggleState -Element $baselineLink) -eq 'On') {
+                $true
+            }
+            else {
+                $null
+            }
+        } | Out-Null
+        [ordered]@{
+            deliberatelyDisturbedHeight = $disturbedHeight
+            restoredHeight = [double]$baselineHeightRange.Current.Value
+            linkedProportions = Get-ToggleState -Element $baselineLink
+        }
+    }
+
+    if ($request.mode -ne 'persistence-only') {
+        Invoke-ThreeDimensionalChecks -Window $window -EvidenceDirectory $evidenceDirectory
 
     Invoke-UiCheck -Name '2D zoom controls round trip' -Check {
         $zoomOut = Find-UiElementByAutomationId -Root $window -AutomationId 'PatternZoomOutButton'
@@ -1661,34 +1859,48 @@ try {
                 $currentName = $avatarState.Current.Name
                 if ($currentName -like 'Avatar preview: editable measurement mesh*') { $currentName } else { $null }
             }
-            Start-Sleep -Milliseconds 1500
+            $fitCamera = Find-UiElementByAutomationId -Root $window -AutomationId 'DrapeFitCameraButton' -TimeoutSeconds 120
+            Invoke-UiElement -Element $fitCamera
+            Start-Sleep -Seconds 4
             $changedShotPath = Join-Path $evidenceDirectory '15-3d-edited-measurement-avatar.png'
             Save-WindowScreenshot -Window $window -Path $changedShotPath
+            $drapeViewport = Find-UiElement -Root $window -Name 'Internal browser cloth diagnostic'
+            $changedRendering = Assert-RenderedScreenshotRegion -Path $changedShotPath -Window $window -Element $drapeViewport -Description 'Edited measurement avatar viewport'
             $script:screenshots.Add([pscustomobject]@{ name = '3d-edited-measurement-avatar'; file = [IO.Path]::GetFileName($changedShotPath) })
         }
         finally {
-            $heightRange.SetValue($originalHeight)
-            Wait-ForCondition -Description 'height slider to restore after 3D avatar proof' -Condition {
-                [math]::Abs([double]$heightRange.Current.Value - $originalHeight) -lt 0.001
-            } | Out-Null
-            Invoke-UiElement -Element $tab3d
-            $avatarState = Find-UiElementByAutomationId -Root $window -AutomationId 'DrapeAvatarPreviewState' -TimeoutSeconds 120
-            $restoredState = Wait-ForCondition -Description '3D preview to restore the fitted Antonia candidate' -TimeoutSeconds 120 -Condition {
-                $currentName = $avatarState.Current.Name
-                if ($currentName -like 'Avatar preview: fitted Antonia candidate*') { $currentName } else { $null }
+            try {
+                $heightRange.SetValue($originalHeight)
+                Wait-ForCondition -Description 'height slider to restore after 3D avatar proof' -Condition {
+                    [math]::Abs([double]$heightRange.Current.Value - $originalHeight) -lt 0.001
+                } | Out-Null
+                Invoke-UiElement -Element $tab3d
+                $avatarState = Find-UiElementByAutomationId -Root $window -AutomationId 'DrapeAvatarPreviewState' -TimeoutSeconds 120
+                $restoredState = Wait-ForCondition -Description '3D preview to restore the fitted Antonia candidate' -TimeoutSeconds 120 -Condition {
+                    $currentName = $avatarState.Current.Name
+                    if ($currentName -like 'Avatar preview: fitted Antonia candidate*') { $currentName } else { $null }
+                }
+                $fitCamera = Find-UiElementByAutomationId -Root $window -AutomationId 'DrapeFitCameraButton' -TimeoutSeconds 120
+                Invoke-UiElement -Element $fitCamera
+                Start-Sleep -Seconds 4
+                $restoredShotPath = Join-Path $evidenceDirectory '16-3d-restored-fitted-avatar.png'
+                Save-WindowScreenshot -Window $window -Path $restoredShotPath
+                $drapeViewport = Find-UiElement -Root $window -Name 'Internal browser cloth diagnostic'
+                $restoredRendering = Assert-RenderedScreenshotRegion -Path $restoredShotPath -Window $window -Element $drapeViewport -Description 'Restored fitted avatar viewport'
+                $script:screenshots.Add([pscustomobject]@{ name = '3d-restored-fitted-avatar'; file = [IO.Path]::GetFileName($restoredShotPath) })
             }
-            Start-Sleep -Milliseconds 1500
-            $restoredShotPath = Join-Path $evidenceDirectory '16-3d-restored-fitted-avatar.png'
-            Save-WindowScreenshot -Window $window -Path $restoredShotPath
-            $script:screenshots.Add([pscustomobject]@{ name = '3d-restored-fitted-avatar'; file = [IO.Path]::GetFileName($restoredShotPath) })
-            Invoke-UiElement -Element $tab2d
-            Find-UiElement -Root $window -Name 'Interactive two dimensional pattern layout' | Out-Null
+            finally {
+                Invoke-UiElement -Element $tab2d
+                Find-UiElement -Root $window -Name 'Interactive two dimensional pattern layout' | Out-Null
+            }
         }
         [ordered]@{
             originalHeight = $originalHeight
             changedHeight = $changedHeight
             changedState = $changedState
             restoredState = $restoredState
+            changedRendering = $changedRendering
+            restoredRendering = $restoredRendering
             changedScreenshot = [IO.Path]::GetFileName($changedShotPath)
             restoredScreenshot = [IO.Path]::GetFileName($restoredShotPath)
         }
@@ -1748,6 +1960,181 @@ try {
         Set-ToggleState -Element $editMode -State $editOriginal
         [ordered]@{ original = $originalReverse; changed = $changedReverse; restoredAfterUndo = $originalReverse }
     }
+    }
+
+    Invoke-UiCheck -Name 'SVG export through packaged file picker' -Check {
+        $exportPath = Join-Path $evidenceDirectory 'pattern-round-trip.svg'
+        $documentsDirectory = [Environment]::GetFolderPath([Environment+SpecialFolder]::MyDocuments)
+        $pickerFileName = "pattern-round-trip-$($request.runId).svg"
+        $pickerPath = Join-Path $documentsDirectory $pickerFileName
+        if (Test-Path -LiteralPath $exportPath) {
+            throw "Refusing to overwrite existing export evidence: $exportPath"
+        }
+        if (Test-Path -LiteralPath $pickerPath) {
+            throw "Refusing to overwrite existing picker export: $pickerPath"
+        }
+        $saveDialog = $null
+        $pickerCompleted = $false
+        try {
+            $exportButton = Find-UiElementByAutomationId -Root $window -AutomationId 'ExportPatternButton'
+            Invoke-GuestPointerElement -Window $window -Element $exportButton
+            $saveDialog = Find-UiElement -Root $automationRoot -Name 'Save As' -TimeoutSeconds 30
+            $fileNameHost = Find-UiDescendantByAutomationId -Root $saveDialog -AutomationId 'FileNameControlHost'
+            if (-not $fileNameHost) {
+                $script:uiTreeNodeCount = 0
+                Convert-UiTreeNode -Element $saveDialog |
+                    ConvertTo-Json -Depth 20 |
+                    Set-Content -LiteralPath (Join-Path $evidenceDirectory 'ui-tree-save-as-unexpected.json') -Encoding utf8
+                throw 'The packaged SVG picker did not expose its file-name field.'
+            }
+            $fileNameEdit = [System.Windows.Automation.TreeWalker]::ControlViewWalker.GetFirstChild($fileNameHost)
+            if (-not $fileNameEdit) {
+                throw 'The packaged SVG picker file-name host did not expose its editable child.'
+            }
+            $fileNameEdit.SetFocus()
+            Start-Sleep -Milliseconds 100
+            [System.Windows.Forms.SendKeys]::SendWait('^a')
+            [System.Windows.Forms.SendKeys]::SendWait($pickerFileName)
+            Start-Sleep -Milliseconds 150
+            Invoke-GuestPointerElement -Window $saveDialog -Element (Find-UiElement -Root $saveDialog -Name 'Save')
+            Wait-ForCondition -Description 'packaged SVG export file' -TimeoutSeconds 30 -Condition {
+                Test-Path -LiteralPath $pickerPath
+            } | Out-Null
+            $pickerCompleted = $true
+            Copy-Item -LiteralPath $pickerPath -Destination $exportPath
+        }
+        finally {
+            if (-not $pickerCompleted -and $saveDialog) {
+                try {
+                    $pickerWindowPattern = Get-UiPattern -Element $saveDialog -Pattern ([System.Windows.Automation.WindowPattern]::Pattern) -PatternName 'WindowPattern'
+                    $pickerWindowPattern.Close()
+                    Wait-ForCondition -Description 'failed SVG picker to close' -TimeoutSeconds 10 -Condition {
+                        -not (Find-UiElementOnce -Root $automationRoot -Name 'Save As')
+                    } | Out-Null
+                }
+                catch {
+                    try {
+                        Invoke-GuestPointerElement -Window $saveDialog -Element (Find-UiElement -Root $saveDialog -Name 'Cancel' -TimeoutSeconds 5)
+                    }
+                    catch {
+                    }
+                }
+            }
+            if (Test-Path -LiteralPath $pickerPath) {
+                Remove-Item -LiteralPath $pickerPath -Force
+            }
+        }
+        Find-UiElement -Root $window -Name 'Pattern exported' | Out-Null
+        $svg = Get-Content -LiteralPath $exportPath -Raw
+        if ($svg -notlike '*<svg*' -or
+            $svg -notlike '*Patternal patterna.garment/1.1*' -or
+            $svg -notlike '*14 simulation panels*' -or
+            $svg -notlike '*38 seams*') {
+            throw 'The packaged SVG export is missing its expected document or construction metadata.'
+        }
+        [ordered]@{
+            file = [IO.Path]::GetFileName($exportPath)
+            bytes = (Get-Item -LiteralPath $exportPath).Length
+            panels = 14
+            seams = 38
+        }
+    }
+
+    Invoke-UiCheck -Name 'Local snapshot save and startup restore round trip' -Check {
+        $activeWindow = Wait-ForCondition -Description 'Patternal window after SVG picker' -TimeoutSeconds 30 -Condition {
+            $nameCondition = [System.Windows.Automation.PropertyCondition]::new(
+                [System.Windows.Automation.AutomationElement]::NameProperty,
+                [string]$request.expectedWindowTitle)
+            $automationRoot.FindFirst([System.Windows.Automation.TreeScope]::Children, $nameCondition)
+        }
+        $activeProcess = Get-Process -Name Patternal -ErrorAction Stop | Select-Object -First 1
+        $height = Find-UiElement -Root $activeWindow -Name 'Height in centimeters'
+        $heightRange = Get-UiPattern -Element $height -Pattern ([System.Windows.Automation.RangeValuePattern]::Pattern) -PatternName 'RangeValuePattern'
+        $originalHeight = [double]$heightRange.Current.Value
+        $testHeight = if ($originalHeight + 0.5 -le [double]$heightRange.Current.Maximum) {
+            $originalHeight + 0.5
+        }
+        else {
+            $originalHeight - 0.5
+        }
+        $link = Find-UiElement -Root $activeWindow -Name 'Link proportional measurements'
+        $originalLink = Get-ToggleState -Element $link
+        $testSnapshotWasSaved = $false
+        try {
+            Set-ToggleState -Element $link -State 'Off'
+            $heightRange.SetValue($testHeight)
+            Wait-ForCondition -Description 'snapshot test height' -Condition {
+                [math]::Abs([double]$heightRange.Current.Value - $testHeight) -lt 0.001
+            } | Out-Null
+            Invoke-UiElement -Element (Find-UiElementByAutomationId -Root $activeWindow -AutomationId 'SavePatternSnapshotButton')
+            Find-UiElement -Root $activeWindow -Name 'Snapshot saved' | Out-Null
+            $testSnapshotWasSaved = $true
+
+            Stop-PatternalUiSession -Window $activeWindow -ProcessId $activeProcess.Id
+            $restoredSession = Start-PatternalUiSession -Aumid $request.aumid -ExpectedWindowTitle $request.expectedWindowTitle
+            $activeWindow = $restoredSession.Window
+            $activeProcess = $restoredSession.Process
+            $restoredHeight = Find-UiElement -Root $activeWindow -Name 'Height in centimeters'
+            $restoredHeightRange = Get-UiPattern -Element $restoredHeight -Pattern ([System.Windows.Automation.RangeValuePattern]::Pattern) -PatternName 'RangeValuePattern'
+            if ([math]::Abs([double]$restoredHeightRange.Current.Value - $testHeight) -ge 0.001) {
+                throw "Saved height $testHeight did not restore after packaged relaunch."
+            }
+            $observedRestoredHeight = [double]$restoredHeightRange.Current.Value
+            $restoredLink = Find-UiElement -Root $activeWindow -Name 'Link proportional measurements'
+            if ((Get-ToggleState -Element $restoredLink) -ne 'Off') {
+                throw 'The saved link-proportions state did not restore after packaged relaunch.'
+            }
+
+            $restoredHeightRange.SetValue($originalHeight)
+            Wait-ForCondition -Description 'original snapshot height' -Condition {
+                [math]::Abs([double]$restoredHeightRange.Current.Value - $originalHeight) -lt 0.001
+            } | Out-Null
+            Set-ToggleState -Element $restoredLink -State $originalLink
+            Invoke-UiElement -Element (Find-UiElementByAutomationId -Root $activeWindow -AutomationId 'SavePatternSnapshotButton')
+            Find-UiElement -Root $activeWindow -Name 'Snapshot saved' | Out-Null
+
+            Stop-PatternalUiSession -Window $activeWindow -ProcessId $activeProcess.Id
+            $finalSession = Start-PatternalUiSession -Aumid $request.aumid -ExpectedWindowTitle $request.expectedWindowTitle
+            $activeWindow = $finalSession.Window
+            $activeProcess = $finalSession.Process
+            $finalHeight = Find-UiElement -Root $activeWindow -Name 'Height in centimeters'
+            $finalHeightRange = Get-UiPattern -Element $finalHeight -Pattern ([System.Windows.Automation.RangeValuePattern]::Pattern) -PatternName 'RangeValuePattern'
+            if ([math]::Abs([double]$finalHeightRange.Current.Value - $originalHeight) -ge 0.001) {
+                throw 'The original snapshot height did not survive the cleanup relaunch.'
+            }
+            $finalLink = Find-UiElement -Root $activeWindow -Name 'Link proportional measurements'
+            if ((Get-ToggleState -Element $finalLink) -ne $originalLink) {
+                throw 'The original link-proportions state did not survive the cleanup relaunch.'
+            }
+            $script:finalWindow = $activeWindow
+            $snapshotShotPath = Join-Path $evidenceDirectory '15-local-snapshot-restored.png'
+            Save-WindowScreenshot -Window $activeWindow -Path $snapshotShotPath
+            $script:screenshots.Add([pscustomobject]@{ name = 'local-snapshot-restored'; file = [IO.Path]::GetFileName($snapshotShotPath) })
+            [ordered]@{
+                originalHeight = $originalHeight
+                savedHeight = $testHeight
+                restoredHeight = $observedRestoredHeight
+                cleanupHeight = [double]$finalHeightRange.Current.Value
+                linkState = $originalLink
+                screenshot = [IO.Path]::GetFileName($snapshotShotPath)
+            }
+        }
+        finally {
+            if ($testSnapshotWasSaved -and -not $script:finalWindow -and $activeWindow) {
+                try {
+                    $cleanupHeight = Find-UiElement -Root $activeWindow -Name 'Height in centimeters' -TimeoutSeconds 5
+                    $cleanupHeightRange = Get-UiPattern -Element $cleanupHeight -Pattern ([System.Windows.Automation.RangeValuePattern]::Pattern) -PatternName 'RangeValuePattern'
+                    $cleanupHeightRange.SetValue($originalHeight)
+                    $cleanupLink = Find-UiElement -Root $activeWindow -Name 'Link proportional measurements' -TimeoutSeconds 5
+                    Set-ToggleState -Element $cleanupLink -State $originalLink
+                    Invoke-UiElement -Element (Find-UiElementByAutomationId -Root $activeWindow -AutomationId 'SavePatternSnapshotButton' -TimeoutSeconds 5)
+                    $script:finalWindow = $activeWindow
+                }
+                catch {
+                }
+            }
+        }
+    }
 
 }
 catch {
@@ -1773,9 +2160,10 @@ catch {
     }
 }
 finally {
-    if ($window -and -not [bool]$request.keepAppOpen) {
+    $windowToClose = if ($script:finalWindow) { $script:finalWindow } else { $window }
+    if ($windowToClose -and -not [bool]$request.keepAppOpen) {
         try {
-            $closePattern = Get-UiPattern -Element $window -Pattern ([System.Windows.Automation.WindowPattern]::Pattern) -PatternName 'WindowPattern'
+            $closePattern = Get-UiPattern -Element $windowToClose -Pattern ([System.Windows.Automation.WindowPattern]::Pattern) -PatternName 'WindowPattern'
             $closePattern.Close()
         }
         catch {

@@ -1768,8 +1768,14 @@
         if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height;} gl.viewport(0,0,width,height);
       }
 
-      let previous=performance.now();
-      function render(now) {
+      let previous=performance.now(),renderGeneration=0;
+      function startRenderLoop() {
+        const generation=++renderGeneration;
+        previous=performance.now();
+        requestAnimationFrame(now=>render(now,generation));
+      }
+      function render(now,generation) {
+        if(generation!==renderGeneration)return;
         resize(); const delta=Math.min((now-previous)/1000,.05);previous=now;
         if(state.autoRotate&&!state.dragging) {
           state.yaw+=delta*.12;
@@ -1814,7 +1820,13 @@
           drawMesh(state.garmentSeams,seamColor,true,now,mvp,model,null,.9);
           drawMesh(state.garmentEdges,edgeColor,true,now,mvp,model,null,.88);
         }
-        gl.bindVertexArray(null);requestAnimationFrame(render);
+        gl.bindVertexArray(null);requestAnimationFrame(next=>render(next,generation));
+      }
+
+      function ensureRendering() {
+        const contextLost=gl.isContextLost();
+        if(!contextLost){resize();startRenderLoop();}
+        return {contextLost,width:canvas.width,height:canvas.height};
       }
 
       canvas.addEventListener('pointerdown',event=>{state.dragging=true;state.lastX=event.clientX;state.lastY=event.clientY;canvas.setPointerCapture(event.pointerId);});
@@ -1854,6 +1866,7 @@
         setCameraView(viewName){return setCameraView(viewName);},
         setCameraYaw(degrees){state.targetYaw=Number(degrees)*Math.PI/180;state.targetPitch=.01;},
         resetCamera(){setCameraView('fit');},
+        ensureRendering(){return ensureRendering();},
         runSimulation(){exciteCloth(state.cloth);}
       };
 
@@ -1861,7 +1874,7 @@
       state.grid=gpuMesh(floorGrid(),gl.LINES);
       loadDetailedHuman();
       refreshEditableDefaultAvatar();
-      requestAnimationFrame(render);
+      startRenderLoop();
     })();
   </script>
 </body>

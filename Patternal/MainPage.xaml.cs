@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
+using System.IO;
 using System.Text;
 using System.Text.Json;
 using Microsoft.UI;
@@ -41,6 +42,8 @@ public sealed partial class MainPage : Page
     private const double DefaultUpperArmEase = 5;
     private const double DefaultArmscyeEase = 2.5;
     private const int BustShapingDefaultVersion = 2;
+    private const int SavedPatternPayloadVersion = 1;
+    private const string SavedPatternPayloadFileName = "saved-pattern-payload.json";
     private const int DefaultBodyTemplateIndex = 1;
     private const string AdaptiveShirtTemplate = "adaptive-shirt";
     private const string WrapDressTemplate = "wrap-dress";
@@ -3554,6 +3557,7 @@ public sealed partial class MainPage : Page
 
     private async void OnImportPhotosClicked(object sender, RoutedEventArgs e)
     {
+        await Task.Yield();
         FileOpenPicker picker = new();
         picker.FileTypeFilter.Add(".jpg");
         picker.FileTypeFilter.Add(".jpeg");
@@ -3953,51 +3957,107 @@ public sealed partial class MainPage : Page
 
     private void OnSavePatternClicked(object sender, RoutedEventArgs e)
     {
-        ApplicationDataContainer settings = ApplicationData.Current.LocalSettings;
-        settings.Values["Height"] = HeightSlider.Value;
-        settings.Values["Chest"] = ChestSlider.Value;
-        settings.Values["Waist"] = WaistSlider.Value;
-        settings.Values["Hip"] = HipSlider.Value;
-        settings.Values["Shoulder"] = ShoulderSlider.Value;
-        settings.Values["Torso"] = TorsoSlider.Value;
-        settings.Values["Posture"] = PostureComboBox.SelectedIndex;
-        settings.Values["BodyTemplate"] = BodyTemplateComboBox.SelectedIndex;
-        settings.Values["LinkedProportions"] = LinkProportionsToggle.IsOn;
-        settings.Values["ShowFittedBra"] = ShowBraToggle.IsOn;
-        settings.Values["DetailedMeasurements"] = JsonSerializer.Serialize(
-            MeasurementGroups.SelectMany(group => group.Measurements).ToDictionary(item => item.Key, item => item.Value));
-        settings.Values["DetailedMeasurementOverrides"] = JsonSerializer.Serialize(
-            MeasurementGroups.SelectMany(group => group.Measurements).ToDictionary(item => item.Key, item => item.IsUserOverride));
-        settings.Values["CustomMeasurements"] = JsonSerializer.Serialize(
-            CustomMeasurements.Select(item => new SavedCustomMeasurement(item.Name, item.Value, item.Unit)).ToArray());
-        settings.Values["Fabric"] = FabricPresetComboBox.SelectedIndex;
-        settings.Values["GarmentTemplate"] = _garmentTemplateKey;
-        settings.Values["ChestEase"] = ChestEaseNumberBox.Value;
-        settings.Values["WaistEase"] = WaistEaseNumberBox.Value;
-        settings.Values["HipEase"] = HipEaseNumberBox.Value;
-        settings.Values["UpperArmEase"] = UpperArmEaseNumberBox.Value;
-        settings.Values["ArmscyeEase"] = ArmscyeEaseNumberBox.Value;
-        ShirtConstructionProfileDocument construction = CurrentShirtConstructionProfile();
-        settings.Values["ShirtConstructionProfile"] = JsonSerializer.Serialize(
-            construction,
-            GarmentJsonOptions);
-        settings.Values["ShirtBustShapingProfile"] = JsonSerializer.Serialize(
-            CurrentShirtBustShapingProfile(),
-            GarmentJsonOptions);
-        settings.Values["BustShapingDefaultVersion"] = BustShapingDefaultVersion;
-        settings.Values["PatternPointOffsets"] = JsonSerializer.Serialize(_patternPointOffsets, GarmentJsonOptions);
-        settings.Values["PatternStructuralEdits"] = JsonSerializer.Serialize(_patternStructuralEdits, GarmentJsonOptions);
-        settings.Values["SeamSideBReverseOverrides"] = JsonSerializer.Serialize(_seamSideBReverseOverrides, GarmentJsonOptions);
-        settings.Values["ClosureStateOverrides"] = JsonSerializer.Serialize(_closureStateOverrides, GarmentJsonOptions);
-        _garmentDocument = BuildCurrentGarmentDocument();
-        settings.Values["GarmentDocument"] = JsonSerializer.Serialize(_garmentDocument, GarmentJsonOptions);
-        settings.Values["SavedAt"] = DateTimeOffset.Now.ToString("O", CultureInfo.InvariantCulture);
-        ShowStatus("Snapshot saved", "Measurements, avatar display options, fabric physics, pattern curves, panel placements, seams, and closure states are stored locally.", InfoBarSeverity.Success);
+        try
+        {
+            ApplicationDataContainer settings = ApplicationData.Current.LocalSettings;
+            Dictionary<string, string> payloadValues = new(StringComparer.Ordinal)
+            {
+                ["DetailedMeasurements"] = JsonSerializer.Serialize(
+                    MeasurementGroups.SelectMany(group => group.Measurements).ToDictionary(item => item.Key, item => item.Value)),
+                ["DetailedMeasurementOverrides"] = JsonSerializer.Serialize(
+                    MeasurementGroups.SelectMany(group => group.Measurements).ToDictionary(item => item.Key, item => item.IsUserOverride)),
+                ["CustomMeasurements"] = JsonSerializer.Serialize(
+                    CustomMeasurements.Select(item => new SavedCustomMeasurement(item.Name, item.Value, item.Unit)).ToArray()),
+                ["ShirtConstructionProfile"] = JsonSerializer.Serialize(CurrentShirtConstructionProfile(), GarmentJsonOptions),
+                ["ShirtBustShapingProfile"] = JsonSerializer.Serialize(CurrentShirtBustShapingProfile(), GarmentJsonOptions),
+                ["PatternPointOffsets"] = JsonSerializer.Serialize(_patternPointOffsets, GarmentJsonOptions),
+                ["PatternStructuralEdits"] = JsonSerializer.Serialize(_patternStructuralEdits, GarmentJsonOptions),
+                ["SeamSideBReverseOverrides"] = JsonSerializer.Serialize(_seamSideBReverseOverrides, GarmentJsonOptions),
+                ["ClosureStateOverrides"] = JsonSerializer.Serialize(_closureStateOverrides, GarmentJsonOptions)
+            };
+            WriteSavedPatternPayload(new SavedPatternPayload(SavedPatternPayloadVersion, payloadValues));
+
+            settings.Values["Height"] = HeightSlider.Value;
+            settings.Values["Chest"] = ChestSlider.Value;
+            settings.Values["Waist"] = WaistSlider.Value;
+            settings.Values["Hip"] = HipSlider.Value;
+            settings.Values["Shoulder"] = ShoulderSlider.Value;
+            settings.Values["Torso"] = TorsoSlider.Value;
+            settings.Values["Posture"] = PostureComboBox.SelectedIndex;
+            settings.Values["BodyTemplate"] = BodyTemplateComboBox.SelectedIndex;
+            settings.Values["LinkedProportions"] = LinkProportionsToggle.IsOn;
+            settings.Values["ShowFittedBra"] = ShowBraToggle.IsOn;
+            settings.Values["Fabric"] = FabricPresetComboBox.SelectedIndex;
+            settings.Values["GarmentTemplate"] = _garmentTemplateKey;
+            settings.Values["ChestEase"] = ChestEaseNumberBox.Value;
+            settings.Values["WaistEase"] = WaistEaseNumberBox.Value;
+            settings.Values["HipEase"] = HipEaseNumberBox.Value;
+            settings.Values["UpperArmEase"] = UpperArmEaseNumberBox.Value;
+            settings.Values["ArmscyeEase"] = ArmscyeEaseNumberBox.Value;
+            settings.Values["BustShapingDefaultVersion"] = BustShapingDefaultVersion;
+            settings.Values["SavedAt"] = DateTimeOffset.Now.ToString("O", CultureInfo.InvariantCulture);
+
+            foreach (string legacyPayloadKey in payloadValues.Keys.Append("GarmentDocument"))
+            {
+                settings.Values.Remove(legacyPayloadKey);
+            }
+
+            _garmentDocument = BuildCurrentGarmentDocument();
+            ShowStatus("Snapshot saved", "Measurements, avatar display options, fabric physics, pattern curves, panel placements, seams, and closure states are stored locally.", InfoBarSeverity.Success);
+        }
+        catch (Exception exception)
+        {
+            ShowStatus("Snapshot save failed", $"Patterna could not store this local snapshot. {exception.Message}", InfoBarSeverity.Error);
+        }
+    }
+
+    private static void WriteSavedPatternPayload(SavedPatternPayload payload)
+    {
+        string payloadPath = System.IO.Path.Combine(ApplicationData.Current.LocalFolder.Path, SavedPatternPayloadFileName);
+        string temporaryPath = payloadPath + ".tmp";
+        try
+        {
+            File.WriteAllText(temporaryPath, JsonSerializer.Serialize(payload, GarmentJsonOptions));
+            File.Move(temporaryPath, payloadPath, true);
+        }
+        finally
+        {
+            if (File.Exists(temporaryPath))
+            {
+                File.Delete(temporaryPath);
+            }
+        }
+    }
+
+    private static SavedPatternPayload? ReadSavedPatternPayload()
+    {
+        string payloadPath = System.IO.Path.Combine(ApplicationData.Current.LocalFolder.Path, SavedPatternPayloadFileName);
+        if (!File.Exists(payloadPath))
+        {
+            return null;
+        }
+
+        try
+        {
+            SavedPatternPayload? payload = JsonSerializer.Deserialize<SavedPatternPayload>(
+                File.ReadAllText(payloadPath),
+                GarmentJsonOptions);
+            return payload is { Version: SavedPatternPayloadVersion, Values: not null }
+                ? payload
+                : null;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
+        {
+            return null;
+        }
     }
 
     private void RestoreSnapshot()
     {
         ApplicationDataContainer settings = ApplicationData.Current.LocalSettings;
+        SavedPatternPayload? savedPayload = ReadSavedPatternPayload();
+        string? ReadPayloadValue(string key) =>
+            savedPayload?.Values.GetValueOrDefault(key) ?? settings.Values[key] as string;
         if (settings.Values["GarmentTemplate"] is string garmentTemplate &&
             garmentTemplate is AdaptiveShirtTemplate or WrapDressTemplate)
         {
@@ -4021,7 +4081,7 @@ public sealed partial class MainPage : Page
             HipEaseNumberBox.Value = ReadDouble(settings, "HipEase", DefaultHipEase);
             UpperArmEaseNumberBox.Value = ReadDouble(settings, "UpperArmEase", DefaultUpperArmEase);
             ArmscyeEaseNumberBox.Value = ReadDouble(settings, "ArmscyeEase", DefaultArmscyeEase);
-            if (settings.Values["ShirtConstructionProfile"] is string constructionJson)
+            if (ReadPayloadValue("ShirtConstructionProfile") is string constructionJson)
             {
                 try
                 {
@@ -4041,7 +4101,7 @@ public sealed partial class MainPage : Page
                     // Keep source-block defaults when a saved construction profile is unreadable.
                 }
             }
-            if (settings.Values["ShirtBustShapingProfile"] is string bustShapingJson)
+            if (ReadPayloadValue("ShirtBustShapingProfile") is string bustShapingJson)
             {
                 try
                 {
@@ -4073,12 +4133,12 @@ public sealed partial class MainPage : Page
                 }
             }
 
-            if (settings.Values["DetailedMeasurements"] is string detailedJson)
+            if (ReadPayloadValue("DetailedMeasurements") is string detailedJson)
             {
                 try
                 {
                     Dictionary<string, double>? savedValues = JsonSerializer.Deserialize<Dictionary<string, double>>(detailedJson);
-                    Dictionary<string, bool>? savedOverrides = settings.Values["DetailedMeasurementOverrides"] is string overridesJson
+                    Dictionary<string, bool>? savedOverrides = ReadPayloadValue("DetailedMeasurementOverrides") is string overridesJson
                         ? JsonSerializer.Deserialize<Dictionary<string, bool>>(overridesJson)
                         : null;
                     if (savedValues is not null)
@@ -4096,7 +4156,7 @@ public sealed partial class MainPage : Page
                 }
             }
 
-            if (settings.Values["CustomMeasurements"] is string customJson)
+            if (ReadPayloadValue("CustomMeasurements") is string customJson)
             {
                 try
                 {
@@ -4117,7 +4177,7 @@ public sealed partial class MainPage : Page
             }
         }
 
-        if (settings.Values["PatternPointOffsets"] is string offsetsJson)
+        if (ReadPayloadValue("PatternPointOffsets") is string offsetsJson)
         {
             try
             {
@@ -4134,7 +4194,7 @@ public sealed partial class MainPage : Page
             }
         }
 
-        if (settings.Values["PatternStructuralEdits"] is string structuralEditsJson)
+        if (ReadPayloadValue("PatternStructuralEdits") is string structuralEditsJson)
         {
             try
             {
@@ -4152,7 +4212,7 @@ public sealed partial class MainPage : Page
             }
         }
 
-        if (settings.Values["SeamSideBReverseOverrides"] is string seamOverridesJson)
+        if (ReadPayloadValue("SeamSideBReverseOverrides") is string seamOverridesJson)
         {
             try
             {
@@ -4173,7 +4233,7 @@ public sealed partial class MainPage : Page
             }
         }
 
-        if (settings.Values["ClosureStateOverrides"] is string closureOverridesJson)
+        if (ReadPayloadValue("ClosureStateOverrides") is string closureOverridesJson)
         {
             try
             {
@@ -4278,6 +4338,7 @@ public sealed partial class MainPage : Page
 
     private async void OnExportClicked(object sender, RoutedEventArgs e)
     {
+        await Task.Yield();
         FileSavePicker picker = new()
         {
             SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
@@ -5805,6 +5866,36 @@ public sealed partial class MainPage : Page
     private void OnWorkspaceTabsSizeChanged(object sender, SizeChangedEventArgs e)
         => UpdateDrapeSurfaceHeight();
 
+    private async void OnWorkspaceTabsSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (WorkspaceTabs.SelectedIndex != 1 || !_webReady || DrapeWebView.CoreWebView2 is null)
+        {
+            return;
+        }
+
+        await Task.Yield();
+        try
+        {
+            string renderingStateJson = await DrapeWebView.ExecuteScriptAsync(
+                "window.patterna?.ensureRendering?.() ?? null;");
+            using JsonDocument renderingState = JsonDocument.Parse(renderingStateJson);
+            bool contextLost = renderingState.RootElement.ValueKind == JsonValueKind.Object &&
+                renderingState.RootElement.TryGetProperty("contextLost", out JsonElement contextLostElement) &&
+                contextLostElement.ValueKind == JsonValueKind.True;
+            if (contextLost)
+            {
+                _webReady = false;
+                _displayedSimulationRevision = null;
+                AvatarPreviewStateText.Text = "Avatar preview: recovering 3D renderer";
+                DrapeWebView.Reload();
+            }
+        }
+        catch (Exception exception)
+        {
+            System.Diagnostics.Debug.WriteLine($"Patternal 3D renderer resume failed: {exception.Message}");
+        }
+    }
+
     private void OnPageRootSizeChanged(object sender, SizeChangedEventArgs e)
         => UpdateDrapeSurfaceHeight();
 
@@ -5906,6 +5997,8 @@ public sealed class PatternPieceListItem
 }
 
 internal sealed record SavedCustomMeasurement(string Name, double Value, string Unit);
+
+internal sealed record SavedPatternPayload(int Version, Dictionary<string, string> Values);
 
 public sealed class MeasurementGroup
 {

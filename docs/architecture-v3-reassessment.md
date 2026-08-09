@@ -25,11 +25,11 @@ The recommended target is:
 
 ### Packaged application
 
-The isolated Windows 11 guest launched the registered AppX as a real responsive top-level window. Run `20260808-234620-27d56bf4` proved all 25 functional interaction checks: the six semantic cameras, return to 2D, panel and drawing toggles, body and fabric sliders, linked-value restoration, fitted-bra availability, assembly direction editing, and Undo. The run correctly failed only the current-cloth freshness gate.
+The isolated Windows 11 guest launched the registered AppX as a real responsive top-level window. Reviewed run `20260809-104940-3155254b` used payload `0965eb4d83d85486264006498870a08f1d8c92045da294732692ed044c470bf9`, ran 41 checks, captured 21 screenshots, passed 40 checks, and correctly failed only the current-cloth freshness gate. It covered the six semantic cameras, the complete current 2D authoring lifecycle, body and fabric sliders, panel and drawing toggles, fitted-bra availability, assembly direction editing, real SVG Save As, and a local snapshot across two full process restarts. Host input injection and VMConnect use remained false.
 
 The current package does not have current accepted cloth at startup. Its 3D surface reports that the bundled neckline, shoulder, armscye, sleeve cap, width distribution, or balance differs from the bundled simulation. Hiding that old cloth is correct. Shipping a baseline that immediately hides its only accepted garment is not.
 
-The preserved reviewed run is `artifacts/isolated-ui/runs/20260808-234620-27d56bf4`. It is local evidence and is not a release artifact. Its payload identity is `224e9d5ce154b76273a004887da14fac2256d5d54148390083c95d70b25bf973`.
+The preserved reviewed run is `artifacts/isolated-ui/runs/20260809-104940-3155254b`. It is local evidence and is not a release artifact.
 
 ### 2D interface review
 
@@ -37,7 +37,7 @@ The packaged 1920 by 1080 workspace now uses geometry-aware deterministic packin
 
 Remaining gates:
 
-1. Cover save, load, and export round trips in the isolated guest. Selection, point editing, numeric and pointer polygon drafting, free sewing, internal-line and guide-dart lifecycle, sewn-edge and free-edge physical darts, Undo, Redo, Fit, Frame, and calibrated 1:1 scale now pass in reviewed run `20260809-084558-a10b550b`. The free-edge workflow proved the compiler-owned permanent-seam count increased from 38 to 39 and returned to 38 after cleanup; visible dart legs were not treated as sufficient topology proof.
+1. Add an explicit named project-file Save As and Open round trip. Local snapshot save and restore across process restarts plus SVG export now pass in reviewed run `20260809-104940-3155254b`, but a private automatic snapshot is not a user-selectable project format and SVG export alone does not prove reimport.
 2. Add screenshot gates at 1280 by 720, 1600 by 900, 1920 by 1080, and 200 percent text scaling.
 3. Verify keyboard navigation, focus order, automation names, and screen-reader labels across the complete authoring workflow.
 
@@ -51,7 +51,8 @@ Observed problems:
 4. The current display avatar is recognizably human but has exaggerated hands, feet, shoulder mass, calf mass, and an awkward presentation pose.
 5. Texture and hair help the old body, but they cannot repair its silhouette and anatomy.
 6. The camera labels were initially reversed for Front and Rear. Packaged screenshot review caught and corrected the production-avatar yaw mapping; interaction success alone had not proved camera semantics.
-6. Existing collision, seam, strain, hash, and equilibrium gates all passed for an asset that still fails an ordinary visual review.
+7. Existing collision, seam, strain, hash, and equilibrium gates all passed for an asset that still fails an ordinary visual review.
+8. Returning to 3D after a long 2D authoring session initially left the WebGL canvas white while XAML state labels continued to update. The packaged renderer now starts one generation-owned render loop whenever 3D becomes visible, invalidates any suspended hidden-tab loop, reloads only after a reported WebGL context loss, and rejects blank late screenshots. Run `20260809-104940-3155254b` recorded a 1.0 non-white sample ratio for both edited and restored avatar views.
 
 Required correction:
 
