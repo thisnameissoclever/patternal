@@ -1,6 +1,6 @@
 # Open-source avatar and cloth foundation decision
 
-Status: active architecture decision, verified against primary project documentation on 2026-08-08. No dependency is approved or installed by this document.
+Status: active architecture decision, reverified against primary project documentation and release metadata on 2026-08-09. No dependency is approved or installed by this document.
 
 ## Bottom line
 
@@ -8,20 +8,26 @@ Patterna should use a deliberately boring composition of permissive foundations 
 
 1. Keep WinUI 3 and the native Patterna document model for the Windows product and interactive 2D authoring.
 2. Keep GarmentCode as an interchange and meshing reference, not as the visual or simulation product.
-3. Keep CC-BY Antonia as the current fitted feminine avatar foundation. Add CC0 MakeHuman appearance assets only when they pass a fresh Antonia fit and visual review; their permissive license does not make a bad fit acceptable.
+3. Keep CC-BY Antonia only as the current fitted control avatar. Stop spending product time polishing its visible texture seams, bald presentation, or coarse bandeau unless a change is needed to keep the control honest.
 4. Keep Newton Style3D as the existing rejected control backend.
 5. Evaluate ZOZO PPF Contact Solver as the first cloth challenger after explicit dependency approval.
 6. Keep Blender as the offline GLB assembly, rendering, and visual-proof boundary.
-7. Treat Meta Momentum Human Rig as a future avatar challenger only after its downloadable model assets carry an explicit reviewed license artifact.
-8. Do not adopt XRTailor as the primary authoring or assembly solver. Its documented custom-garment path starts with Marvelous Designer sewing and draping, then imports a welded template. That does not remove the CLO-class dependency Patterna is trying to replace.
+7. Evaluate Meta Momentum Human Rig LOD1 as the first avatar challenger after explicit dependency approval. The maintainer confirmed on 2026-06-10 that its assets are Apache 2.0 and updated `assets.zip` to include the license. Patterna already contains a narrow TorchScript mesh bridge, measurement fitter, anthropometry helpers, and focused tests; the remaining work is a versioned runtime and an honest bake-off, not a speculative rewrite.
+8. Keep Anny 0.5 as a semantic measurement and collision comparator. Its Apache-2.0 code, CC0 MPFB2 data, native shape controls, texture coordinates, and optional Apache-2.0 SOMA topology are useful, but its MakeHuman-derived appearance does not solve the rejected hero-avatar problem.
+9. Keep SOMA-X as a later interoperability layer for shared topology, rigging, and pose correctives if MHR wins. Do not add it to the first bake-off because it adds PyTorch, Warp, auto-downloaded assets, and another mapping layer before the base avatar is accepted.
+10. Use Blender Studio's CC0 Human Base Meshes only as sculpted detail, topology, and appearance references. They are not parametric bodies and do not replace measurement fitting.
+11. Do not adopt XRTailor as the primary authoring or assembly solver. Its documented custom-garment path starts with Marvelous Designer sewing and draping, then imports a welded template. That does not remove the CLO-class dependency Patterna is trying to replace.
 
 ## Decision matrix
 
 | Foundation | License evidence | What it actually supplies | One-person practicality | Decision |
 | --- | --- | --- | --- | --- |
-| CharMorph Antonia | Character is CC-BY; the vendored character includes its exact license and attribution | Stable 36,030-vertex feminine body, UVs, material regions, named morphs, underwear, and a Blender source | Already integrated, fitted, exported to GLB, packaged, and hash-bound | Current avatar foundation |
+| CharMorph Antonia | Character is CC-BY; the vendored character includes its exact license and attribution | Stable 36,030-vertex feminine body, UVs, material regions, named morphs, underwear, and a Blender source | Already integrated, fitted, exported to GLB, packaged, and hash-bound | Current control avatar |
 | MakeHuman and MPFB core assets | Core graphical assets are CC0; tool code is GPL or AGPL | Hair, eyes, skin, clothing proxies, targets, rigs, and Blender fitting tools | Assets are already vendored, but topology-specific proxies need a new fit to Antonia | Appearance donor only, never assume cross-body fit |
-| Meta Momentum Human Rig | Repository declares Apache 2.0; a closed issue notes that the release asset ZIP lacks its own license or notice | 45 identity parameters, 204 pose parameters, 72 facial controls, pose correctives, detailed face and hands, and seven levels of detail | Technically strong, but adds Python 3.11, PyTorch, PyMomentum or TorchScript, asset download, semantic measurement fitting, and license review | Research-only avatar challenger |
+| Meta Momentum Human Rig | Apache 2.0 code and assets; the maintainer confirmed the asset license and added it to the release ZIP on 2026-06-10 | 45 identity parameters, 204 pose parameters, 72 facial controls, pose correctives, detailed face and hands, seven levels of detail, rigged FBX assets, and a LOD1 TorchScript path | Existing Patterna bridge avoids PyMomentum and needs only a versioned Python 3.11 or 3.12 CPU PyTorch runtime plus the roughly 190 MB v1.0.1 asset ZIP for the first geometry bake-off | First avatar challenger after approval |
+| Anny 0.5 | Apache-2.0 code, CC0 MPFB2 data, and optional Apache-2.0 SOMA data; optional SMPL-X topology is separately non-commercial and excluded | Interpretable age and body controls, stable topology, hands and face models, rigging, texture coordinates, differentiable fitting, and SOMA interoperability | Patterna already contains an Anny fitter and garment-collider preparation path, but the current product has already rejected MakeHuman-family appearance | Measurement and collision comparator, not hero display |
+| SOMA-X 0.1 | Apache-2.0 code; optional identity backends and downloaded assets retain their own terms | One topology and rig across MHR, Anny, GarmentMeasurement, and separately licensed SMPL-family inputs, with shared pose correctives | Valuable only after one identity source wins; otherwise it adds a second parametric layer and a larger PyTorch and Warp runtime | Later interoperability challenger |
+| Blender Human Base Meshes 1.4.1 | CC0 asset bundle from Blender Studio | Realistic and stylized closed quad meshes, multi-resolution sculpt detail, UVs, hands, feet, heads, eyes, jaws, and teeth | Excellent reference and donor material, but no measurement model, production rig, or fitted clothing follows automatically | Appearance and topology reference only |
 | Newton Style3D | Apache 2.0 Newton and current Apache-2.0 Warp | GPU shell simulation with current Patterna seam adapter | Already owned and reproducible; exact Antonia control renders remain rejected | Keep as control backend |
 | ZOZO PPF Contact Solver | Apache 2.0 with explicit proprietary and commercial-use permission | GPU finite-element shells, contact barriers, strain limiting, friction, pins, cross-object soft stitches, Windows executable, Docker service, Blender API, and offline fitting examples | Native Windows package is about 320 MB, needs a modern NVIDIA driver but no local Python or CUDA Toolkit, and can run headlessly without desktop focus | First cloth challenger after approval |
 | XRTailor | Codebase declares Apache 2.0 and lists third-party licenses | CUDA cloth, obstacle collision, self-collision, anisotropic quality mode, GLTF animation input, and Alembic or OBJ output | Windows build is non-trivial. Documented custom assets require Marvelous Designer, RizomUV, MeshLab, and an already welded and draped garment template | Do not use as primary assembly solver; possible later animation comparator |
@@ -56,14 +62,27 @@ After explicit dependency approval, install PPF into a separate versioned runtim
 
 ## Avatar path
 
-Antonia is the current rational choice because it is already local, attributable, inspectable, and good enough to expose cloth defects instead of contributing grotesque base anatomy. It still needs work:
+Antonia is the current rational control because it is already local, attributable, inspectable, and good enough to expose cloth defects instead of contributing grotesque base anatomy. It is not the rational production destination. The packaged review rejects its texture transitions, bald scalp, coarse modesty shell, and the completely different MakeHuman-derived body shown after measurement edits. Further cosmetic Antonia work would preserve the same two-body architecture that caused the complaint.
 
-1. Add fitted hair from a concrete CC0 or CC-BY asset and record its source and fit report.
-2. Convert source height maps into GLB-safe tangent-space normal maps.
-3. Improve skin material balance and remove visible texture-region transitions.
-4. Derive a simplified watertight collision body and report regional display-to-collision distance.
-5. Expand semantic measurement coverage beyond the currently accepted primary fit set.
-6. Add a relaxed display pose only after accepted cloth can follow the same skeleton and pose state.
+MHR LOD1 is now the first production challenger because its license blocker is resolved and it attacks the actual deficits: body-shape range, detailed hands and face, one stable topology, a skeleton, pose correctives, and a compact TorchScript inference path. It still does not provide a finished Patterna character by magic. The first bake-off must add a deliberately neutral PBR material, eyes, fitted CC0 hair, and modesty clothing, then prove measurement fit and all six packaged cameras. A grey research mesh with better fingers is still a grey research mesh.
+
+The minimum Antonia control work is:
+
+1. Keep its exact license, fitted geometry, and collision hashes reproducible as the control.
+2. Do not present the display-only bandeau as fitted clothing.
+3. Preserve the current visual rejection in six-view evidence.
+4. Avoid new Antonia-only hair, material, or pose work unless MHR fails its first controlled bake-off.
+
+The MHR bake-off boundary, after dependency approval, is:
+
+1. Create a separate versioned runtime with Python 3.11 or 3.12, CPU PyTorch, and the v1.0.1 `mhr_model.pt`. Do not install into the host's Python 3.14 environment and do not alter the Antonia runtime.
+2. Record the release URL, asset ZIP SHA-256, embedded Apache-2.0 license hash, Torch version, runtime lock, and every generated-output hash.
+3. Run the existing neutral bridge and focused unit tests before fitting any measurement profile.
+4. Fit the same 167 cm full-bust profile using the existing measurement fitter. Bound every identity coefficient, report every circuit and landmark residual, and reject anatomy that only wins numerically.
+5. Export one display GLB and one watertight collision body from the same identity and pose revision. Report regional display-to-collision distance and exact floor alignment.
+6. Fit one concrete vendored CC0 hair asset and simple modesty clothing to the exact MHR revision. Record per-asset licenses and surface-clearance checks.
+7. Render front, rear, both sides, and both obliques in Blender, then package the exact accepted hashes and repeat the six semantic cameras in the VM.
+8. Keep Antonia if MHR fails measurement coverage, surface quality, runtime latency, license packaging, or multi-view review. A newer model is a challenger, not an automatic promotion.
 
 The generated avatar report uses `accepted` only for its measurement-fit and geometry-export stage because the simulation pipeline must consume that exact result before it can construct a collider. The report also carries `acceptanceScope`, `productAccepted: false`, and a pending product status. Numerical body fit must never be presented as packaged visual or cloth acceptance.
 
@@ -83,7 +102,7 @@ This architecture costs some debounced background latency, but it removes the pr
 
 Horizontal collider sections are valid only where the plane crosses the torso without posed limbs. The high-bust tape distribution now comes from the explicit `acrossFront` and `acrossBack` measurements across CharMorph, Anny, and MPFB body preparation. The current Antonia report records the requested 96 cm tape, its 0.5020 back fraction, and that no horizontal collider circuit was used; the former 202.47 cm T-pose arm circuit is rejected evidence, not anatomy.
 
-Momentum Human Rig is worth a controlled future bake-off because it addresses detailed hands, face, pose deformation, and levels of detail in one model. It is not eligible for packaging while its downloadable asset archive lacks an explicit license artifact. Even after that is fixed, its statistical identity coefficients are not Patterna measurements. It would need the same constrained measurement fitting, anatomical review, collision derivation, GLB export, and license hashing required of Antonia.
+Momentum Human Rig is eligible for a controlled bake-off now that the asset archive includes an explicit Apache-2.0 license. Its statistical identity coefficients are still not Patterna measurements. It needs the same constrained measurement fitting, anatomical review, collision derivation, GLB export, appearance assembly, and license hashing required of Antonia before it can replace anything.
 
 ## Rejected shortcuts
 
@@ -101,7 +120,10 @@ Momentum Human Rig is worth a controlled future bake-off because it addresses de
 4. XRTailor custom-asset workflow: <https://xrtailor.readthedocs.io/en/latest/common/preparing_your_own_asset.html>
 5. Momentum Human Rig: <https://github.com/facebookresearch/MHR>
 6. MHR release-asset license question: <https://github.com/facebookresearch/MHR/issues/62>
-7. MakeHuman and MPFB asset licensing: <https://static.makehumancommunity.org/about/license.html>
-8. CharMorph character licensing: <https://blendercharacterproject.org/docs/html/Introduction.html>
-9. PositionBasedDynamics: <https://github.com/InteractiveComputerGraphics/PositionBasedDynamics>
-10. IPC Toolkit: <https://ipctk.xyz/>
+7. Anny: <https://github.com/naver/anny>
+8. SOMA-X: <https://github.com/NVlabs/SOMA-X>
+9. Blender Human Base Meshes: <https://www.blender.org/download/demo-files/#assets>
+10. MakeHuman and MPFB asset licensing: <https://static.makehumancommunity.org/about/license.html>
+11. CharMorph character licensing: <https://blendercharacterproject.org/docs/html/Introduction.html>
+12. PositionBasedDynamics: <https://github.com/InteractiveComputerGraphics/PositionBasedDynamics>
+13. IPC Toolkit: <https://ipctk.xyz/>

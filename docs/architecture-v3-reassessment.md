@@ -12,12 +12,14 @@ Keep WinUI 3, the editable 2D document model, GarmentCode pattern exchange, Blen
 
 The recommended target is:
 
-1. CC-BY Antonia as the first feminine display and collision source, with explicit attribution.
-2. A separately reviewed masculine source. Reom may be a measurement and topology research input, but the vendored copy has no license or attribution artifact and its unsubdivided base is not acceptable as the hero display mesh. Do not redistribute it from Patterna until both problems are resolved.
-3. A display mesh and a collision mesh derived from the same fitted body state but allowed to use different topology. Their registration must be proved numerically.
-4. ZOZO's Apache-2.0 PPF Contact Solver as the first challenger in a controlled solver bake-off on the local RTX 4090.
-5. Newton 1.4.0 with Warp 1.15.0 retained as the current control backend until another solver wins the same garment, body, material, contact, timing, and multi-view gates.
-6. Blender as the canonical offline render and comparison boundary. The packaged WinUI/WebView2 viewer remains the interactive surface, but it should consume compact PBR GLB assets rather than giant raw OBJ files and ad hoc material rules.
+1. CC-BY Antonia retained as the current fitted control, not treated as the production destination.
+2. Apache-2.0 Meta Momentum Human Rig LOD1 as the first avatar challenger after dependency approval. Its release assets now include an explicit Apache-2.0 license, and Patterna already contains a narrow mesh bridge and measurement-fitting path.
+3. Apache-2.0 and CC0 Anny retained as a semantic measurement and collision comparator, not a hero appearance source.
+4. A separately reviewed masculine source. Reom may be a measurement and topology research input, but the vendored copy has no license or attribution artifact and its unsubdivided base is not acceptable as the hero display mesh. Do not redistribute it from Patterna until both problems are resolved.
+5. A display mesh and a collision mesh derived from the same fitted body state but allowed to use different topology. Their registration must be proved numerically.
+6. ZOZO's Apache-2.0 PPF Contact Solver as the first challenger in a controlled solver bake-off on the local RTX 4090.
+7. Newton 1.4.0 with Warp 1.15.0 retained as the current control backend until another solver wins the same garment, body, material, contact, timing, and multi-view gates.
+8. Blender as the canonical offline render and comparison boundary. The packaged WinUI/WebView2 viewer remains the interactive surface, but it should consume compact PBR GLB assets rather than giant raw OBJ files and ad hoc material rules.
 
 ## Evidence collected
 
@@ -66,9 +68,13 @@ Required correction:
 | Windows product shell | WinUI 3 with WebView2 3D surface | Microsoft platform terms | Keep |
 | 2D pattern document | Native Patternal model with GarmentCode import and export | Project code plus MIT GarmentCode | Keep and improve UX |
 | Bundled display body | MakeHuman and MPFB-derived mesh and CC0 appearance assets | CC0 assets; tool code varies | Retire as hero baseline after replacement proof |
-| Current live source avatar path | CharMorph Antonia | Generated body is CC-BY 3.0 with attribution | Keep as the versioned runtime foundation; production visual gate remains open |
-| Available feminine source | CharMorph Antonia | CC-BY 3.0 | Primary replacement candidate |
+| Current live source avatar path | CharMorph Antonia | Generated body is CC-BY 3.0 with attribution | Keep as the versioned control runtime; production visual gate remains open |
+| Available feminine source | CharMorph Antonia | CC-BY 3.0 | Current control candidate, not the production destination |
 | Available masculine source | CharMorph Reom | Declared CC-BY; license artifact missing | Research-only candidate; do not redistribute |
+| First avatar challenger | Meta Momentum Human Rig LOD1 | Apache-2.0 code and assets; release ZIP now includes the license | Evaluate in a separate versioned CPU TorchScript runtime after approval |
+| Measurement comparator | Anny 0.5 default or SOMA topology | Apache-2.0 code and CC0 or Apache-2.0 data | Keep for semantic fitting and collision comparisons, not hero appearance |
+| Future topology and rig bridge | SOMA-X 0.1 | Apache-2.0 core; optional identity inputs retain separate terms | Defer until one avatar source wins |
+| Appearance reference | Blender Human Base Meshes 1.4.1 | CC0 | Use as sculpt and topology reference only; not a parametric avatar |
 | Current accepted cloth backend | Newton 1.4.0 `SolverStyle3D` on Warp 1.15.0 | Apache-2.0 | Keep as bake-off control |
 | Legacy GarmentCode Python environment | Customized Warp 1.0.0b6 | Old NVIDIA source license | Isolate, replace, or remove after an import audit |
 | Canonical offline rendering | Blender 4.5.11 LTS | GPL application; generated assets remain governed by their inputs | Keep |
@@ -87,7 +93,7 @@ Local deterministic Blender renders are stored under `artifacts/architecture-ava
 | `mb_female` | 18,210 | Reproduces oversized hands, feet, shoulders, and calves; extensive morph vocabulary does not repair the base silhouette | Reject for product output because generated meshes are AGPL-3.0 |
 | Reom | 8,434 | Useful masculine proportions but visibly faceted torso and limbs at base resolution | The upstream metadata declares CC-BY, but the vendored character lacks a license or attribution file; do not ship it |
 
-This bake-off used flat studio materials to compare geometry rather than flattering one candidate with better textures. It is not proof that Antonia already supports Patternal's 151 editable values. It proves that spending more time polishing `mb_female` would optimize the wrong base asset.
+This bake-off used flat studio materials to compare geometry rather than flattering one candidate with better textures. It is not proof that Antonia already supports Patternal's 151 editable values. It proves that spending more time polishing `mb_female` would optimize the wrong base asset. The 2026-08-09 source refresh also moves MHR from license-blocked research to the first avatar challenger: its maintainer confirmed that the release assets are Apache 2.0 and added the license to `assets.zip`. That does not constitute a visual pass; it only permits the controlled bake-off described in `docs/open-source-foundation-decision.md`.
 
 ## Avatar architecture
 
@@ -300,3 +306,7 @@ The old GarmentCode Warp environment should be removed only after proving that t
 9. MakeHuman CC0 assets: <https://github.com/makehumancommunity/makehuman-assets>
 10. XRTailor: <https://github.com/openxrlab/xrtailor>
 11. Momentum Human Rig: <https://github.com/facebookresearch/MHR>
+12. MHR asset license resolution: <https://github.com/facebookresearch/MHR/issues/62>
+13. Anny: <https://github.com/naver/anny>
+14. SOMA-X: <https://github.com/NVlabs/SOMA-X>
+15. Blender Human Base Meshes: <https://www.blender.org/download/demo-files/#assets>
