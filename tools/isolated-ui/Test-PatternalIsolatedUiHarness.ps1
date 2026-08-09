@@ -134,6 +134,32 @@ foreach ($avatarStateContract in @(
         throw "Guest runner no longer proves avatar-state contract $avatarStateContract."
     }
 }
+foreach ($patternLifecycleContract in @(
+    "'2D internal line create update delete undo and redo'",
+    "'Edit: Construction line 1'",
+    "'Shoulder balance guide'",
+    "'Delete line'",
+    "'2D dart create update delete undo and redo'",
+    "'Edit: Dart 1'",
+    "'Waist shaping guide'",
+    "'Delete dart'"
+)) {
+    if (-not $guestRunner.Contains($patternLifecycleContract)) {
+        throw "Guest runner no longer proves the full 2D construction lifecycle contract $patternLifecycleContract."
+    }
+}
+foreach ($dialogLifecycleContract in @(
+    'Select a new or existing straight internal line',
+    'PatternInternalPathUpdateCommand',
+    'PatternInternalPathDeleteCommand',
+    'Select a new or existing dart',
+    'PatternDartUpdateCommand',
+    'PatternDartDeleteCommand'
+)) {
+    if (-not $codeBehind.Contains($dialogLifecycleContract)) {
+        throw "MainPage.xaml.cs no longer exposes the full 2D construction lifecycle contract '$dialogLifecycleContract'."
+    }
+}
 $viewport = Get-Content -LiteralPath (Join-Path $repositoryRoot 'Patternal\Assets\avatar3d.html') -Raw
 if (-not $codeBehind.Contains('"avatar-state"') -or
     -not $codeBehind.Contains('Avatar preview: editable measurement mesh') -or

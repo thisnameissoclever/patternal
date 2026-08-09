@@ -230,6 +230,50 @@ function Invoke-UiElement {
     $invoke.Invoke()
 }
 
+function Set-UiTextValue {
+    param(
+        [Parameter(Mandatory)]
+        [System.Windows.Automation.AutomationElement]$Element,
+        [Parameter(Mandatory)]
+        [string]$Value
+    )
+
+    $valuePattern = Get-UiPattern -Element $Element -Pattern ([System.Windows.Automation.ValuePattern]::Pattern) -PatternName 'ValuePattern'
+    if ($valuePattern.Current.IsReadOnly) {
+        throw "'$($Element.Current.Name)' is read-only."
+    }
+    $valuePattern.SetValue($Value)
+    Wait-ForCondition -Description "'$($Element.Current.Name)' to contain '$Value'" -Condition {
+        $valuePattern.Current.Value -eq $Value
+    } | Out-Null
+}
+
+function Select-UiComboBoxItem {
+    param(
+        [Parameter(Mandatory)]
+        [System.Windows.Automation.AutomationElement]$Root,
+        [Parameter(Mandatory)]
+        [string]$ComboBoxName,
+        [Parameter(Mandatory)]
+        [string]$ItemName
+    )
+
+    $comboBox = Find-UiElement -Root $Root -Name $ComboBoxName
+    $expandCollapse = Get-UiPattern -Element $comboBox -Pattern ([System.Windows.Automation.ExpandCollapsePattern]::Pattern) -PatternName 'ExpandCollapsePattern'
+    if ($expandCollapse.Current.ExpandCollapseState.ToString() -ne 'Expanded') {
+        $expandCollapse.Expand()
+    }
+    $item = Find-UiElement -Root $Root -Name $ItemName
+    $selection = Get-UiPattern -Element $item -Pattern ([System.Windows.Automation.SelectionItemPattern]::Pattern) -PatternName 'SelectionItemPattern'
+    $selection.Select()
+    Wait-ForCondition -Description "'$ItemName' to be selected in '$ComboBoxName'" -Condition {
+        $selection.Current.IsSelected
+    } | Out-Null
+    if ($expandCollapse.Current.ExpandCollapseState.ToString() -eq 'Expanded') {
+        $expandCollapse.Collapse()
+    }
+}
+
 function Get-ToggleState {
     param([System.Windows.Automation.AutomationElement]$Element)
     $toggle = Get-UiPattern -Element $Element -Pattern ([System.Windows.Automation.TogglePattern]::Pattern) -PatternName 'TogglePattern'
@@ -846,7 +890,7 @@ try {
         }
     }
 
-    Invoke-UiCheck -Name '2D internal line creation undo and redo' -Check {
+    Invoke-UiCheck -Name '2D internal line create update delete undo and redo' -Check {
         $piece = Find-UiElement -Root $window -Name 'Back Torso'
         Invoke-UiElement -Element $piece
         $addInternalLine = Find-UiElement -Root $window -Name 'Add a precise internal line to the selected pattern piece'
@@ -862,9 +906,6 @@ try {
         Wait-ForCondition -Description 'new internal construction line to appear on Back Torso' -Condition {
             Find-UiElementOnce -Root $window -Name $lineAutomationName
         } | Out-Null
-        $lineShotPath = Join-Path $evidenceDirectory '12-2d-internal-line.png'
-        Save-WindowScreenshot -Window $window -Path $lineShotPath
-        $script:screenshots.Add([pscustomobject]@{ name = '2d-internal-line'; file = [IO.Path]::GetFileName($lineShotPath) })
 
         $undo = Find-UiElement -Root $window -Name 'Undo pattern geometry edit'
         Invoke-UiElement -Element $undo
@@ -876,22 +917,65 @@ try {
         Wait-ForCondition -Description 'Redo to restore the internal construction line' -Condition {
             Find-UiElementOnce -Root $window -Name $lineAutomationName
         } | Out-Null
+
+        Invoke-UiElement -Element $addInternalLine
+        Select-UiComboBoxItem -Root $window -ComboBoxName 'Select a new or existing straight internal line' -ItemName 'Edit: Construction line 1'
+        Set-UiTextValue -Element (Find-UiElement -Root $window -Name 'Internal line name') -Value 'Shoulder balance guide'
+        Select-UiComboBoxItem -Root $window -ComboBoxName 'Internal line purpose' -ItemName 'Fold'
+        Invoke-UiElement -Element (Find-UiElement -Root $window -Name 'Apply line')
+
+        $updatedLineAutomationName = 'Back Torso internal fold line Shoulder balance guide'
+        Wait-ForCondition -Description 'updated fold line to replace the original construction line' -Condition {
+            (Find-UiElementOnce -Root $window -Name $updatedLineAutomationName) -and
+            -not (Find-UiElementOnce -Root $window -Name $lineAutomationName)
+        } | Out-Null
+
         $undo = Find-UiElement -Root $window -Name 'Undo pattern geometry edit'
         Invoke-UiElement -Element $undo
-        Wait-ForCondition -Description 'final Undo to restore Back Torso without the internal line' -Condition {
+        Wait-ForCondition -Description 'Undo to restore the original construction line' -Condition {
+            (Find-UiElementOnce -Root $window -Name $lineAutomationName) -and
+            -not (Find-UiElementOnce -Root $window -Name $updatedLineAutomationName)
+        } | Out-Null
+        $redo = Find-UiElement -Root $window -Name 'Redo pattern geometry edit'
+        Invoke-UiElement -Element $redo
+        Wait-ForCondition -Description 'Redo to restore the updated fold line' -Condition {
+            (Find-UiElementOnce -Root $window -Name $updatedLineAutomationName) -and
             -not (Find-UiElementOnce -Root $window -Name $lineAutomationName)
+        } | Out-Null
+
+        $lineShotPath = Join-Path $evidenceDirectory '12-2d-internal-line.png'
+        Save-WindowScreenshot -Window $window -Path $lineShotPath
+        $script:screenshots.Add([pscustomobject]@{ name = '2d-internal-line'; file = [IO.Path]::GetFileName($lineShotPath) })
+
+        Invoke-UiElement -Element $addInternalLine
+        Select-UiComboBoxItem -Root $window -ComboBoxName 'Select a new or existing straight internal line' -ItemName 'Edit: Shoulder balance guide'
+        Invoke-UiElement -Element (Find-UiElement -Root $window -Name 'Delete line')
+        Wait-ForCondition -Description 'Delete to remove the updated fold line' -Condition {
+            -not (Find-UiElementOnce -Root $window -Name $updatedLineAutomationName)
+        } | Out-Null
+        $undo = Find-UiElement -Root $window -Name 'Undo pattern geometry edit'
+        Invoke-UiElement -Element $undo
+        Wait-ForCondition -Description 'Undo to restore the deleted fold line' -Condition {
+            Find-UiElementOnce -Root $window -Name $updatedLineAutomationName
+        } | Out-Null
+        $redo = Find-UiElement -Root $window -Name 'Redo pattern geometry edit'
+        Invoke-UiElement -Element $redo
+        Wait-ForCondition -Description 'final Redo to leave Back Torso without the test line' -Condition {
+            -not (Find-UiElementOnce -Root $window -Name $updatedLineAutomationName)
         } | Out-Null
 
         [ordered]@{
             piece = 'Back Torso'
-            line = 'Construction line 1'
-            purpose = 'construction'
+            createdLine = 'Construction line 1'
+            updatedLine = 'Shoulder balance guide'
+            updatedPurpose = 'fold'
+            deleted = $true
             restored = $true
             screenshot = [IO.Path]::GetFileName($lineShotPath)
         }
     }
 
-    Invoke-UiCheck -Name '2D dart creation undo and redo' -Check {
+    Invoke-UiCheck -Name '2D dart create update delete undo and redo' -Check {
         $piece = Find-UiElement -Root $window -Name 'Back Torso'
         Invoke-UiElement -Element $piece
         $addDart = Find-UiElement -Root $window -Name 'Add a precise dart to the selected pattern piece'
@@ -909,9 +993,6 @@ try {
             (Find-UiElementOnce -Root $window -Name $firstLegName) -and
             (Find-UiElementOnce -Root $window -Name $secondLegName)
         } | Out-Null
-        $dartShotPath = Join-Path $evidenceDirectory '13-2d-dart.png'
-        Save-WindowScreenshot -Window $window -Path $dartShotPath
-        $script:screenshots.Add([pscustomobject]@{ name = '2d-dart'; file = [IO.Path]::GetFileName($dartShotPath) })
 
         $undo = Find-UiElement -Root $window -Name 'Undo pattern geometry edit'
         Invoke-UiElement -Element $undo
@@ -925,17 +1006,70 @@ try {
             (Find-UiElementOnce -Root $window -Name $firstLegName) -and
             (Find-UiElementOnce -Root $window -Name $secondLegName)
         } | Out-Null
-        $undo = Find-UiElement -Root $window -Name 'Undo pattern geometry edit'
-        Invoke-UiElement -Element $undo
-        Wait-ForCondition -Description 'final Undo to restore Back Torso without the test dart' -Condition {
+
+        Invoke-UiElement -Element $addDart
+        Select-UiComboBoxItem -Root $window -ComboBoxName 'Select a new or existing dart' -ItemName 'Edit: Dart 1'
+        Set-UiTextValue -Element (Find-UiElement -Root $window -Name 'Dart name') -Value 'Waist shaping guide'
+        Select-UiComboBoxItem -Root $window -ComboBoxName 'Dart fold direction' -ItemName 'Right'
+        Invoke-UiElement -Element (Find-UiElement -Root $window -Name 'Apply dart')
+
+        $updatedFirstLegName = 'Back Torso dart Waist shaping guide first leg'
+        $updatedSecondLegName = 'Back Torso dart Waist shaping guide second leg'
+        Wait-ForCondition -Description 'updated dart legs to replace the original dart legs' -Condition {
+            (Find-UiElementOnce -Root $window -Name $updatedFirstLegName) -and
+            (Find-UiElementOnce -Root $window -Name $updatedSecondLegName) -and
             -not (Find-UiElementOnce -Root $window -Name $firstLegName) -and
             -not (Find-UiElementOnce -Root $window -Name $secondLegName)
         } | Out-Null
 
+        $undo = Find-UiElement -Root $window -Name 'Undo pattern geometry edit'
+        Invoke-UiElement -Element $undo
+        Wait-ForCondition -Description 'Undo to restore the original dart legs' -Condition {
+            (Find-UiElementOnce -Root $window -Name $firstLegName) -and
+            (Find-UiElementOnce -Root $window -Name $secondLegName) -and
+            -not (Find-UiElementOnce -Root $window -Name $updatedFirstLegName) -and
+            -not (Find-UiElementOnce -Root $window -Name $updatedSecondLegName)
+        } | Out-Null
+        $redo = Find-UiElement -Root $window -Name 'Redo pattern geometry edit'
+        Invoke-UiElement -Element $redo
+        Wait-ForCondition -Description 'Redo to restore the updated dart legs' -Condition {
+            (Find-UiElementOnce -Root $window -Name $updatedFirstLegName) -and
+            (Find-UiElementOnce -Root $window -Name $updatedSecondLegName) -and
+            -not (Find-UiElementOnce -Root $window -Name $firstLegName) -and
+            -not (Find-UiElementOnce -Root $window -Name $secondLegName)
+        } | Out-Null
+
+        $dartShotPath = Join-Path $evidenceDirectory '13-2d-dart.png'
+        Save-WindowScreenshot -Window $window -Path $dartShotPath
+        $script:screenshots.Add([pscustomobject]@{ name = '2d-dart'; file = [IO.Path]::GetFileName($dartShotPath) })
+
+        Invoke-UiElement -Element $addDart
+        Select-UiComboBoxItem -Root $window -ComboBoxName 'Select a new or existing dart' -ItemName 'Edit: Waist shaping guide'
+        Invoke-UiElement -Element (Find-UiElement -Root $window -Name 'Delete dart')
+        Wait-ForCondition -Description 'Delete to remove the updated dart legs' -Condition {
+            -not (Find-UiElementOnce -Root $window -Name $updatedFirstLegName) -and
+            -not (Find-UiElementOnce -Root $window -Name $updatedSecondLegName)
+        } | Out-Null
+        $undo = Find-UiElement -Root $window -Name 'Undo pattern geometry edit'
+        Invoke-UiElement -Element $undo
+        Wait-ForCondition -Description 'Undo to restore the deleted dart legs' -Condition {
+            (Find-UiElementOnce -Root $window -Name $updatedFirstLegName) -and
+            (Find-UiElementOnce -Root $window -Name $updatedSecondLegName)
+        } | Out-Null
+        $redo = Find-UiElement -Root $window -Name 'Redo pattern geometry edit'
+        Invoke-UiElement -Element $redo
+        Wait-ForCondition -Description 'final Redo to leave Back Torso without the test dart' -Condition {
+            -not (Find-UiElementOnce -Root $window -Name $updatedFirstLegName) -and
+            -not (Find-UiElementOnce -Root $window -Name $updatedSecondLegName)
+        } | Out-Null
+
         [ordered]@{
             piece = 'Back Torso'
-            dart = 'Dart 1'
+            createdDart = 'Dart 1'
+            updatedDart = 'Waist shaping guide'
             construction = 'annotation'
+            updatedFoldDirection = 'right'
+            deleted = $true
             restored = $true
             screenshot = [IO.Path]::GetFileName($dartShotPath)
         }

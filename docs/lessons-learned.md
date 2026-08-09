@@ -2714,3 +2714,21 @@ The first implementation captured immediately after the accessible state changed
 **Prevention rule:** Never infer a high-bust front/back distribution from a horizontal collider section that intersects posed limbs. Use the explicit across-front and across-back measurements, retain the requested tape height and circumference, and record that no horizontal section was used. Apply the same invariant to every avatar backend.
 
 **How to verify:** Prepare the default 167 cm Antonia collider. Require a watertight accepted body, `highBustTapeDistribution.requestedCircumferenceCm` of 96.0, a back fraction of `37.0 / (36.7 + 37.0)`, `horizontalColliderSectionUsed: false`, and no `highBustTape` entry in the measured horizontal `sections` map.
+
+## Acceptance status must be reconciled with the product before adding a duplicate feature
+
+### What happened
+
+The isolated-test status listed internal-line and dart update and deletion as open. Source inspection showed that both dialogs already supported create, edit, delete, Undo, and Redo through stable structural commands. The missing work was packaged interaction proof, not product implementation.
+
+### Root cause
+
+The automated suite stopped after create and a simple Undo and Redo round trip. Its status paragraph was later treated as a feature inventory instead of an acceptance inventory, so an untested workflow was mistaken for an absent workflow.
+
+### Prevention rule
+
+Before implementing a listed UI gap, inspect the active command handler, document model, structural edit commands, and tests. Describe unobserved behavior as unproven, not missing, unless source and packaged inspection both support that conclusion.
+
+### How to verify
+
+In the packaged guest, create an internal line and a guide dart, update their names and semantic fields, prove each update through Undo and Redo, delete each object, prove each deletion through Undo and Redo, and leave the garment with neither test object. Review the resulting line and dart screenshots at 1920 by 1080 and confirm the result bundle records no functional failure beyond the independent current-cloth freshness gate.
