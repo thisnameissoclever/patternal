@@ -112,7 +112,8 @@ foreach ($automationId in $requiredCameraAutomationIds) {
 }
 $requiredDrapeStateAutomationIds = @(
     'DrapeStaleSimulationState',
-    'DrapeAcceptedSimulationState'
+    'DrapeAcceptedSimulationState',
+    'DrapeAvatarPreviewState'
 )
 foreach ($automationId in $requiredDrapeStateAutomationIds) {
     if (-not $guestRunner.Contains("'$automationId'")) {
@@ -121,6 +122,28 @@ foreach ($automationId in $requiredDrapeStateAutomationIds) {
     if (-not $xaml.Contains(('AutomationProperties.AutomationId="{0}"' -f $automationId))) {
         throw "MainPage.xaml no longer exposes 3D state automation ID '$automationId'."
     }
+}
+foreach ($avatarStateContract in @(
+    "'3D avatar follows edited measurements'",
+    "'Avatar preview: editable measurement mesh*'",
+    "'Avatar preview: fitted Antonia candidate*'",
+    "'15-3d-edited-measurement-avatar.png'",
+    "'16-3d-restored-fitted-avatar.png'"
+)) {
+    if (-not $guestRunner.Contains($avatarStateContract)) {
+        throw "Guest runner no longer proves avatar-state contract $avatarStateContract."
+    }
+}
+$viewport = Get-Content -LiteralPath (Join-Path $repositoryRoot 'Patternal\Assets\avatar3d.html') -Raw
+if (-not $codeBehind.Contains('"avatar-state"') -or
+    -not $codeBehind.Contains('Avatar preview: editable measurement mesh') -or
+    -not $codeBehind.Contains('Avatar preview: fitted Antonia candidate') -or
+    -not $viewport.Contains("type:'avatar-state'")) {
+    throw 'The packaged renderer no longer reports its measured-avatar preview state to the accessible WinUI surface.'
+}
+if (-not $viewport.Contains("?'FITTED AVATAR CANDIDATE'") -or
+    -not $viewport.Contains(":'MEASUREMENT PREVIEW'")) {
+    throw 'The 3D viewport again presents both the fitted candidate and the low-detail measurement preview as one accepted anatomical avatar.'
 }
 if (-not $guestRunner.Contains('failureDiagnostics = $failureDiagnostics')) {
     throw 'Guest runner no longer preserves process and event-log diagnostics with failed UI evidence.'

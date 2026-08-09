@@ -3473,6 +3473,25 @@ public sealed partial class MainPage : Page
                 return;
             }
 
+            if (string.Equals(type.GetString(), "avatar-state", StringComparison.Ordinal))
+            {
+                string? mode = root.TryGetProperty("mode", out JsonElement modeElement) &&
+                    modeElement.ValueKind == JsonValueKind.String
+                        ? modeElement.GetString()
+                        : null;
+                double height = root.TryGetProperty("height", out JsonElement heightElement) &&
+                    heightElement.TryGetDouble(out double parsedHeight)
+                        ? parsedHeight
+                        : 0;
+                AvatarPreviewStateText.Text = string.Equals(
+                    mode,
+                    "fitted-antonia-candidate",
+                    StringComparison.Ordinal)
+                        ? $"Avatar preview: fitted Antonia candidate · {height:0} cm"
+                        : $"Avatar preview: editable measurement mesh · {height:0} cm";
+                return;
+            }
+
             if (!string.Equals(type.GetString(), "asset-load", StringComparison.Ordinal) ||
                 !root.TryGetProperty("revision", out JsonElement revisionElement) ||
                 !string.Equals(revisionElement.GetString(), _pendingViewportAssetRevision, StringComparison.Ordinal))

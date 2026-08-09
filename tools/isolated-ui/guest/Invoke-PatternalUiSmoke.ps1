@@ -1040,6 +1040,63 @@ try {
         [ordered]@{ original = $originalLinkState; testState = 'Off' }
     }
 
+    Invoke-UiCheck -Name '3D avatar follows edited measurements' -Check {
+        $heightSlider = Find-UiElement -Root $window -Name 'Height in centimeters'
+        $heightRange = Get-UiPattern -Element $heightSlider -Pattern ([System.Windows.Automation.RangeValuePattern]::Pattern) -PatternName 'RangeValuePattern'
+        $originalHeight = [double]$heightRange.Current.Value
+        $step = [math]::Max([double]$heightRange.Current.SmallChange, 0.1)
+        $changedHeight = if ($originalHeight + $step -le [double]$heightRange.Current.Maximum) {
+            $originalHeight + $step
+        }
+        else {
+            $originalHeight - $step
+        }
+        $tab3d = Find-UiElement -Root $window -Name '3D DRAPE'
+        $tab2d = Find-UiElement -Root $window -Name '2D FLAT'
+        try {
+            $heightRange.SetValue($changedHeight)
+            Wait-ForCondition -Description 'height slider to invalidate the fitted avatar candidate' -Condition {
+                [math]::Abs([double]$heightRange.Current.Value - $changedHeight) -lt 0.001
+            } | Out-Null
+            Invoke-UiElement -Element $tab3d
+            $avatarState = Find-UiElementByAutomationId -Root $window -AutomationId 'DrapeAvatarPreviewState' -TimeoutSeconds 120
+            $changedState = Wait-ForCondition -Description '3D preview to display the editable measurement mesh' -TimeoutSeconds 120 -Condition {
+                $currentName = $avatarState.Current.Name
+                if ($currentName -like 'Avatar preview: editable measurement mesh*') { $currentName } else { $null }
+            }
+            Start-Sleep -Milliseconds 1500
+            $changedShotPath = Join-Path $evidenceDirectory '15-3d-edited-measurement-avatar.png'
+            Save-WindowScreenshot -Window $window -Path $changedShotPath
+            $script:screenshots.Add([pscustomobject]@{ name = '3d-edited-measurement-avatar'; file = [IO.Path]::GetFileName($changedShotPath) })
+        }
+        finally {
+            $heightRange.SetValue($originalHeight)
+            Wait-ForCondition -Description 'height slider to restore after 3D avatar proof' -Condition {
+                [math]::Abs([double]$heightRange.Current.Value - $originalHeight) -lt 0.001
+            } | Out-Null
+            Invoke-UiElement -Element $tab3d
+            $avatarState = Find-UiElementByAutomationId -Root $window -AutomationId 'DrapeAvatarPreviewState' -TimeoutSeconds 120
+            $restoredState = Wait-ForCondition -Description '3D preview to restore the fitted Antonia candidate' -TimeoutSeconds 120 -Condition {
+                $currentName = $avatarState.Current.Name
+                if ($currentName -like 'Avatar preview: fitted Antonia candidate*') { $currentName } else { $null }
+            }
+            Start-Sleep -Milliseconds 1500
+            $restoredShotPath = Join-Path $evidenceDirectory '16-3d-restored-fitted-avatar.png'
+            Save-WindowScreenshot -Window $window -Path $restoredShotPath
+            $script:screenshots.Add([pscustomobject]@{ name = '3d-restored-fitted-avatar'; file = [IO.Path]::GetFileName($restoredShotPath) })
+            Invoke-UiElement -Element $tab2d
+            Find-UiElement -Root $window -Name 'Interactive two dimensional pattern layout' | Out-Null
+        }
+        [ordered]@{
+            originalHeight = $originalHeight
+            changedHeight = $changedHeight
+            changedState = $changedState
+            restoredState = $restoredState
+            changedScreenshot = [IO.Path]::GetFileName($changedShotPath)
+            restoredScreenshot = [IO.Path]::GetFileName($restoredShotPath)
+        }
+    }
+
     foreach ($sliderName in @(
         'Height in centimeters',
         'Full bust circumference in centimeters',

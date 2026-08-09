@@ -2692,3 +2692,15 @@ Create `Canvas polygon 15`, enter point-edit mode, and independently invoke `Can
 **Prevention rule:** Keep the pipeline stage Boolean for compatibility, but pair it with an exact `acceptanceScope`, an explicit `productAccepted` value, and a product-status string. Avoid acceptance labels such as `accepted-topology` when any required visual review is still pending.
 
 **How to verify:** Generate an Antonia avatar report and confirm that accepted measurement geometry declares `acceptanceScope: measurement-fit-and-geometry-export`, while `productAccepted` remains false and the product status remains pending render and cloth review.
+
+## A slider round trip does not prove the 3D avatar changed
+
+**What happened:** The isolated UI suite changed and restored every primary body slider, but it stayed in the 2D workspace. That proved the controls accepted values; it did not prove the 3D renderer stopped showing the fixed default Antonia candidate after a measurement edit.
+
+**Root cause:** The renderer's avatar-mode label existed only inside WebView content and was not exposed through the WinUI Automation tree.
+
+**Prevention rule:** Report the renderer's structured avatar state to an accessible WinUI element. For at least one representative body control, test the complete path from slider edit to editable 3D mesh and from value restoration back to the fitted candidate.
+
+**How to verify:** In the isolated guest, change Height with linked proportions disabled, enter 3D, require `DrapeAvatarPreviewState` to name the editable measurement mesh, capture it, restore Height, and require the same element to name the fitted Antonia candidate before returning to 2D.
+
+The first implementation captured immediately after the accessible state changed. WinUI had repainted its label before the WebView compositor visibly replaced the old mesh, producing a contradictory screenshot. Allow the embedded renderer to settle before capture and review the pixels; an event proves internal state, not the frame the user actually saw.

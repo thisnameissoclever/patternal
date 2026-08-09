@@ -67,6 +67,20 @@ Antonia is the current rational choice because it is already local, attributable
 
 The generated avatar report uses `accepted` only for its measurement-fit and geometry-export stage because the simulation pipeline must consume that exact result before it can construct a collider. The report also carries `acceptanceScope`, `productAccepted: false`, and a pending product status. Numerical body fit must never be presented as packaged visual or cloth acceptance.
 
+### Interactive customization architecture
+
+The packaged default Antonia candidate and the current real-time measurement preview are two different systems. The default candidate is a textured, measurement-fitted Antonia GLB. Editing any body measurement clears it and exposes the older 151-value MakeHuman-derived deformation mesh. Reviewed guest evidence `20260809-065324-3fec2283` proves the switch and restoration work, but rejects the edited mesh visually: its anatomy, hands, feet, surface detail, and material presentation are below the product gate.
+
+The replacement should preserve one body family from editing through simulation instead of switching topology when the user touches a slider:
+
+1. Treat the existing Antonia fitter, fitted vertices, and GLB exporter as one revisioned avatar-build service independent of cloth solving.
+2. Debounce measurement edits and build a new Antonia preview in the managed background runtime. Cache it by the same body-profile revision used by simulation.
+3. While the fit is running, keep the last fitted body visibly marked as stale or show a neutral measurement envelope. Do not substitute a different human and imply that it reflects the edited anatomy.
+4. Load the revision-matched Antonia GLB when its measurement report and multi-angle preview checks pass. The cloth command should consume the same fitted vertices and collider revision.
+5. If immediate continuous slider feedback is later required, export Antonia-compatible morph deltas or a deformation cage and apply them to the same topology in WebGL or WebGPU. Do not revive the current MakeHuman fallback as the product avatar.
+
+This architecture costs some debounced background latency, but it removes the present bait-and-switch between a detailed default body and a visibly inferior edited one. A one-person project can own and test this pipeline because it reuses the already vendored fitter, Blender exporter, cache identity, and license evidence instead of introducing another human ecosystem.
+
 Momentum Human Rig is worth a controlled future bake-off because it addresses detailed hands, face, pose deformation, and levels of detail in one model. It is not eligible for packaging while its downloadable asset archive lacks an explicit license artifact. Even after that is fixed, its statistical identity coefficients are not Patterna measurements. It would need the same constrained measurement fitting, anatomical review, collision derivation, GLB export, and license hashing required of Antonia.
 
 ## Rejected shortcuts

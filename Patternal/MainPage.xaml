@@ -633,6 +633,7 @@
                             </Border>
 
                             <Border
+                                MaxWidth="360"
                                 Margin="20"
                                 Padding="10,6"
                                 HorizontalAlignment="Left"
@@ -824,6 +825,21 @@
                                     Click="OnResetDrapeCameraClicked"
                                     Content="Fit view" />
                             </StackPanel>
+
+                            <Border
+                                Margin="20"
+                                Padding="10,7"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top"
+                                Background="#CC191A21"
+                                CornerRadius="5">
+                                <TextBlock
+                                    x:Name="AvatarPreviewStateText"
+                                    AutomationProperties.AutomationId="DrapeAvatarPreviewState"
+                                    Foreground="White"
+                                    TextTrimming="CharacterEllipsis"
+                                    Text="Avatar preview: loading measured body" />
+                            </Border>
 
                             <Border
                                 x:Name="AcceptedEquilibriumCard"

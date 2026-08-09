@@ -21,7 +21,7 @@
 <body>
   <canvas id="viewport" aria-label="Interactive detailed anatomical avatar drape preview"></canvas>
   <div id="hud">
-    <div class="eyebrow">ANATOMICAL AVATAR</div>
+    <div class="eyebrow" id="avatarEyebrow">MEASUREMENT PREVIEW</div>
     <div class="value" id="bodyLabel">167 cm · editable profile</div>
     <div class="meta" id="fabricLabel">Lightweight cotton jersey<br>120 g/m² · 9% stretch</div>
     <div class="build" id="buildLabel">Building continuous body surface...</div>
@@ -1704,9 +1704,19 @@
         }
 
         const numericCount=Object.entries(a).filter(([key,value])=>key!=='photos'&&typeof value==='number').length;
-        document.getElementById('bodyLabel').textContent=state.displayAvatarMode==='antonia-candidate'
+        const candidateAvatar=state.displayAvatarMode==='antonia-candidate';
+        document.getElementById('avatarEyebrow').textContent=candidateAvatar
+          ?'FITTED AVATAR CANDIDATE'
+          :'MEASUREMENT PREVIEW';
+        document.getElementById('bodyLabel').textContent=candidateAvatar
           ?`${Math.round(a.height)} cm · fitted GLB candidate`
           :`${Math.round(a.height)} cm · ${numericCount} mapped values`;
+        if(globalThis.chrome?.webview)globalThis.chrome.webview.postMessage({
+          type:'avatar-state',
+          mode:candidateAvatar?'fitted-antonia-candidate':'editable-measurement-mesh',
+          height:a.height,
+          mappedValues:numericCount
+        });
         const name={silk:'Silk charmeuse',cotton:'Lightweight cotton jersey',linen:'Linen twill',wool:'Wool crepe'}[f.key]||'Custom fabric';
         document.getElementById('fabricLabel').innerHTML=`${name}<br>${Math.round(f.weight)} g/m² · ${Math.round(f.stretch)}% stretch`;
         document.getElementById('buildLabel').textContent=useProduction
