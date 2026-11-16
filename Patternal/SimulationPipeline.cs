@@ -63,9 +63,23 @@ public sealed record SimulationFitEvidence(
     double? HighStrainEdgeFraction,
     double? MaximumAllowedHighStrainEdgeFraction);
 
-public sealed class SimulationPipelineException : InvalidOperationException
+public class SimulationPipelineException : InvalidOperationException
 {
     public SimulationPipelineException(string message)
+        : base(message)
+    {
+    }
+}
+
+/// <summary>
+/// Raised when every automated gate has passed and the revision now waits on a
+/// person's review of its six rendered views. It is a pipeline exception so
+/// every existing handler still catches it, and its own type so the
+/// application can present it as a pending decision rather than a failure.
+/// </summary>
+public sealed class SimulationReviewPendingException : SimulationPipelineException
+{
+    public SimulationReviewPendingException(string message)
         : base(message)
     {
     }
@@ -78,8 +92,22 @@ public static class SimulationPipeline
     private const string CurrentWarpPrefitSchema = "patterna.warp-prefit-report/2.6";
     private const string CurrentStyle3DReportSchema = "patterna.newton-style3d-report/1.0";
     private const double SimulationMeshResolutionCm = 0.25;
+
+    // The solver input gate build_style3d_source.py applies. They are repeated
+    // here so the warm start is judged by the same numbers that will judge it
+    // one stage later, rather than being passed on and refused there.
+    private const double MinimumArrangementTriangleAreaCm2 = 0.001;
+    private const double MaximumArrangementEdgeStrainRatio = 2.0;
+    private const double MaximumArrangementPercentileEdgeStrainRatio = 0.25;
     private const string PipelineRevisionSalt = "patterna-simulation-pipeline/7.0:newton-style3d:mesh=0.25cm:antonia:body-aware-warm-start:three-stage:avatar-anatomy-pose";
-    private const string ProductAvatarBackend = "CharMorph Antonia";
+    // The body a fresh simulation builds. It was Antonia through CharMorph,
+    // which meant the application ran three different bodies at once: this
+    // one here, MPFB under the packaged cloth, and MHR in the preview. The
+    // packaged cloth and the preview are both MPFB now, promotion only accepts
+    // an MPFB job, and the Antonia drape left 141 body intersections where the
+    // same solver on MPFB left none.
+    private const string ProductAvatarBackend = "MakeHuman MPFB2";
+    private const string ProductAvatarOutputLicense = "CC0";
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -233,6 +261,32 @@ public static class SimulationPipeline
             }
         }
         return false;
+    }
+
+    /// <summary>
+    /// True when the six views exist and the only thing missing from their
+    /// manifest is a recorded human decision.
+    /// </summary>
+    private static bool AwaitsHumanVisualReview(string proofManifestPath)
+    {
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(File.ReadAllText(proofManifestPath));
+            JsonElement proof = document.RootElement;
+            if (!proof.TryGetProperty("visual_quality", out JsonElement visualQuality) ||
+                !visualQuality.TryGetProperty("accepted", out JsonElement accepted) ||
+                accepted.ValueKind is not JsonValueKind.False)
+            {
+                return false;
+            }
+            return !visualQuality.TryGetProperty("reviewed_render_sha256", out JsonElement reviewed) ||
+                reviewed.ValueKind is not JsonValueKind.Object ||
+                !reviewed.EnumerateObject().Any();
+        }
+        catch (Exception exception) when (exception is IOException or JsonException or UnauthorizedAccessException)
+        {
+            return false;
+        }
     }
 
     public static bool TryValidateProductVisualProof(SimulationPipelineResult result)
@@ -550,7 +604,7 @@ public static class SimulationPipeline
     private static bool HashesEqual(string first, string second)
         => string.Equals(first, second, StringComparison.OrdinalIgnoreCase);
 
-    private static string FileSha256(string path)
+    internal static string FileSha256(string path)
     {
         using FileStream stream = File.OpenRead(path);
         return Convert.ToHexString(SHA256.HashData(stream)).ToLowerInvariant();
@@ -825,8 +879,10 @@ public static class SimulationPipeline
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(runtime);
-        if (!string.Equals(runtime.AvatarBackend, ProductAvatarBackend, StringComparison.Ordinal) ||
-            string.IsNullOrWhiteSpace(runtime.AvatarCharacterDirectory))
+        // The runtime declares which body it was installed for. A character
+        // directory was an Antonia requirement; MPFB carries its body inside
+        // the Blender extension and needs none.
+        if (!string.Equals(runtime.AvatarBackend, ProductAvatarBackend, StringComparison.Ordinal))
         {
             throw new SimulationPipelineException(
                 $"The installed simulation runtime uses {runtime.AvatarBackend}, but this product revision requires {ProductAvatarBackend}. Repair the simulation runtime before solving cloth.");
@@ -846,15 +902,23 @@ public static class SimulationPipeline
             jobDirectory,
             $"{patternStem}.initial-arrangement.preflight.json");
         string avatarProfilePath = Path.Combine(jobDirectory, "avatar-garmentcode-profile.json");
-        string avatarBodyPath = Path.Combine(jobDirectory, "avatar-charmorph.obj");
-        string avatarControlsPath = Path.Combine(jobDirectory, "avatar-charmorph.controls.json");
-        string avatarVerticesPath = Path.Combine(jobDirectory, "avatar-charmorph.vertices.npy");
-        string avatarFitReportPath = Path.Combine(jobDirectory, "avatar-charmorph.fit-report.json");
-        string avatarReportPath = Path.Combine(jobDirectory, "avatar-report.json");
+        string avatarBodyPath = Path.Combine(jobDirectory, "avatar-mpfb.obj");
+        // generate_mpfb_avatar.py writes its fit report beside its body.
+        string avatarFitReportPath = Path.Combine(jobDirectory, "avatar-mpfb.fit-report.json");
+        string posedAvatarBodyPath = Path.Combine(jobDirectory, "avatar-mpfb.relaxed.obj");
+        string bodyPoseReportPath = Path.Combine(jobDirectory, "avatar-mpfb.relaxed.pose-report.json");
         string displayAvatarDirectory = Path.Combine(jobDirectory, "display-avatar");
         string displayAvatarManifestPath = Path.Combine(displayAvatarDirectory, "manifest.json");
-        string displayAvatarGlbPath = Path.Combine(displayAvatarDirectory, "avatar.glb");
-        string displayAvatarLicensePath = Path.Combine(displayAvatarDirectory, "license.txt");
+        string displayAvatarBodyPath = Path.Combine(displayAvatarDirectory, "body.obj");
+        string displayAvatarRestBodyPath = Path.Combine(displayAvatarDirectory, "body.rest.obj");
+        string displayAvatarPoseReportPath = Path.Combine(displayAvatarDirectory, "body.pose-report.json");
+        // The garment is sewn and settled on the rest-pose body, then the body
+        // is lowered into its relaxed stance inside the cloth. Both bodies are
+        // kept, because the final settle animates from one to the other.
+        string restBodyPath = Path.Combine(jobDirectory, "simulation-body.rest.obj");
+        string restBodyMeasurementsPath = Path.Combine(jobDirectory, "simulation-body.rest.yaml");
+        string restBodySegmentationPath = Path.Combine(jobDirectory, "simulation-body.rest.segmentation.json");
+        string restBodyPreparationReportPath = Path.Combine(jobDirectory, "simulation-body.rest.report.json");
         string bodyPath = Path.Combine(jobDirectory, "simulation-body.obj");
         string bodyMeasurementsPath = Path.Combine(jobDirectory, "simulation-body.yaml");
         string bodySegmentationPath = Path.Combine(jobDirectory, "simulation-body.segmentation.json");
@@ -865,6 +929,14 @@ public static class SimulationPipeline
         string sourceReportPath = Path.Combine(sourceDirectory, $"{sourceStem}.report.json");
         string materialCoordinatesPath = Path.Combine(
             sourceDirectory,
+            $"{sourceStem}.material-coordinates.npz");
+        // The same pattern built against the relaxed body: identical material
+        // surface and seams, a different collider. The final settle reads its
+        // target body from here and its starting body from the rest source.
+        string posedSourceDirectory = Path.Combine(jobDirectory, "style3d-source-relaxed");
+        string posedSourceReportPath = Path.Combine(posedSourceDirectory, $"{sourceStem}.report.json");
+        string posedMaterialCoordinatesPath = Path.Combine(
+            posedSourceDirectory,
             $"{sourceStem}.material-coordinates.npz");
         string stageOneDirectory = Path.Combine(jobDirectory, "style3d-stage-1-drape");
         string stageTwoDirectory = Path.Combine(jobDirectory, "style3d-stage-2-contact");
@@ -904,21 +976,26 @@ public static class SimulationPipeline
             runtime.Style3DPythonPath,
             "Newton Style3D Python environment");
         string blenderPath = RequireFile(runtime.BlenderPath, "managed Blender runtime");
-        string avatarFitScript = RequireFile(
-            Path.Combine(runtime.ToolsDirectory, "fit_charmorph_profile.py"),
-            "CharMorph measurement fitter");
         string avatarScript = RequireFile(
-            Path.Combine(runtime.ToolsDirectory, "generate_charmorph_avatar.py"),
-            "CharMorph avatar generator");
+            Path.Combine(runtime.ToolsDirectory, "generate_mpfb_avatar.py"),
+            "MPFB measurement fitter");
         string bodyPreparationScript = RequireFile(
-            Path.Combine(runtime.ToolsDirectory, "prepare_charmorph_garmentcode_body.py"),
-            "CharMorph GarmentCode body converter");
-        string charMorphCharacterDirectory = RequireDirectory(
-            runtime.AvatarCharacterDirectory,
-            "Antonia character data");
-        string charMorphBlendPath = RequireFile(
-            Path.Combine(charMorphCharacterDirectory, "char.blend"),
-            "Antonia source mesh");
+            Path.Combine(runtime.ToolsDirectory, "prepare_mpfb_garmentcode_body.py"),
+            "MPFB GarmentCode body converter");
+        string bodyPoseScript = RequireFile(
+            Path.Combine(runtime.ToolsDirectory, "pose_mpfb_body.py"),
+            "topology-preserving MPFB pose transfer");
+        string rigWeightsPath = RequireFile(
+            Path.Combine(
+                runtime.RootDirectory,
+                "third_party", "MPFB2", "src", "mpfb", "data", "rigs", "standard",
+                "weights.default.json"),
+            "MPFB default rig weights");
+        string renderAssetRoot = RequireDirectory(
+            Path.Combine(
+                runtime.RootDirectory,
+                "third_party", "MakeHumanAssets", "makehuman_system_assets"),
+            "MakeHuman display assets");
         string bodyProfileScript = RequireFile(
             Path.Combine(runtime.ToolsDirectory, "generate_body_profile_from_mesh.py"),
             "compiler body-profile generator");
@@ -953,14 +1030,13 @@ public static class SimulationPipeline
             meshPath,
             avatarFitReportPath,
             displayAvatarManifestPath,
-            displayAvatarGlbPath,
-            displayAvatarLicensePath,
+            displayAvatarBodyPath,
             bodyPath,
             bodySegmentationPath,
             bodyPreparationReportPath,
             bodyProfilePath,
-            sourceReportPath,
-            materialCoordinatesPath,
+            posedSourceReportPath,
+            posedMaterialCoordinatesPath,
             stageOnePath,
             stageOneReportPath,
             stageTwoPath,
@@ -984,82 +1060,61 @@ public static class SimulationPipeline
 
             progress?.Report(new(
                 "avatar",
-                "Fitting Antonia anatomy to the current measurements",
+                "Fitting a MakeHuman body to the current measurements",
                 0.08));
-            await RunProcessAsync(
-                garmentCodePythonPath,
-                [
-                    avatarFitScript,
-                "--character-dir", charMorphCharacterDirectory,
-                "--profile", avatarProfilePath,
-                "--output", avatarControlsPath,
-                "--report", avatarFitReportPath,
-                "--vertices", avatarVerticesPath
-                ],
-                runtime.RootDirectory,
-                Path.Combine(jobDirectory, "01-avatar-fit.log"),
-                cancellationToken);
-            RequireFile(avatarControlsPath, "measurement-fitted CharMorph controls");
-            RequireFile(avatarVerticesPath, "measurement-fitted CharMorph vertices");
-            RequireAcceptedJson(avatarFitReportPath, "CharMorph measurement fit");
+            // Blender is started without --factory-startup on purpose: that
+            // flag disables the MPFB extension this script is built on.
             await RunProcessAsync(
                 blenderPath,
                 [
-                    charMorphBlendPath,
                     "--background",
+                    "--python-exit-code", "1",
                 "--python", avatarScript,
                 "--",
-                "--character-dir", charMorphCharacterDirectory,
                 "--profile", avatarProfilePath,
-                "--controls", avatarControlsPath,
-                "--vertices", avatarVerticesPath,
-                "--fit-report", avatarFitReportPath,
-                "--output-dir", jobDirectory,
                 "--output", avatarBodyPath,
-                "--glb-output", displayAvatarGlbPath,
-                "--glb-manifest", displayAvatarManifestPath
+                "--render-output-dir", displayAvatarDirectory,
+                "--render-asset-root", renderAssetRoot
                 ],
                 runtime.RootDirectory,
-                Path.Combine(jobDirectory, "02-avatar-export.log"),
+                Path.Combine(jobDirectory, "01-avatar.log"),
                 cancellationToken);
-            RequireFile(avatarBodyPath, "measurement-fitted CharMorph avatar");
-            RequireAcceptedJson(avatarReportPath, "CharMorph avatar export");
+            RequireFile(avatarBodyPath, "measurement-fitted MPFB avatar");
+            RequireAcceptedJson(avatarFitReportPath, "MPFB measurement fit");
             RequireFile(displayAvatarManifestPath, "measurement-fitted display avatar manifest");
-            RequireFile(displayAvatarGlbPath, "measurement-fitted Antonia display GLB");
-            RequireFile(displayAvatarLicensePath, "Antonia display license");
+            RequireFile(displayAvatarBodyPath, "measurement-fitted display body");
 
             progress?.Report(new(
                 "collision-body",
-                "Building the exact measured collision body and anatomical segmentation",
+                "Building the exact rest-pose collision body and anatomical segmentation",
                 0.16));
             await RunProcessAsync(
                 garmentCodePythonPath,
                 [
                     bodyPreparationScript,
                 "--avatar-body", avatarBodyPath,
-                "--avatar-report", avatarReportPath,
                 "--fit-report", avatarFitReportPath,
                 "--profile", avatarProfilePath,
-                "--output-body", bodyPath
+                "--output-body", restBodyPath
                 ],
                 runtime.RootDirectory,
-                Path.Combine(jobDirectory, "03-body.log"),
+                Path.Combine(jobDirectory, "02-body.log"),
                 cancellationToken);
-            RequireFile(bodyPath, "revision-specific simulation body");
-            RequireFile(bodyMeasurementsPath, "revision-specific body measurements");
-            RequireFile(bodySegmentationPath, "revision-specific anatomical segmentation");
-            RequireAcceptedJson(bodyPreparationReportPath, "simulation body preparation");
+            RequireFile(restBodyPath, "revision-specific rest-pose simulation body");
+            RequireFile(restBodyMeasurementsPath, "revision-specific rest-pose body measurements");
+            RequireFile(restBodySegmentationPath, "revision-specific rest-pose anatomical segmentation");
+            RequireAcceptedJson(restBodyPreparationReportPath, "rest-pose simulation body preparation");
 
             await RunProcessAsync(
                 garmentCodePythonPath,
                 [
                 bodyProfileScript,
-                "--body", bodyPath,
-                "--segmentation", bodySegmentationPath,
+                "--body", restBodyPath,
+                "--segmentation", restBodySegmentationPath,
                 "--output", bodyProfilePath
                 ],
                 runtime.RootDirectory,
-                Path.Combine(jobDirectory, "04-body-profile.log"),
+                Path.Combine(jobDirectory, "03-body-profile.log"),
                 cancellationToken);
             RequireFile(bodyProfilePath, "revision-specific compiler body profile");
 
@@ -1106,9 +1161,18 @@ public static class SimulationPipeline
                 Path.Combine(jobDirectory, "06-initial-arrangement.log"),
                 cancellationToken);
             RequireFile(initialArrangementPath, "body-aware initial garment arrangement");
-            RequireUsableBodyAwareArrangement(
+            bool warmStartUsable = IsUsableBodyAwareArrangement(
                 initialArrangementPreflightPath,
-                bridge.Garment.Panels.Count);
+                bridge.Garment.Panels.Count,
+                out string warmStartRejection);
+            if (!warmStartUsable)
+            {
+                progress?.Report(new(
+                    "arrangement",
+                    $"Dropping the body-aware warm start because {warmStartRejection}; "
+                        + "the panels will settle from their drafted layout instead",
+                    0.29));
+            }
 
             progress?.Report(new(
                 "style3d-source",
@@ -1117,10 +1181,14 @@ public static class SimulationPipeline
             await RunProcessAsync(
                 garmentCodePythonPath,
                 [
-                    sourceScript,
-                "--pattern", patternPath,
-                "--body", bodyPath,
-                "--initial-arrangement", initialArrangementPath,
+                    ..(string[])[
+                        sourceScript,
+                        "--pattern", patternPath,
+                        "--body", restBodyPath
+                    ],
+                ..(warmStartUsable
+                    ? (string[])["--initial-arrangement", initialArrangementPath]
+                    : []),
                 "--output-dir", sourceDirectory,
                 "--resolution-cm",
                 SimulationMeshResolutionCm.ToString("0.########", CultureInfo.InvariantCulture)
@@ -1174,22 +1242,101 @@ public static class SimulationPipeline
             RequireFile(stageTwoPath, "collision-clean Style3D warm start");
             RequireStyle3DWarmStart(stageTwoReportPath, Style3DStage.ContactRefinement);
 
+            // The cloth is dressed with the arms raised, which is the pose a
+            // garment goes on in. The person does not stand like that. Lower
+            // the arms on the fitted body and on the textured display body,
+            // build the relaxed collider, and let the final settle carry the
+            // dressed cloth from the one body to the other.
+            progress?.Report(new(
+                "pose",
+                "Lowering the arms into a relaxed stance inside the dressed cloth",
+                0.70));
+            await RunProcessAsync(
+                garmentCodePythonPath,
+                [
+                    bodyPoseScript,
+                "--input", avatarBodyPath,
+                "--output", posedAvatarBodyPath,
+                "--rig-weights", rigWeightsPath,
+                "--source-fit-report", avatarFitReportPath,
+                "--arm-lowering-degrees", ProductArmLoweringDegrees
+                ],
+                runtime.RootDirectory,
+                Path.Combine(jobDirectory, "10-body-pose.log"),
+                cancellationToken);
+            RequireFile(posedAvatarBodyPath, "relaxed measurement-fitted MPFB avatar");
+            RequireAcceptedJson(bodyPoseReportPath, "relaxed body pose");
+
+            File.Copy(displayAvatarBodyPath, displayAvatarRestBodyPath, overwrite: true);
+            await RunProcessAsync(
+                garmentCodePythonPath,
+                [
+                    bodyPoseScript,
+                "--input", displayAvatarRestBodyPath,
+                "--output", displayAvatarBodyPath,
+                "--rig-weights", rigWeightsPath,
+                "--arm-lowering-degrees", ProductArmLoweringDegrees
+                ],
+                runtime.RootDirectory,
+                Path.Combine(jobDirectory, "11-display-avatar-pose.log"),
+                cancellationToken);
+            RequireFile(displayAvatarBodyPath, "relaxed textured display body");
+            RequireAcceptedJson(displayAvatarPoseReportPath, "relaxed display-avatar pose");
+
+            await RunProcessAsync(
+                garmentCodePythonPath,
+                [
+                    bodyPreparationScript,
+                "--avatar-body", posedAvatarBodyPath,
+                "--fit-report", avatarFitReportPath,
+                "--pose-report", bodyPoseReportPath,
+                "--profile", avatarProfilePath,
+                "--output-body", bodyPath
+                ],
+                runtime.RootDirectory,
+                Path.Combine(jobDirectory, "12-relaxed-collision-body.log"),
+                cancellationToken);
+            RequireFile(bodyPath, "relaxed revision-specific simulation body");
+            RequireFile(bodyMeasurementsPath, "relaxed revision-specific body measurements");
+            RequireFile(bodySegmentationPath, "relaxed anatomical segmentation");
+            RequireAcceptedJson(bodyPreparationReportPath, "relaxed simulation body preparation");
+
+            // The same pattern against the relaxed collider. The solver reads
+            // its target body from this report and starts from the rest body.
+            await RunProcessAsync(
+                garmentCodePythonPath,
+                [
+                    sourceScript,
+                "--pattern", patternPath,
+                "--body", bodyPath,
+                "--output-dir", posedSourceDirectory,
+                "--resolution-cm",
+                SimulationMeshResolutionCm.ToString("0.########", CultureInfo.InvariantCulture)
+                ],
+                runtime.RootDirectory,
+                Path.Combine(jobDirectory, "13-style3d-source-relaxed.log"),
+                cancellationToken);
+            RequireFile(posedSourceReportPath, "relaxed Style3D source report");
+            RequireFile(posedMaterialCoordinatesPath, "relaxed Style3D material coordinates");
+
             progress?.Report(new(
                 "style3d-proof",
-                "Proving static equilibrium, exact seams, zero intersections, and strain-tail limits",
+                "Settling the cloth on the relaxed body and proving equilibrium, seams, intersections and strain",
                 0.78));
             await RunProcessAsync(
                 style3DPythonPath,
                 CreateStyle3DArguments(
                     style3DScript,
-                    sourceReportPath,
-                    materialCoordinatesPath,
+                    posedSourceReportPath,
+                    posedMaterialCoordinatesPath,
                     finalDirectory,
                     stageTwoPath,
                     fabric,
-                    Style3DStage.FinalProof),
+                    Style3DStage.FinalProof,
+                    bodyStartSourcePath: restBodyPath,
+                    bodyAnimationFrames: ProductBodyAnimationFrames),
                 runtime.RootDirectory,
-                Path.Combine(jobDirectory, "10-style3d-proof.log"),
+                Path.Combine(jobDirectory, "14-style3d-proof.log"),
                 cancellationToken);
             RequireFile(prefitPath, "accepted Style3D equilibrium mesh");
             RequireAcceptedFitReport(prefitReportPath);
@@ -1221,7 +1368,7 @@ public static class SimulationPipeline
                 "--garment-id", "PatternaFemaleShirt"
             ],
             runtime.RootDirectory,
-            Path.Combine(jobDirectory, "11-compiler.log"),
+            Path.Combine(jobDirectory, "15-compiler.log"),
             cancellationToken);
         RequireAcceptedPreflight(preflightPath);
         RequireFile(usdPath, "compiled Unreal cloth source");
@@ -1237,16 +1384,16 @@ public static class SimulationPipeline
             blenderPath,
             [
                 "--background",
+                "--python-exit-code", "1",
                 "--python", productRenderScript,
                 "--",
                 "--avatar-manifest", displayAvatarManifestPath,
                 "--garment", renderMeshPath,
                 "--fabric", fabricTexturePath,
-                "--output-directory", visualProofDirectory,
-                "--hide-bra"
+                "--output-directory", visualProofDirectory
             ],
             runtime.RootDirectory,
-            Path.Combine(jobDirectory, "12-product-acceptance.log"),
+            Path.Combine(jobDirectory, "16-product-acceptance.log"),
             cancellationToken);
         RequireFile(visualProofManifestPath, "revision-specific six-view visual proof");
 
@@ -1273,10 +1420,21 @@ public static class SimulationPipeline
             bridge.Garment.Fabric.ThicknessMillimeters,
             "The current measurements and edited pattern were solved through the three-stage Newton Style3D production gate.",
             visualProofManifestPath,
-            runtime.AvatarBackend,
-            runtime.AvatarOutputLicense);
+            ProductAvatarBackend,
+            ProductAvatarOutputLicense);
         if (!TryValidateProductVisualProof(result))
         {
+            // Everything a program can check has passed by the time the six
+            // views exist. What the gate still needs is a person's decision on
+            // them, and a message that calls that a failure sends the user
+            // looking for a defect that is not there.
+            if (AwaitsHumanVisualReview(visualProofManifestPath))
+            {
+                throw new SimulationReviewPendingException(
+                    "The cloth settled and its six views were rendered, but no person has reviewed them yet. " +
+                    "Review the views under proofs/product in the job directory and record the decision with " +
+                    "tools/record_product_visual_review.py before this revision can be accepted.");
+            }
             throw new SimulationPipelineException(
                 "The current cloth revision failed its exact six-view body, garment, and render-hash gate.");
         }
@@ -1406,6 +1564,7 @@ public static class SimulationPipeline
             blenderPath,
             [
                 "--background",
+                "--python-exit-code", "1",
                 "--python", avatarScript,
                 "--",
                 "--profile", avatarProfilePath,
@@ -1691,8 +1850,7 @@ public static class SimulationPipeline
         string MeshPath,
         string AvatarFitReportPath,
         string DisplayAvatarManifestPath,
-        string DisplayAvatarGlbPath,
-        string DisplayAvatarLicensePath,
+        string DisplayAvatarBodyPath,
         string BodyPath,
         string BodySegmentationPath,
         string BodyPreparationReportPath,
@@ -1713,7 +1871,9 @@ public static class SimulationPipeline
         string outputDirectory,
         string? initialMeshPath,
         Style3DFabricParameters fabric,
-        Style3DStage stage)
+        Style3DStage stage,
+        string? bodyStartSourcePath = null,
+        string bodyAnimationFrames = "0")
     {
         static string Number(double value)
             => value.ToString("0.########", CultureInfo.InvariantCulture);
@@ -1765,6 +1925,17 @@ public static class SimulationPipeline
         {
             arguments.Add("--initial-mesh");
             arguments.Add(initialMeshPath);
+        }
+        // A start body makes the solver dress against that body and then
+        // animate the collider to the source report's body over the given
+        // frames, so the cloth follows the arms down rather than being dropped
+        // onto a posed body it was never sewn on.
+        if (!string.IsNullOrWhiteSpace(bodyStartSourcePath))
+        {
+            arguments.Add("--body-start-source");
+            arguments.Add(bodyStartSourcePath);
+            arguments.Add("--body-animation-frames");
+            arguments.Add(bodyAnimationFrames);
         }
         return arguments;
     }
@@ -1840,8 +2011,7 @@ public static class SimulationPipeline
                 artifacts.PatternPath,
                 artifacts.MeshPath,
                 artifacts.DisplayAvatarManifestPath,
-                artifacts.DisplayAvatarGlbPath,
-                artifacts.DisplayAvatarLicensePath,
+                artifacts.DisplayAvatarBodyPath,
                 artifacts.BodyPath,
                 artifacts.BodySegmentationPath,
                 artifacts.BodyProfilePath,
@@ -1895,9 +2065,25 @@ public static class SimulationPipeline
             accepted.ValueKind is JsonValueKind.True;
     }
 
-    private static void RequireUsableBodyAwareArrangement(
+    /// <summary>
+    /// Reports whether the compiler's body-aware warm start is good enough to
+    /// hand to the solver, and why it is not.
+    /// </summary>
+    /// <remarks>
+    /// This used to check that the shell was complete and sewn, and nothing
+    /// else, so it passed arrangements the compiler had already marked
+    /// <c>accepted: false</c>. The source builder then applied the real solver
+    /// input gate and refused them, which failed the whole simulation at the
+    /// next stage with triangles of 0.000095 cm2 and edge strain of 5.5. The
+    /// same thresholds are applied here so the disagreement cannot happen, and
+    /// the caller drops the warm start instead of failing: a garment settles
+    /// perfectly well from the source builder's own arrangement, which is how
+    /// the packaged drape was produced.
+    /// </remarks>
+    private static bool IsUsableBodyAwareArrangement(
         string preflightPath,
-        int expectedPanelCount)
+        int expectedPanelCount,
+        out string reason)
     {
         using JsonDocument report = JsonDocument.Parse(
             File.ReadAllText(RequireFile(preflightPath, "body-aware arrangement preflight")));
@@ -1919,9 +2105,55 @@ public static class SimulationPipeline
                 "minimumTorsoClearanceCm",
                 out _))
         {
-            throw new SimulationPipelineException(
-                "The compiler did not produce a complete, sewn, body-aware warm-start shell.");
+            reason = "it is not a complete, sewn, body-aware shell";
+            return false;
         }
+
+        if (arrangement.TryGetProperty("accepted", out JsonElement acceptedProperty) &&
+            acceptedProperty.ValueKind is JsonValueKind.False)
+        {
+            reason = "the compiler did not accept it";
+            return false;
+        }
+
+        if (!TryGetPositiveFiniteDouble(
+                arrangement,
+                "minimumTriangleAreaCm2",
+                out double minimumTriangleAreaCm2) ||
+            minimumTriangleAreaCm2 < MinimumArrangementTriangleAreaCm2)
+        {
+            reason =
+                $"its smallest triangle is {minimumTriangleAreaCm2:0.######} cm2, " +
+                $"under the {MinimumArrangementTriangleAreaCm2:0.###} cm2 the solver requires";
+            return false;
+        }
+
+        if (!TryGetNonNegativeFiniteDouble(
+                arrangement,
+                "maximumEdgeStrainRatio",
+                out double maximumEdgeStrainRatio) ||
+            maximumEdgeStrainRatio > MaximumArrangementEdgeStrainRatio)
+        {
+            reason =
+                $"its peak edge strain is {maximumEdgeStrainRatio:0.###}, " +
+                $"over the {MaximumArrangementEdgeStrainRatio:0.###} the solver requires";
+            return false;
+        }
+
+        if (!TryGetNonNegativeFiniteDouble(
+                arrangement,
+                "ninetyFifthPercentileEdgeStrainRatio",
+                out double percentileEdgeStrainRatio) ||
+            percentileEdgeStrainRatio > MaximumArrangementPercentileEdgeStrainRatio)
+        {
+            reason =
+                $"its 95th-percentile edge strain is {percentileEdgeStrainRatio:0.###}, " +
+                $"over the {MaximumArrangementPercentileEdgeStrainRatio:0.###} the solver requires";
+            return false;
+        }
+
+        reason = string.Empty;
+        return true;
     }
 
     private static bool HasAuthoritativeSourcePlacement(GarmentDocument garment)

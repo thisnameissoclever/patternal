@@ -1332,8 +1332,8 @@ try {
                 $workspace3dSelection.Current.IsSelected
             } | Out-Null
             $avatarPreviewState = Find-UiElementByAutomationId -Root $window -AutomationId 'DrapeAvatarPreviewState'
-            Wait-ForCondition -Description 'keyboard Fabric restore to settle the fitted avatar state' -TimeoutSeconds 30 -Condition {
-                if ($avatarPreviewState.Current.Name -like 'Avatar preview: fitted MHR candidate*') {
+            Wait-ForCondition -Description 'keyboard Fabric restore to settle the MHR baseline preview' -TimeoutSeconds 30 -Condition {
+                if ($avatarPreviewState.Current.Name -like 'Avatar preview: MHR baseline preview*') {
                     $avatarPreviewState.Current.Name
                 }
                 else {
@@ -1451,26 +1451,92 @@ try {
     }
 
     Invoke-UiCheck -Name '2D selection and frame-selected workflow' -Check {
-        $piece = Find-UiElement -Root $window -Name 'Back Torso'
-        Invoke-UiElement -Element $piece
+        $fit = Find-UiElementByAutomationId -Root $window -AutomationId 'PatternFitButton'
         $frame = Find-UiElementByAutomationId -Root $window -AutomationId 'PatternFrameSelectedButton'
         $zoomLabel = Find-UiElementByAutomationId -Root $window -AutomationId 'PatternZoomText'
+        $collar = Find-UiElement -Root $window -Name 'Left Collar Front'
+        Invoke-UiElement -Element $collar
+        $collarZoom = Wait-ForCondition -Description 'small collar selection to frame automatically' -Condition {
+            $current = $zoomLabel.Current.Name
+            $currentValue = [double]::Parse(
+                $current.TrimEnd('%'),
+                [Globalization.CultureInfo]::InvariantCulture)
+            if ($currentValue -ge 400) { $current } else { $null }
+        }
+        Start-Sleep -Milliseconds 300
+        $smallPieceShotPath = Join-Path $evidenceDirectory '09-2d-small-piece-auto-frame.png'
+        Save-WindowScreenshot -Window $window -Path $smallPieceShotPath
+        $script:screenshots.Add([pscustomobject]@{ name = '2d-small-piece-auto-frame'; file = [IO.Path]::GetFileName($smallPieceShotPath) })
+
+        Invoke-UiElement -Element $fit
+        $fittedZoom = Wait-ForCondition -Description 'fit command to leave the collar detail view' -Condition {
+            $current = $zoomLabel.Current.Name
+            $currentValue = [double]::Parse(
+                $current.TrimEnd('%'),
+                [Globalization.CultureInfo]::InvariantCulture)
+            $collarValue = [double]::Parse(
+                $collarZoom.TrimEnd('%'),
+                [Globalization.CultureInfo]::InvariantCulture)
+            if ($currentValue -lt $collarValue) { $current } else { $null }
+        }
+
+        $backPieceGeometry = Find-UiElement -Root $window -Name 'Back Torso pattern piece'
+        $pieceList = Find-UiElementByAutomationId -Root $window -AutomationId 'PatternPiecesList'
+        $backPieceListItem = Find-UiElement -Root $pieceList -Name 'Back Torso'
+        $backPieceSelection = Get-UiPattern -Element $backPieceListItem -Pattern ([System.Windows.Automation.SelectionItemPattern]::Pattern) -PatternName 'SelectionItemPattern'
+        Invoke-GuestPointerElement -Window $window -Element $backPieceGeometry
+        Wait-ForCondition -Description 'filled Back Torso geometry to select its piece without reframing' -Condition {
+            if ($backPieceSelection.Current.IsSelected -and $zoomLabel.Current.Name -eq $fittedZoom) {
+                $true
+            }
+            else {
+                $null
+            }
+        } | Out-Null
+        Start-Sleep -Milliseconds 300
+        $canvasSelectionShotPath = Join-Path $evidenceDirectory '09-2d-canvas-selection.png'
+        Save-WindowScreenshot -Window $window -Path $canvasSelectionShotPath
+        $script:screenshots.Add([pscustomobject]@{ name = '2d-canvas-selection'; file = [IO.Path]::GetFileName($canvasSelectionShotPath) })
+
+        Invoke-UiElement -Element $collar
+        Wait-ForCondition -Description 'collar list selection before independent Back Torso frame' -Condition {
+            -not $backPieceSelection.Current.IsSelected
+        } | Out-Null
+
+        $piece = Find-UiElement -Root $window -Name 'Back Torso'
+        Invoke-UiElement -Element $piece
         if (-not $frame.Current.IsEnabled) {
             throw 'Frame selected is disabled after selecting Back Torso.'
         }
+        Wait-ForCondition -Description 'Back Torso selection to frame automatically' -Condition {
+            if ($zoomLabel.Current.Name -ne $fittedZoom) { $zoomLabel.Current.Name } else { $null }
+        } | Out-Null
+        Invoke-UiElement -Element $fit
+        Wait-ForCondition -Description 'fit command to restore the all-piece view before explicit framing' -Condition {
+            $zoomLabel.Current.Name -eq $fittedZoom
+        } | Out-Null
         Invoke-UiElement -Element $frame
+        $fittedZoomValue = [double]::Parse(
+            $fittedZoom.TrimEnd('%'),
+            [Globalization.CultureInfo]::InvariantCulture)
         $framedZoom = Wait-ForCondition -Description 'frame-selected command to enlarge Back Torso' -Condition {
             $current = $zoomLabel.Current.Name
             $currentValue = [double]::Parse(
                 $current.TrimEnd('%'),
                 [Globalization.CultureInfo]::InvariantCulture)
-            if ($currentValue -gt 100) { $current } else { $null }
+            if ($currentValue -gt $fittedZoomValue + 0.01) { $current } else { $null }
         }
         Start-Sleep -Milliseconds 300
         $frameShotPath = Join-Path $evidenceDirectory '09-2d-frame-selected.png'
         Save-WindowScreenshot -Window $window -Path $frameShotPath
         $script:screenshots.Add([pscustomobject]@{ name = '2d-frame-selected'; file = [IO.Path]::GetFileName($frameShotPath) })
         [ordered]@{
+            autoFramedPiece = 'Left Collar Front'
+            autoFramedZoom = $collarZoom
+            autoFrameScreenshot = [IO.Path]::GetFileName($smallPieceShotPath)
+            canvasSelectedPiece = 'Back Torso'
+            canvasSelectionZoom = $fittedZoom
+            canvasSelectionScreenshot = [IO.Path]::GetFileName($canvasSelectionShotPath)
             piece = 'Back Torso'
             zoom = $framedZoom
             screenshot = [IO.Path]::GetFileName($frameShotPath)
@@ -2288,9 +2354,9 @@ try {
             } | Out-Null
             Invoke-UiElement -Element $tab3d
             $avatarState = Find-UiElementByAutomationId -Root $window -AutomationId 'DrapeAvatarPreviewState' -TimeoutSeconds 120
-            $changedState = Wait-ForCondition -Description '3D preview to display the editable measurement mesh' -TimeoutSeconds 120 -Condition {
+            $changedState = Wait-ForCondition -Description '3D preview to display the MHR partial preview' -TimeoutSeconds 120 -Condition {
                 $currentName = $avatarState.Current.Name
-                if ($currentName -like 'Avatar preview: editable measurement mesh*') { $currentName } else { $null }
+                if ($currentName -like 'Avatar preview: MHR partial preview*') { $currentName } else { $null }
             }
             $fitCamera = Find-UiElementByAutomationId -Root $window -AutomationId 'DrapeFitCameraButton' -TimeoutSeconds 120
             Invoke-UiElement -Element $fitCamera
@@ -2309,14 +2375,14 @@ try {
                 } | Out-Null
                 Invoke-UiElement -Element $tab3d
                 $avatarState = Find-UiElementByAutomationId -Root $window -AutomationId 'DrapeAvatarPreviewState' -TimeoutSeconds 120
-                $restoredState = Wait-ForCondition -Description '3D preview to restore the fitted MHR candidate' -TimeoutSeconds 120 -Condition {
+                $restoredState = Wait-ForCondition -Description '3D preview to restore the MHR baseline preview' -TimeoutSeconds 120 -Condition {
                     $currentName = $avatarState.Current.Name
-                    if ($currentName -like 'Avatar preview: fitted MHR candidate*') { $currentName } else { $null }
+                    if ($currentName -like 'Avatar preview: MHR baseline preview*') { $currentName } else { $null }
                 }
                 $fitCamera = Find-UiElementByAutomationId -Root $window -AutomationId 'DrapeFitCameraButton' -TimeoutSeconds 120
                 Invoke-UiElement -Element $fitCamera
                 Start-Sleep -Seconds 4
-                $restoredShotPath = Join-Path $evidenceDirectory '16-3d-restored-fitted-avatar.png'
+                $restoredShotPath = Join-Path $evidenceDirectory '16-3d-restored-baseline-preview.png'
                 Save-WindowScreenshot -Window $window -Path $restoredShotPath
                 $drapeViewport = Find-UiElement -Root $window -Name 'Internal browser cloth diagnostic'
                 $restoredRendering = Assert-RenderedScreenshotRegion -Path $restoredShotPath -Window $window -Element $drapeViewport -Description 'Restored fitted avatar viewport'

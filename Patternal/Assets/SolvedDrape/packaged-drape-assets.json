@@ -1,0 +1,164 @@
+{
+  "schemaVersion": "patterna.packaged-drape-assets/1.0",
+  "claims": {
+    "producerAccepted": true,
+    "packagedVisualQualityAccepted": false,
+    "calibratedFabric": false,
+    "patternDraftedForThisBody": true
+  },
+  "producerAcceptanceEvidence": {
+    "evaluated": true,
+    "reportSchema": "patterna.newton-style3d-report/1.0",
+    "reportSha256": "35af6c69bafdc395f4db38d1c7a69729a1be5f7828434fe7f18d07682ab8cd69",
+    "reportAccepted": true,
+    "rejectionReasons": [],
+    "garmentHashMatches": true,
+    "bodyHashMatches": true,
+    "solver": "newton.solvers.SolverStyle3D",
+    "clothGates": {
+      "bodyCollisions": 0,
+      "selfCollisions": 0,
+      "staticEquilibriumReached": true,
+      "maximumSeamSeparationCm": 0.0,
+      "maximumEdgeStrainRatio": 0.2761406980442733,
+      "p95EdgeStrainRatio": 0.028167678240493134,
+      "p999EdgeStrainRatio": 0.11060467791321127,
+      "p9999EdgeStrainRatio": 0.14068780765998382,
+      "highStrainEdgeFraction": 0.0
+    }
+  },
+  "fabricCoherenceEvidence": {
+    "evaluated": true,
+    "reportSha256": "df2e1063b4d04956084018edaa45f32645e42b9a9ffe395503551b643ada279d",
+    "physicallyCoherent": true,
+    "failedRelations": [],
+    "fabricClass": "jersey",
+    "checkedRelations": [
+      "fibre packing fraction",
+      "bending length against jersey",
+      "bending rigidity against published KES-FB2 readings for cotton knits",
+      "membrane stiffness",
+      "shear as a fraction of tensile",
+      "friction against skin",
+      "warp to weft anisotropy"
+    ]
+  },
+  "draftedForThisBodyEvidence": {
+    "evaluated": true,
+    "toleranceCm": 0.15,
+    "fitReportSha256": "ffb21c369c679a7514a600d6adc7c21db7dc92f2ce2a99b395e434e89911dac2",
+    "measurements": [
+      {
+        "measurement": "bust_circumference",
+        "requestedCm": 112.0,
+        "fitTargetCm": 112.0,
+        "achievedCm": 111.8584530379795,
+        "errorCm": -0.14154696202049877,
+        "state": "met"
+      },
+      {
+        "measurement": "waist_circumference",
+        "requestedCm": 82.0,
+        "fitTargetCm": 82.0,
+        "achievedCm": 81.95997089994555,
+        "errorCm": -0.04002910005445415,
+        "state": "met"
+      },
+      {
+        "measurement": "hip_circumference",
+        "requestedCm": 108.0,
+        "fitTargetCm": 108.0,
+        "achievedCm": 107.94886245221464,
+        "errorCm": -0.05113754778535906,
+        "state": "met"
+      },
+      {
+        "measurement": "underbust_circumference",
+        "requestedCm": 84.0,
+        "fitTargetCm": 84.0,
+        "achievedCm": 84.01563883808932,
+        "errorCm": 0.01563883808931621,
+        "state": "met"
+      },
+      {
+        "measurement": "nape_to_waist",
+        "requestedCm": 47.0,
+        "fitTargetCm": 47.0,
+        "achievedCm": 46.99103138259352,
+        "errorCm": -0.008968617406480917,
+        "state": "met"
+      },
+      {
+        "measurement": "upper_arm_circumference",
+        "requestedCm": 26.0,
+        "fitTargetCm": 26.0,
+        "achievedCm": 26.002626373382082,
+        "errorCm": 0.002626373382081937,
+        "state": "met"
+      }
+    ]
+  },
+  "visualReview": {
+    "accepted": false,
+    "reviewer": null,
+    "sixViewManifestSha256": "1fe9437f4692fb64fe7f4b6b89f5699df5a9382f5a5b6dbd3a7d15958f4aed76",
+    "sixViewManifestComplete": true,
+    "views": [
+      "front",
+      "front-oblique",
+      "left",
+      "back",
+      "back-oblique",
+      "right"
+    ]
+  },
+  "openGates": [
+    "The fabric agrees with published KES-FB2 readings for cotton knits but no swatch of this cloth has been measured.",
+    "No person has reviewed and accepted these six views."
+  ],
+  "arrangementId": "4a3bf450c38da10b285408d853687c770648dd1cf8c2a959e2e22389dea6ef3c",
+  "sourceBundleId": "10cc51ef05960722774c3a6c2644addf3a07913eb8fa205a52dc6bd1755bafcf",
+  "garmentArchetype": "MPFB hm08 body with the accepted Newton Style3D crew-neck equilibrium",
+  "method": {
+    "engine": "packaged from an existing accepted pair, not re-solved"
+  },
+  "inputs": {
+    "bodySource": "D:\\VIBES\\patternal\\Patternal\\Assets\\Production\\patterna-mpfb-female.obj",
+    "garmentSource": "D:\\VIBES\\patternal\\Patternal\\Assets\\Production\\patterna-production-crew-neck.obj"
+  },
+  "body": {
+    "vertexCount": 13380,
+    "triangleCount": 26756,
+    "statureMeters": 1.67000004,
+    "units": "meters",
+    "upAxis": "y",
+    "consumer": "parseProductionObj"
+  },
+  "garment": {
+    "vertexCount": 526636,
+    "triangleCount": 1051256,
+    "panelCount": null,
+    "seamLineCount": null,
+    "edgeSegmentCount": null,
+    "fabricTileCentimeters": null,
+    "units": "centimeters",
+    "upAxis": "y",
+    "consumer": "parseTexturedObj",
+    "boundsCentimeters": {
+      "minimum": [
+        -35.325104,
+        94.593006,
+        -23.22409
+      ],
+      "maximum": [
+        35.775742,
+        145.715106,
+        13.4968
+      ]
+    }
+  },
+  "outputs": {
+    "body.obj": "10cc51ef05960722774c3a6c2644addf3a07913eb8fa205a52dc6bd1755bafcf",
+    "garment.obj": "4a3bf450c38da10b285408d853687c770648dd1cf8c2a959e2e22389dea6ef3c"
+  }
+}

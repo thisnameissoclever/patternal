@@ -1,6 +1,6 @@
 # Open-source avatar and cloth foundation decision
 
-Status: active architecture decision, reverified against primary project documentation and release metadata on 2026-08-09. The user approved the pinned MHR and PPF challengers, and both are installed in separate versioned machine-local runtimes. MHR is now the packaged default candidate but remains outside product acceptance. PPF is rejected for the current garment route and is not promoted.
+Status: historical challenger decision, superseded by `docs/adversarial-architecture-review-2026-08-22.md`. The pinned MHR and PPF runtimes remain isolated and reproducible. MHR is preview-only and rejected for product acceptance. PPF is rejected for the current garment route and is not promoted.
 
 ## Bottom line
 
@@ -12,7 +12,7 @@ Patterna should use a deliberately boring composition of permissive foundations 
 4. Keep Newton Style3D as the existing rejected control backend.
 5. Evaluate the installed ZOZO PPF Contact Solver as the first cloth challenger.
 6. Keep Blender as the offline GLB assembly, rendering, and visual-proof boundary.
-7. Keep the installed Meta Momentum Human Rig LOD1 runtime as the active avatar challenger and packaged default candidate. Patterna now has a hash-locked TorchScript runtime, local measurement correction, matching rig correction, a skinned GLB exporter, backend-neutral anatomy and registration reports, and packaged semantic-camera proof. Its numerical gates pass, but its appearance, edited-measurement continuity, cloth, and product visual gates remain open.
+7. Preserve the installed Meta Momentum Human Rig LOD1 runtime as frozen comparison evidence, not an active product candidate. Patterna has a hash-locked TorchScript runtime, local measurement correction, matching rig correction, a skinned GLB exporter, backend-neutral anatomy and registration reports, and packaged semantic-camera proof. Its numerical endpoint gates pass, but compound edits, appearance, collider continuity, cloth, and product visual gates fail or remain open.
 8. Keep Anny 0.5 as a semantic measurement and collision comparator. Its Apache-2.0 code, CC0 MPFB2 data, native shape controls, texture coordinates, and optional Apache-2.0 SOMA topology are useful, but its MakeHuman-derived appearance does not solve the rejected hero-avatar problem.
 9. Keep SOMA-X 0.2.1 as a later interoperability layer for shared topology, rigging, pose correctives, and procedural twist joints if MHR wins. Do not add it to the first bake-off because it adds CUDA PyTorch, Warp, Git LFS or auto-downloaded assets, and another mapping layer before the base avatar is accepted.
 10. Use Blender Studio's CC0 Human Base Meshes only as sculpted detail, topology, and appearance references. They are not parametric bodies and do not replace measurement fitting.
@@ -121,7 +121,7 @@ The generated avatar report uses `accepted` only for its measurement-fit and geo
 
 ### Interactive customization architecture
 
-The packaged default MHR candidate and the current real-time measurement preview are two different systems. Editing any body measurement clears the MHR GLB and exposes the older 151-value MakeHuman-derived deformation mesh. Reviewed guest evidence `20260809-202345-fc31b983` proves the switch and restoration work, but rejects the edited mesh visually: its anatomy, hands, feet, surface detail, and material presentation are below the product gate.
+The packaged MHR body and its additive morph basis are preview-only systems. The root display manifest and morph basis both remain unaccepted. Baseline display is labeled `MHR baseline preview`; a represented body edit is labeled `MHR partial preview` and explicitly has no matching collider or cloth. Any edited value outside the declared basis, or outside its preview envelope, fails closed as `3D unsupported for this revision` while 2D remains authoritative. The viewer receives the complete changed-key set from WinUI, so an unmapped edit cannot inherit exact-fit or accepted wording.
 
 The replacement should preserve one body family from editing through simulation instead of switching topology when the user touches a slider:
 

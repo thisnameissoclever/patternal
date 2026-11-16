@@ -2,7 +2,7 @@
 param(
     [string]$SourceRoot = (Split-Path -Parent $PSScriptRoot),
     [string]$DestinationRoot = (Join-Path $env:LOCALAPPDATA 'Patterna\SimulationRuntime'),
-    [string]$RuntimeVersion = '2026.08.09-style3d-antonia-v7',
+    [string]$RuntimeVersion = '2026.09.13-style3d-mpfb-v1',
     [switch]$Replace
 )
 
@@ -154,7 +154,6 @@ Copy-RuntimeTree (Require-Directory (Join-Path $source 'third_party\GarmentCode'
 Copy-RuntimeTree (Require-Directory (Join-Path $source 'third_party\NvidiaWarp-GarmentCode') 'GarmentCode Warp source') (Join-Path $staging 'third_party\NvidiaWarp-GarmentCode') 'GarmentCode Warp runtime'
 Copy-RuntimeTree (Require-Directory (Join-Path $source 'third_party\MPFB2') 'MPFB source') (Join-Path $staging 'third_party\MPFB2') 'MPFB body system'
 Copy-RuntimeTree (Require-Directory (Join-Path $source 'third_party\MakeHumanAssets') 'MakeHuman assets') (Join-Path $staging 'third_party\MakeHumanAssets') 'MakeHuman body and appearance assets'
-Copy-RuntimeTree (Require-Directory (Join-Path $source 'third_party\CharMorph-db\characters\antonia') 'Antonia character data') (Join-Path $staging 'third_party\CharMorph-db\characters\antonia') 'Antonia body system'
 Copy-RuntimeTree $blenderSource (Join-Path $staging 'blender') 'Blender runtime'
 Copy-RuntimeTree $compilerSource (Join-Path $staging 'compiler') 'Patterna garment compiler'
 
@@ -181,7 +180,7 @@ foreach ($referenceFile in $runtimeReferenceFiles) {
 }
 
 $sourceRevisions = [ordered]@{}
-foreach ($sourceDirectoryName in @('MPFB2', 'GarmentCode', 'MakeHumanAssets', 'NvidiaWarp-GarmentCode', 'CharMorph-db')) {
+foreach ($sourceDirectoryName in @('MPFB2', 'GarmentCode', 'MakeHumanAssets', 'NvidiaWarp-GarmentCode')) {
     $sourceDirectory = Join-Path $source "third_party\$sourceDirectoryName"
     $revision = (& git -C $sourceDirectory rev-parse HEAD 2>$null)
     if ($LASTEXITCODE -eq 0 -and $revision -match '^[0-9a-fA-F]{40}$') {
@@ -191,9 +190,6 @@ foreach ($sourceDirectoryName in @('MPFB2', 'GarmentCode', 'MakeHumanAssets', 'N
 if (-not $sourceRevisions.Contains('MPFB2')) {
     throw 'The installer could not record the exact MPFB source revision.'
 }
-if (-not $sourceRevisions.Contains('CharMorph-db')) {
-    throw 'The installer could not record the exact CharMorph character-data revision.'
-}
 $sourceRevisionPath = Join-Path $staging 'runtime-source-revisions.json'
 [System.IO.File]::WriteAllText(
     $sourceRevisionPath,
@@ -201,17 +197,14 @@ $sourceRevisionPath = Join-Path $staging 'runtime-source-revisions.json'
     [System.Text.UTF8Encoding]::new($false))
 
 $requiredScripts = @(
-    'fit_charmorph_profile.py',
-    'generate_charmorph_avatar.py',
-    'prepare_charmorph_garmentcode_body.py',
-    'charmorph_collision.py',
-    'charmorph_character.py',
-    'charmorph_anatomy.py',
-    'charmorph_pose.py',
-    'charmorph_glb.py',
-    'verify_charmorph_glb.py',
-    'charmorph_morphs.py',
-    'charmorph_profile_controls.py',
+    'generate_mpfb_avatar.py',
+    'prepare_mpfb_garmentcode_body.py',
+    'pose_mpfb_body.py',
+    'mpfb_morph_controls.py',
+    'mpfb_local_deformations.py',
+    'mpfb_surface_constraints.py',
+    'mpfb_measurements.py',
+    'mpfb_fit_acceptance.py',
     'mesh_torso_arcs.py',
     'generate_body_profile_from_mesh.py',
     'export_garmentcode_pattern_mesh.py',
@@ -239,9 +232,9 @@ $integrityFiles += @(
     (Join-Path $staging 'third_party\GarmentCode\pygarment\__init__.py'),
     (Join-Path $staging '.venv-newton\Lib\site-packages\newton\__init__.py'),
     (Join-Path $staging '.venv-newton\Lib\site-packages\warp\__init__.py'),
-    (Join-Path $staging 'third_party\CharMorph-db\characters\antonia\license.txt')
+    (Join-Path $staging 'third_party\MPFB2\LICENSE.ASSETS.md'),
+    (Join-Path $staging 'third_party\MPFB2\src\mpfb\data\rigs\standard\weights.default.json')
 ) | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf }
-$integrityFiles += Get-ChildItem -LiteralPath (Join-Path $staging 'third_party\CharMorph-db\characters\antonia') -File -Recurse | Select-Object -ExpandProperty FullName
 $integrityFiles = $integrityFiles | Sort-Object -Unique
 
 $hashes = [ordered]@{}
@@ -258,10 +251,11 @@ $manifest = [ordered]@{
     blender = 'blender/blender.exe'
     compiler = 'compiler/Patternal.UnrealGarmentCompiler.exe'
     toolsDirectory = 'tools'
-    avatarBackend = 'CharMorph Antonia'
-    avatarOutputLicense = 'CC-BY 3.0'
-    avatarLicenseFile = 'third_party/CharMorph-db/characters/antonia/license.txt'
-    avatarCharacterDirectory = 'third_party/CharMorph-db/characters/antonia'
+    # The body a fresh simulation builds. MPFB lives inside the Blender
+    # extension, so no separate character directory is declared.
+    avatarBackend = 'MakeHuman MPFB2'
+    avatarOutputLicense = 'CC0'
+    avatarLicenseFile = 'third_party/MPFB2/LICENSE.ASSETS.md'
     entrypointSha256 = $hashes
 }
 $manifestPath = Join-Path $staging 'runtime-manifest.json'

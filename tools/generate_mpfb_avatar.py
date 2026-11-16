@@ -40,6 +40,7 @@ from mpfb_local_deformations import (  # noqa: E402
     local_deformation_keys,
 )
 from mpfb_fit_acceptance import evaluate_fit_acceptance  # noqa: E402
+from pose_mpfb_body import arm_weights  # noqa: E402
 from mpfb_surface_constraints import (  # noqa: E402
     BustToHighChestSurfaceConstraintReport,
     HorizontalTorsoCircumferenceConstraintReport,
@@ -57,6 +58,11 @@ TargetService: Any = None
 MPFB_MODULE_NAME = "bl_ext.user_default.mpfb"
 BRA_DISPLAY_SURFACE_OFFSET_M = 0.00008
 BRA_DISPLAY_STRAP_OFFSET_M = 0.00010
+# A body face whose vertices average more than this summed arm-bone weight
+# moves mostly with the arm. The shell ray passes such a face when a torso
+# face lies behind it.
+BRA_ARM_DOMINANT_FACE_WEIGHT = 0.5
+BRA_RAY_RESTART_M = 0.0001
 _BODY_SURFACE_FACE_CACHE: dict[int, tuple[tuple[int, ...], ...]] = {}
 SURFACE_AUTHORITATIVE_RULERS = frozenset({
     "bust_circumference",
@@ -741,8 +747,17 @@ def write_bra_shell_obj(
     surface_offset_m: float = BRA_DISPLAY_SURFACE_OFFSET_M,
     strap_offset_m: float = BRA_DISPLAY_STRAP_OFFSET_M,
     maximum_torso_half_width_m: float | None = None,
+    arm_weight_by_vertex: list[float] | None = None,
 ) -> tuple[int, int, int]:
-    """Write a smooth optional sports-bra shell fitted to the collision body."""
+    """Write a smooth optional sports-bra shell fitted to the collision body.
+
+    `arm_weight_by_vertex` is the summed rig weight of the arm bones for each
+    basemesh vertex. The display build passes it so a ray cast from the side
+    passes through the raised arm and lands on the torso behind it. The arm
+    faces stay in the surface: MakeHuman spreads small arm weights across the
+    chest as far as the midline, so deleting every arm-weighted face removes
+    the chest the shell is fitted to.
+    """
     body_group = basemesh.vertex_groups.get("body")
     if body_group is None:
         raise RuntimeError("MPFB basemesh has no body vertex group.")
@@ -772,6 +787,12 @@ def write_bra_shell_obj(
         )
     ]
     surface = BVHTree.FromPolygons(coordinates, body_faces, all_triangles=False)
+    arm_dominant_faces = [
+        arm_weight_by_vertex is not None
+        and sum(arm_weight_by_vertex[index] for index in face) / len(face)
+        > BRA_ARM_DOMINANT_FACE_WEIGHT
+        for face in body_faces
+    ]
 
     shell_vertices: list[Vector] = []
     shell_uvs: list[tuple[float, float]] = []
@@ -787,8 +808,9 @@ def write_bra_shell_obj(
         # Always cast inward from outside the body. A large supported bust is
         # concave at the inframammary fold, so an origin-outward ray can select
         # an inner fold wall and put the display bra behind the breast surface.
-        exterior = origin + direction * 1.0
-        location, normal, _face_index, _distance = surface.ray_cast(
+        exterior_distance = 1.0
+        exterior = origin + direction * exterior_distance
+        location, normal, face_index, distance = surface.ray_cast(
             exterior,
             -direction,
             2.0,
@@ -797,6 +819,26 @@ def write_bra_shell_obj(
             raise RuntimeError(
                 f"Could not fit bra shell at theta={theta:.4f}, z={z_ratio:.4f}."
             )
+        # A first hit on an arm is the raised arm standing in front of the
+        # torso. Walk inward past arm faces, stopping at the body axis, and
+        # keep the innermost hit when every face on the way is arm-driven:
+        # there the arm is fused with the torso, as it is over the shoulder.
+        travelled = distance
+        while arm_dominant_faces[face_index]:
+            travelled += BRA_RAY_RESTART_M
+            if travelled >= exterior_distance:
+                break
+            next_location, next_normal, next_face_index, next_distance = (
+                surface.ray_cast(
+                    exterior - direction * travelled,
+                    -direction,
+                    exterior_distance - travelled,
+                )
+            )
+            if next_location is None or next_normal is None:
+                break
+            location, normal, face_index = next_location, next_normal, next_face_index
+            travelled += next_distance
         if normal.dot(direction) < 0.0:
             normal.negate()
         normal.normalize()
@@ -1072,10 +1114,31 @@ def build_display_avatar(
             "uv_count": body_geometry[2],
         }
     }
+    # Fit the shell to the torso alone. Without this the rays cast at the
+    # sides reach the raised arms and the shell wraps onto them, which is
+    # invisible while the arms stay raised and stands out as flat slabs at
+    # chest height the moment the body is lowered into its relaxed stance. A
+    # width limit cannot separate them here, the torso ends 0.8 cm before the
+    # arm begins at bust height, so the arm is defined the way the pose
+    # defines it: every vertex the rig weights assign to an arm bone.
+    rig_weights = json.loads(
+        (REPO_ROOT / "third_party" / "MPFB2" / "src" / "mpfb" / "data" / "rigs" / "standard" / "weights.default.json")
+        .read_text(encoding="utf-8")
+    )
+    vertex_count = len(basemesh.data.vertices)
+    arm_weight_by_vertex = [
+        max(left_weight, right_weight)
+        for left_weight, right_weight in zip(
+            arm_weights(vertex_count, rig_weights, ".L"),
+            arm_weights(vertex_count, rig_weights, ".R"),
+            strict=True,
+        )
+    ]
     bra_geometry = write_bra_shell_obj(
         basemesh,
         output_dir / "bra.obj",
         coordinates,
+        arm_weight_by_vertex=arm_weight_by_vertex,
     )
     write_solid_texture(output_dir / "bra.png", (0.018, 0.035, 0.055, 1.0))
     generated_assets["bra"] = {
@@ -1199,6 +1262,134 @@ def git_head(path: Path) -> str:
     return revision.lower()
 
 
+@dataclass
+class FittedMeasurementResults:
+    """What the measurement fit produced, for the report that records it."""
+
+    height: Any
+    detail_morph_controls: list[dict[str, Any]]
+    requested_measurements: dict[str, float]
+    requested_measurement_sources: dict[str, Any]
+    direct_fit: dict[str, Any]
+    coupled_refinement: list[dict[str, Any]]
+    local_compensation: list[dict[str, Any]]
+
+
+def fit_basemesh_to_profile(
+    basemesh: bpy.types.Object,
+    profile: dict[str, float],
+    height_result: Any,
+    *,
+    max_target_weight: float,
+    fit_passes: int,
+    tolerance_cm: float,
+) -> FittedMeasurementResults:
+    """Drive a created basemesh onto the profile's measurements.
+
+    Every step here matters to the body that comes out, and the last one is
+    the easiest to leave out: local deformations and surface constraints change
+    both the rulers and the stature, so the loop at the end re-fits against
+    compensated targets and re-applies the height against the deformed
+    measurement. A caller that skips it gets a body several centimetres taller
+    than the profile asked for, which is why this is shared rather than
+    repeated.
+    """
+    detail_morph_results = apply_detail_morph_controls(basemesh, profile)
+    internal_fit_tolerance = min(tolerance_cm * 0.1, 0.02)
+
+    requested_measurements = target_measurements(profile)
+    requested_measurement_sources = target_measurement_source_keys(profile)
+    fit_results: dict[str, Any] = {}
+    for _ in range(fit_passes):
+        for measurement_name, desired_cm in requested_measurements.items():
+            fit_results[measurement_name] = fit_direct_measurement(
+                basemesh,
+                measurement_name,
+                desired_cm,
+                max_target_weight,
+                internal_fit_tolerance,
+            )
+        if "height" in profile:
+            height_result = set_height(
+                basemesh,
+                profile["height"],
+                internal_fit_tolerance,
+            )
+
+    coupled_refinement = refine_coupled_direct_measurements(
+        basemesh,
+        profile,
+        requested_measurements,
+        fit_results,
+        max_target_weight,
+        tolerance_cm,
+    )
+
+    # Local surface and posture controls can perturb a hard ruler. Compensate
+    # against the undeformed MPFB ruler target, except where a closed collision
+    # surface is the measurement authority. Open MPFB bust chains remain useful
+    # morph controls but must not fight the actual body tape circumference.
+    local_compensation: list[dict[str, Any]] = []
+    for pass_index in range(12):
+        raw_coordinates = mixed_world_coordinates(basemesh)
+        deformed_coordinates, _ = deformed_world_coordinates(basemesh, profile)
+        compensated_targets: dict[str, float] = {}
+        for measurement_name, desired_cm in requested_measurements.items():
+            if measurement_name in SURFACE_AUTHORITATIVE_RULERS:
+                continue
+            raw_cm = ruler_measurement_cm(raw_coordinates, measurement_name)
+            deformed_cm = ruler_measurement_cm(deformed_coordinates, measurement_name)
+            compensated_targets[measurement_name] = desired_cm - (deformed_cm - raw_cm)
+        for measurement_name, compensated_cm in compensated_targets.items():
+            fit_direct_measurement(
+                basemesh,
+                measurement_name,
+                compensated_cm,
+                max_target_weight,
+                internal_fit_tolerance,
+            )
+        if "height" in profile:
+            raw_height = avatar_height_cm(mixed_world_coordinates(basemesh))
+            deformed_height = avatar_height_cm(
+                deformed_world_coordinates(
+                    basemesh,
+                    profile,
+                    apply_surface_constraints=False,
+                )[0]
+            )
+            set_height(
+                basemesh,
+                profile["height"] - (deformed_height - raw_height),
+                tolerance_cm,
+            )
+        compensated_coordinates, _ = deformed_world_coordinates(basemesh, profile)
+        compensated_errors = {
+            measurement_name: abs(
+                ruler_measurement_cm(compensated_coordinates, measurement_name)
+                - desired_cm
+            )
+            for measurement_name, desired_cm in requested_measurements.items()
+            if measurement_name not in SURFACE_AUTHORITATIVE_RULERS
+        }
+        local_compensation.append({
+            "pass": pass_index + 1,
+            "compensated_targets_cm": compensated_targets,
+            "maximum_direct_ruler_error_cm": max(compensated_errors.values(), default=0.0),
+        })
+        if all(error <= tolerance_cm for error in compensated_errors.values()):
+            break
+
+    return FittedMeasurementResults(
+        height=height_result,
+        detail_morph_controls=detail_morph_results,
+        requested_measurements=requested_measurements,
+        requested_measurement_sources=requested_measurement_sources,
+        direct_fit=fit_results,
+        coupled_refinement=coupled_refinement,
+        local_compensation=local_compensation,
+    )
+
+
 def main() -> None:
     global HumanObjectProperties, HumanService, TargetService
 
@@ -1260,90 +1451,21 @@ def main() -> None:
             args.tolerance_cm,
         )
 
-    detail_morph_results = apply_detail_morph_controls(basemesh, profile)
-    internal_fit_tolerance = min(args.tolerance_cm * 0.1, 0.02)
-
-    requested_measurements = target_measurements(profile)
-    requested_measurement_sources = target_measurement_source_keys(profile)
-    fit_results: dict[str, Any] = {}
-    for _ in range(args.fit_passes):
-        for measurement_name, desired_cm in requested_measurements.items():
-            fit_results[measurement_name] = fit_direct_measurement(
-                basemesh,
-                measurement_name,
-                desired_cm,
-                args.max_target_weight,
-                internal_fit_tolerance,
-            )
-        if "height" in profile:
-            height_result = set_height(
-                basemesh,
-                profile["height"],
-                internal_fit_tolerance,
-            )
-
-    coupled_refinement = refine_coupled_direct_measurements(
+    fitted = fit_basemesh_to_profile(
         basemesh,
         profile,
-        requested_measurements,
-        fit_results,
-        args.max_target_weight,
-        args.tolerance_cm,
+        height_result,
+        max_target_weight=args.max_target_weight,
+        fit_passes=args.fit_passes,
+        tolerance_cm=args.tolerance_cm,
     )
-
-    # Local surface and posture controls can perturb a hard ruler. Compensate
-    # against the undeformed MPFB ruler target, except where a closed collision
-    # surface is the measurement authority. Open MPFB bust chains remain useful
-    # morph controls but must not fight the actual body tape circumference.
-    local_compensation: list[dict[str, Any]] = []
-    for pass_index in range(12):
-        raw_coordinates = mixed_world_coordinates(basemesh)
-        deformed_coordinates, _ = deformed_world_coordinates(basemesh, profile)
-        compensated_targets: dict[str, float] = {}
-        for measurement_name, desired_cm in requested_measurements.items():
-            if measurement_name in SURFACE_AUTHORITATIVE_RULERS:
-                continue
-            raw_cm = ruler_measurement_cm(raw_coordinates, measurement_name)
-            deformed_cm = ruler_measurement_cm(deformed_coordinates, measurement_name)
-            compensated_targets[measurement_name] = desired_cm - (deformed_cm - raw_cm)
-        for measurement_name, compensated_cm in compensated_targets.items():
-            fit_direct_measurement(
-                basemesh,
-                measurement_name,
-                compensated_cm,
-                args.max_target_weight,
-                internal_fit_tolerance,
-            )
-        if "height" in profile:
-            raw_height = avatar_height_cm(mixed_world_coordinates(basemesh))
-            deformed_height = avatar_height_cm(
-                deformed_world_coordinates(
-                    basemesh,
-                    profile,
-                    apply_surface_constraints=False,
-                )[0]
-            )
-            set_height(
-                basemesh,
-                profile["height"] - (deformed_height - raw_height),
-                args.tolerance_cm,
-            )
-        compensated_coordinates, _ = deformed_world_coordinates(basemesh, profile)
-        compensated_errors = {
-            measurement_name: abs(
-                ruler_measurement_cm(compensated_coordinates, measurement_name)
-                - desired_cm
-            )
-            for measurement_name, desired_cm in requested_measurements.items()
-            if measurement_name not in SURFACE_AUTHORITATIVE_RULERS
-        }
-        local_compensation.append({
-            "pass": pass_index + 1,
-            "compensated_targets_cm": compensated_targets,
-            "maximum_direct_ruler_error_cm": max(compensated_errors.values(), default=0.0),
-        })
-        if all(error <= args.tolerance_cm for error in compensated_errors.values()):
-            break
+    height_result = fitted.height
+    detail_morph_results = fitted.detail_morph_controls
+    requested_measurements = fitted.requested_measurements
+    requested_measurement_sources = fitted.requested_measurement_sources
+    fit_results = fitted.direct_fit
+    coupled_refinement = fitted.coupled_refinement
+    local_compensation = fitted.local_compensation
 
     coordinates, deformation_evidence = deformed_world_coordinates(basemesh, profile)
     if height_result is not None:

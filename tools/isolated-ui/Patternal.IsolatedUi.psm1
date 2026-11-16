@@ -139,6 +139,39 @@ function Assert-PatternalHyperVAccess {
     }
 }
 
+function Start-PatternalVmForAutomation {
+    param(
+        [string]$VmName = $script:DefaultVmName,
+        [ValidateRange(5, 300)]
+        [int]$SavedStateStabilizationSeconds = 75
+    )
+
+    $vm = Assert-PatternalHyperVAccess -VmName $VmName
+    $resumedSavedState = $vm.State -eq 'Saved'
+    if ($vm.State -ne 'Running') {
+        Start-VM -Name $VmName | Out-Null
+    }
+
+    if ($resumedSavedState) {
+        $deadline = [DateTimeOffset]::UtcNow.AddSeconds($SavedStateStabilizationSeconds)
+        do {
+            Start-Sleep -Seconds 3
+            $vm = Get-VM -Name $VmName -ErrorAction Stop
+            if ($vm.State -eq 'Off') {
+                # A saved guest can contain an already-initiated Windows shutdown. Let it
+                # finish, then boot once from a clean off state instead of racing it.
+                Start-VM -Name $VmName | Out-Null
+                return Get-VM -Name $VmName -ErrorAction Stop
+            }
+            if ($vm.State -ne 'Running') {
+                throw "Virtual machine '$VmName' entered unexpected state '$($vm.State)' while stabilizing a saved session."
+            }
+        } while ([DateTimeOffset]::UtcNow -lt $deadline)
+    }
+
+    return Get-VM -Name $VmName -ErrorAction Stop
+}
+
 function New-PatternalVmSession {
     param(
         [string]$VmName = $script:DefaultVmName,
@@ -267,12 +300,13 @@ function Get-PatternalDirectoryIdentity {
     )
 
     $resolvedPath = (Resolve-Path -LiteralPath $Path).Path
-    $lines = foreach ($file in Get-ChildItem -LiteralPath $resolvedPath -File -Recurse | Sort-Object FullName) {
+    [string[]]$lines = foreach ($file in Get-ChildItem -LiteralPath $resolvedPath -File -Recurse) {
         $rootPrefix = $resolvedPath.TrimEnd('\') + '\'
         $relativePath = $file.FullName.Substring($rootPrefix.Length).Replace('\', '/')
         $hash = Get-PatternalFileSha256 -Path $file.FullName
         "$relativePath`t$($file.Length)`t$hash"
     }
+    [Array]::Sort($lines, [StringComparer]::Ordinal)
 
     $content = [Text.Encoding]::UTF8.GetBytes(($lines -join "`n"))
     $sha256 = [System.Security.Cryptography.SHA256]::Create()
@@ -298,5 +332,6 @@ Export-ModuleMember -Function @(
     'New-PatternalDataIso',
     'New-PatternalGuestCredential',
     'New-PatternalVmSession',
+    'Start-PatternalVmForAutomation',
     'Send-PatternalVmEnterKey'
 )

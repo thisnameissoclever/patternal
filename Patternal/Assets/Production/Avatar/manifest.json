@@ -58,5 +58,2156 @@
     }
   },
   "source_body_geometry_sha256": "9f05f12e4beaa2bb2d0a084b611a5fb8a5a62622490c43a1a3f8e208a8420cd8",
-  "source_body_vertex_count": 13380
+  "source_body_vertex_count": 13380,
+  "morph_basis": {
+    "schemaVersion": "patterna.mpfb-morph-basis/1.0",
+    "accepted": false,
+    "previewOnly": true,
+    "validationScope": "independent endpoint interpolation for declared measurements only; compound behaviour is unproven",
+    "source": "MakeHuman Community system assets via MPFB",
+    "license": "CC0",
+    "file": "mpfb-morphs.bin",
+    "bytes": 3086960,
+    "sha256": "2799f506bc81cd6229e8cbf76dadc0e2200e5cbe82671b5c1e2d6823e9db5c85",
+    "encoding": "per endpoint: little-endian uint32 source vertex indices followed by little-endian float32 xyz deltas in Blender metres",
+    "sourceVertexCount": 13380,
+    "sourceBodySha256": "293f5a1bd486b49f6762cfc0bf260d7fdd766f8a8634839f039331e86b8bd52f",
+    "deltaKind": "mpfb-target-offsets",
+    "bodyIndependent": true,
+    "baselineHeightCm": 167.0,
+    "baselineSeparationFromPackagedBodyM": 0.07089334276027003,
+    "minimumDisplacementM": 2e-05,
+    "parameters": [
+      {
+        "avatarKey": "head-circumference",
+        "avatarSourceKeys": [
+          "headCirc"
+        ],
+        "aggregation": "first",
+        "minimum": 45.0,
+        "baseline": 56.2,
+        "maximum": 70.0,
+        "endpoints": {
+          "minimum": {
+            "count": 4160,
+            "indexByteOffset": 0,
+            "deltaByteOffset": 16640,
+            "maximumDisplacementM": 0.012771345674991608
+          },
+          "maximum": {
+            "count": 4160,
+            "indexByteOffset": 66560,
+            "deltaByteOffset": 83200,
+            "maximumDisplacementM": 0.012771345674991608
+          }
+        },
+        "restValueOnMeasuredBody": 56.2
+      },
+      {
+        "avatarKey": "head-height",
+        "avatarSourceKeys": [
+          "headHeight",
+          "crownChin"
+        ],
+        "aggregation": "mean",
+        "minimum": 16.0,
+        "baseline": 22.75,
+        "maximum": 30.0,
+        "endpoints": {
+          "minimum": {
+            "count": 4211,
+            "indexByteOffset": 133120,
+            "deltaByteOffset": 149964,
+            "maximumDisplacementM": 0.017354130744934082
+          },
+          "maximum": {
+            "count": 4211,
+            "indexByteOffset": 200496,
+            "deltaByteOffset": 217340,
+            "maximumDisplacementM": 0.01735401153564453
+          }
+        },
+        "restValueOnMeasuredBody": 22.75
+      },
+      {
+        "avatarKey": "face-depth",
+        "avatarSourceKeys": [
+          "faceDepth"
+        ],
+        "aggregation": "first",
+        "minimum": 12.0,
+        "baseline": 18.1,
+        "maximum": 25.0,
+        "endpoints": {
+          "minimum": {
+            "count": 3554,
+            "indexByteOffset": 267872,
+            "deltaByteOffset": 282088,
+            "maximumDisplacementM": 0.005784675478935242
+          },
+          "maximum": {
+            "count": 3554,
+            "indexByteOffset": 324736,
+            "deltaByteOffset": 338952,
+            "maximumDisplacementM": 0.008489206433296204
+          }
+        },
+        "restValueOnMeasuredBody": 18.1
+      },
+      {
+        "avatarKey": "temple-width",
+        "avatarSourceKeys": [
+          "faceWidth"
+        ],
+        "aggregation": "first",
+        "minimum": 10.0,
+        "baseline": 14.2,
+        "maximum": 20.0,
+        "endpoints": {
+          "minimum": {
+            "count": 90,
+            "indexByteOffset": 381600,
+            "deltaByteOffset": 381960,
+            "maximumDisplacementM": 0.006085168570280075
+          },
+          "maximum": {
+            "count": 258,
+            "indexByteOffset": 383040,
+            "deltaByteOffset": 384072,
+            "maximumDisplacementM": 0.004885472227513416
+          }
+        },
+        "restValueOnMeasuredBody": 14.2
+      },
+      {
+        "avatarKey": "cheekbone-width",
+        "avatarSourceKeys": [
+          "bizygomaticWidth"
+        ],
+        "aggregation": "first",
+        "minimum": 9.0,
+        "baseline": 13.8,
+        "maximum": 20.0,
+        "endpoints": {
+          "minimum": {
+            "count": 168,
+            "indexByteOffset": 387168,
+            "deltaByteOffset": 387840,
+            "maximumDisplacementM": 0.0019387485860039345
+          },
+          "maximum": {
+            "count": 118,
+            "indexByteOffset": 389856,
+            "deltaByteOffset": 390328,
+            "maximumDisplacementM": 0.006085168570280075
+          }
+        },
+        "restValueOnMeasuredBody": 13.8
+      },
+      {
+        "avatarKey": "ear-to-ear-over-crown",
+        "avatarSourceKeys": [
+          "earToEar"
+        ],
+        "aggregation": "first",
+        "minimum": 22.0,
+        "baseline": 31.8,
+        "maximum": 42.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1010,
+            "indexByteOffset": 391744,
+            "deltaByteOffset": 395784,
+            "maximumDisplacementM": 0.0052681957355335185
+          },
+          "maximum": {
+            "count": 1016,
+            "indexByteOffset": 407904,
+            "deltaByteOffset": 411968,
+            "maximumDisplacementM": 0.005432682275385333
+          }
+        },
+        "restValueOnMeasuredBody": 31.8
+      },
+      {
+        "avatarKey": "back-skull-projection",
+        "avatarSourceKeys": [
+          "skullBackProjection"
+        ],
+        "aggregation": "first",
+        "minimum": 0.0,
+        "baseline": 2.1,
+        "maximum": 6.0,
+        "endpoints": {
+          "minimum": {
+            "count": 374,
+            "indexByteOffset": 424160,
+            "deltaByteOffset": 425656,
+            "maximumDisplacementM": 0.020375790032402055
+          },
+          "maximum": {
+            "count": 378,
+            "indexByteOffset": 430144,
+            "deltaByteOffset": 431656,
+            "maximumDisplacementM": 0.022415765932910423
+          }
+        },
+        "restValueOnMeasuredBody": 2.1
+      },
+      {
+        "avatarKey": "jaw-width",
+        "avatarSourceKeys": [
+          "jawWidth"
+        ],
+        "aggregation": "first",
+        "minimum": 7.0,
+        "baseline": 11.2,
+        "maximum": 18.0,
+        "endpoints": {
+          "minimum": {
+            "count": 142,
+            "indexByteOffset": 436192,
+            "deltaByteOffset": 436760,
+            "maximumDisplacementM": 0.00383803008570919
+          },
+          "maximum": {
+            "count": 198,
+            "indexByteOffset": 438464,
+            "deltaByteOffset": 439256,
+            "maximumDisplacementM": 0.008942783988093863
+          }
+        },
+        "restValueOnMeasuredBody": 11.2
+      },
+      {
+        "avatarKey": "jaw-depth",
+        "avatarSourceKeys": [
+          "jawDepth"
+        ],
+        "aggregation": "first",
+        "minimum": 6.0,
+        "baseline": 10.4,
+        "maximum": 16.0,
+        "endpoints": {
+          "minimum": {
+            "count": 457,
+            "indexByteOffset": 441632,
+            "deltaByteOffset": 443460,
+            "maximumDisplacementM": 0.005934923887252808
+          },
+          "maximum": {
+            "count": 331,
+            "indexByteOffset": 448944,
+            "deltaByteOffset": 450268,
+            "maximumDisplacementM": 0.005258806049823761
+          }
+        },
+        "restValueOnMeasuredBody": 10.4
+      },
+      {
+        "avatarKey": "neck-base-width",
+        "avatarSourceKeys": [
+          "neckBaseCirc"
+        ],
+        "aggregation": "first",
+        "minimum": 28.0,
+        "baseline": 39.4,
+        "maximum": 68.0,
+        "endpoints": {
+          "minimum": {
+            "count": 424,
+            "indexByteOffset": 454240,
+            "deltaByteOffset": 455936,
+            "maximumDisplacementM": 0.007437430322170258
+          },
+          "maximum": {
+            "count": 528,
+            "indexByteOffset": 461024,
+            "deltaByteOffset": 463136,
+            "maximumDisplacementM": 0.008864816278219223
+          }
+        },
+        "restValueOnMeasuredBody": 39.4
+      },
+      {
+        "avatarKey": "neck-depth",
+        "avatarSourceKeys": [
+          "neckCirc"
+        ],
+        "aggregation": "first",
+        "minimum": 24.0,
+        "baseline": 34.5,
+        "maximum": 58.0,
+        "endpoints": {
+          "minimum": {
+            "count": 676,
+            "indexByteOffset": 469472,
+            "deltaByteOffset": 472176,
+            "maximumDisplacementM": 0.006611049175262451
+          },
+          "maximum": {
+            "count": 676,
+            "indexByteOffset": 480288,
+            "deltaByteOffset": 482992,
+            "maximumDisplacementM": 0.006611049175262451
+          }
+        },
+        "restValueOnMeasuredBody": 34.5
+      },
+      {
+        "avatarKey": "chin-to-neck",
+        "avatarSourceKeys": [
+          "chinNeck"
+        ],
+        "aggregation": "first",
+        "minimum": 4.0,
+        "baseline": 9.3,
+        "maximum": 17.0,
+        "endpoints": {
+          "minimum": {
+            "count": 257,
+            "indexByteOffset": 491104,
+            "deltaByteOffset": 492132,
+            "maximumDisplacementM": 0.004958391189575195
+          },
+          "maximum": {
+            "count": 480,
+            "indexByteOffset": 495216,
+            "deltaByteOffset": 497136,
+            "maximumDisplacementM": 0.010267138481140137
+          }
+        },
+        "restValueOnMeasuredBody": 9.3
+      },
+      {
+        "avatarKey": "head-forward-offset",
+        "avatarSourceKeys": [
+          "neckForward"
+        ],
+        "aggregation": "first",
+        "minimum": -4.0,
+        "baseline": 1.2,
+        "maximum": 8.0,
+        "endpoints": {
+          "minimum": {
+            "count": 813,
+            "indexByteOffset": 502896,
+            "deltaByteOffset": 506148,
+            "maximumDisplacementM": 0.011018417775630951
+          },
+          "maximum": {
+            "count": 617,
+            "indexByteOffset": 515904,
+            "deltaByteOffset": 518372,
+            "maximumDisplacementM": 0.011018417775630951
+          }
+        },
+        "restValueOnMeasuredBody": 1.2
+      },
+      {
+        "avatarKey": "chest-depth",
+        "avatarSourceKeys": [
+          "chestDepth"
+        ],
+        "aggregation": "first",
+        "minimum": 14.0,
+        "baseline": 31.0,
+        "maximum": 42.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1671,
+            "indexByteOffset": 525776,
+            "deltaByteOffset": 532460,
+            "maximumDisplacementM": 0.009586021304130554
+          },
+          "maximum": {
+            "count": 1590,
+            "indexByteOffset": 552512,
+            "deltaByteOffset": 558872,
+            "maximumDisplacementM": 0.018510941416025162
+          }
+        },
+        "restValueOnMeasuredBody": 23.2
+      },
+      {
+        "avatarKey": "high-chest-circumference",
+        "avatarSourceKeys": [
+          "highChestCirc"
+        ],
+        "aggregation": "first",
+        "minimum": 58.0,
+        "baseline": 96.0,
+        "maximum": 150.0,
+        "endpoints": {
+          "minimum": {
+            "count": 5822,
+            "indexByteOffset": 577952,
+            "deltaByteOffset": 601240,
+            "maximumDisplacementM": 0.015235543251037598
+          },
+          "maximum": {
+            "count": 5508,
+            "indexByteOffset": 671104,
+            "deltaByteOffset": 693136,
+            "maximumDisplacementM": 0.015415787696838379
+          }
+        },
+        "restValueOnMeasuredBody": 88.0
+      },
+      {
+        "avatarKey": "back-width",
+        "avatarSourceKeys": [
+          "acrossBack"
+        ],
+        "aggregation": "first",
+        "minimum": 24.0,
+        "baseline": 37.0,
+        "maximum": 60.0,
+        "endpoints": {
+          "minimum": {
+            "count": 468,
+            "indexByteOffset": 759232,
+            "deltaByteOffset": 761104,
+            "maximumDisplacementM": 0.01272865141221938
+          },
+          "maximum": {
+            "count": 468,
+            "indexByteOffset": 766720,
+            "deltaByteOffset": 768592,
+            "maximumDisplacementM": 0.012728663390713484
+          }
+        },
+        "restValueOnMeasuredBody": 36.5
+      },
+      {
+        "avatarKey": "lower-rib-circumference",
+        "avatarSourceKeys": [
+          "ribCirc"
+        ],
+        "aggregation": "first",
+        "minimum": 50.0,
+        "baseline": 82.0,
+        "maximum": 145.0,
+        "endpoints": {
+          "minimum": {
+            "count": 456,
+            "indexByteOffset": 774208,
+            "deltaByteOffset": 776032,
+            "maximumDisplacementM": 0.002604342280698948
+          },
+          "maximum": {
+            "count": 472,
+            "indexByteOffset": 781504,
+            "deltaByteOffset": 783392,
+            "maximumDisplacementM": 0.014367509486991252
+          }
+        },
+        "restValueOnMeasuredBody": 78.4
+      },
+      {
+        "avatarKey": "upper-bust-fullness",
+        "avatarSourceKeys": [
+          "upperBustFullness"
+        ],
+        "aggregation": "first",
+        "minimum": 0.0,
+        "baseline": 85.0,
+        "maximum": 100.0,
+        "endpoints": {
+          "minimum": {
+            "count": 241,
+            "indexByteOffset": 789056,
+            "deltaByteOffset": 790020,
+            "maximumDisplacementM": 0.008160576627696632
+          },
+          "maximum": {
+            "count": 344,
+            "indexByteOffset": 792912,
+            "deltaByteOffset": 794288,
+            "maximumDisplacementM": 0.010142230790774323
+          }
+        },
+        "restValueOnMeasuredBody": 50.0
+      },
+      {
+        "avatarKey": "back-waist-length",
+        "avatarSourceKeys": [
+          "backWaistLength"
+        ],
+        "aggregation": "first",
+        "minimum": 27.0,
+        "baseline": 41.8,
+        "maximum": 64.0,
+        "endpoints": {
+          "minimum": {
+            "count": 9999,
+            "indexByteOffset": 798416,
+            "deltaByteOffset": 838412,
+            "maximumDisplacementM": 0.017269015312194824
+          },
+          "maximum": {
+            "count": 9816,
+            "indexByteOffset": 958400,
+            "deltaByteOffset": 997664,
+            "maximumDisplacementM": 0.041188955307006836
+          }
+        },
+        "restValueOnMeasuredBody": 41.8
+      },
+      {
+        "avatarKey": "bust-separation",
+        "avatarSourceKeys": [
+          "bustSeparation"
+        ],
+        "aggregation": "first",
+        "minimum": 8.0,
+        "baseline": 19.0,
+        "maximum": 34.0,
+        "endpoints": {
+          "minimum": {
+            "count": 294,
+            "indexByteOffset": 1115456,
+            "deltaByteOffset": 1116632,
+            "maximumDisplacementM": 0.024841255444968017
+          },
+          "maximum": {
+            "count": 290,
+            "indexByteOffset": 1120160,
+            "deltaByteOffset": 1121320,
+            "maximumDisplacementM": 0.018327716573855592
+          }
+        },
+        "restValueOnMeasuredBody": 18.6
+      },
+      {
+        "avatarKey": "bust-height",
+        "avatarSourceKeys": [
+          "bustHeightL",
+          "bustHeightR"
+        ],
+        "aggregation": "mean",
+        "minimum": 14.0,
+        "baseline": 24.700000000000003,
+        "maximum": 42.0,
+        "endpoints": {
+          "minimum": {
+            "count": 579,
+            "indexByteOffset": 1124800,
+            "deltaByteOffset": 1127116,
+            "maximumDisplacementM": 0.01069784164428711
+          },
+          "maximum": {
+            "count": 583,
+            "indexByteOffset": 1134064,
+            "deltaByteOffset": 1136396,
+            "maximumDisplacementM": 0.01983320713043213
+          }
+        },
+        "restValueOnMeasuredBody": 25.7
+      },
+      {
+        "avatarKey": "bust-projection",
+        "avatarSourceKeys": [
+          "bustProjectionL",
+          "bustProjectionR"
+        ],
+        "aggregation": "mean",
+        "minimum": 0.0,
+        "baseline": 9.5,
+        "maximum": 14.0,
+        "endpoints": {
+          "minimum": {
+            "count": 278,
+            "indexByteOffset": 1143392,
+            "deltaByteOffset": 1144504,
+            "maximumDisplacementM": 0.0022187444559345773
+          },
+          "maximum": {
+            "count": 200,
+            "indexByteOffset": 1147840,
+            "deltaByteOffset": 1148640,
+            "maximumDisplacementM": 0.005946810102277275
+          }
+        },
+        "restValueOnMeasuredBody": 4.75
+      },
+      {
+        "avatarKey": "abdomen-projection",
+        "avatarSourceKeys": [
+          "abdomenProjection"
+        ],
+        "aggregation": "first",
+        "minimum": -4.0,
+        "baseline": 2.4,
+        "maximum": 12.0,
+        "endpoints": {
+          "minimum": {
+            "count": 140,
+            "indexByteOffset": 1151040,
+            "deltaByteOffset": 1151600,
+            "maximumDisplacementM": 0.008583586301158392
+          },
+          "maximum": {
+            "count": 346,
+            "indexByteOffset": 1153280,
+            "deltaByteOffset": 1154664,
+            "maximumDisplacementM": 0.05400891312337991
+          }
+        },
+        "restValueOnMeasuredBody": 1.7
+      },
+      {
+        "avatarKey": "abdomen-circumference",
+        "avatarSourceKeys": [
+          "abdomenCirc"
+        ],
+        "aggregation": "first",
+        "minimum": 50.0,
+        "baseline": 90.0,
+        "maximum": 165.0,
+        "endpoints": {
+          "minimum": {
+            "count": 199,
+            "indexByteOffset": 1158816,
+            "deltaByteOffset": 1159612,
+            "maximumDisplacementM": 0.02450796245717606
+          },
+          "maximum": {
+            "count": 173,
+            "indexByteOffset": 1162000,
+            "deltaByteOffset": 1162692,
+            "maximumDisplacementM": 0.004685419599319705
+          }
+        },
+        "restValueOnMeasuredBody": 82.0
+      },
+      {
+        "avatarKey": "abdomen-depth",
+        "avatarSourceKeys": [
+          "abdomenDepth"
+        ],
+        "aggregation": "first",
+        "minimum": 10.0,
+        "baseline": 22.5,
+        "maximum": 45.0,
+        "endpoints": {
+          "minimum": {
+            "count": 19,
+            "indexByteOffset": 1164768,
+            "deltaByteOffset": 1164844,
+            "maximumDisplacementM": 0.0031051933765411377
+          },
+          "maximum": {
+            "count": 19,
+            "indexByteOffset": 1165072,
+            "deltaByteOffset": 1165148,
+            "maximumDisplacementM": 0.0014023631811141968
+          }
+        },
+        "restValueOnMeasuredBody": 20.4
+      },
+      {
+        "avatarKey": "high-hip-circumference",
+        "avatarSourceKeys": [
+          "highHipCirc"
+        ],
+        "aggregation": "first",
+        "minimum": 58.0,
+        "baseline": 98.0,
+        "maximum": 155.0,
+        "endpoints": {
+          "minimum": {
+            "count": 209,
+            "indexByteOffset": 1165376,
+            "deltaByteOffset": 1166212,
+            "maximumDisplacementM": 0.019077460867031586
+          },
+          "maximum": {
+            "count": 458,
+            "indexByteOffset": 1168720,
+            "deltaByteOffset": 1170552,
+            "maximumDisplacementM": 0.014853353556607352
+          }
+        },
+        "restValueOnMeasuredBody": 87.4
+      },
+      {
+        "avatarKey": "pelvis-width",
+        "avatarSourceKeys": [
+          "pelvicWidth"
+        ],
+        "aggregation": "first",
+        "minimum": 18.0,
+        "baseline": 31.0,
+        "maximum": 48.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1092,
+            "indexByteOffset": 1176048,
+            "deltaByteOffset": 1180416,
+            "maximumDisplacementM": 0.020549356937408447
+          },
+          "maximum": {
+            "count": 1092,
+            "indexByteOffset": 1193520,
+            "deltaByteOffset": 1197888,
+            "maximumDisplacementM": 0.020549342036247253
+          }
+        },
+        "restValueOnMeasuredBody": 29.2
+      },
+      {
+        "avatarKey": "hip-depth",
+        "avatarSourceKeys": [
+          "hipDepth"
+        ],
+        "aggregation": "first",
+        "minimum": 14.0,
+        "baseline": 28.0,
+        "maximum": 46.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1186,
+            "indexByteOffset": 1210992,
+            "deltaByteOffset": 1215736,
+            "maximumDisplacementM": 0.018621131777763367
+          },
+          "maximum": {
+            "count": 1190,
+            "indexByteOffset": 1229968,
+            "deltaByteOffset": 1234728,
+            "maximumDisplacementM": 0.02043914794921875
+          }
+        },
+        "restValueOnMeasuredBody": 24.8
+      },
+      {
+        "avatarKey": "seat-projection",
+        "avatarSourceKeys": [
+          "gluteProjectionL",
+          "gluteProjectionR"
+        ],
+        "aggregation": "mean",
+        "minimum": 0.0,
+        "baseline": 5.55,
+        "maximum": 13.0,
+        "endpoints": {
+          "minimum": {
+            "count": 197,
+            "indexByteOffset": 1249008,
+            "deltaByteOffset": 1249796,
+            "maximumDisplacementM": 0.014931288166609845
+          },
+          "maximum": {
+            "count": 491,
+            "indexByteOffset": 1252160,
+            "deltaByteOffset": 1254124,
+            "maximumDisplacementM": 0.016154802660108238
+          }
+        },
+        "restValueOnMeasuredBody": 4.15
+      },
+      {
+        "avatarKey": "body-rise",
+        "avatarSourceKeys": [
+          "bodyRise"
+        ],
+        "aggregation": "first",
+        "minimum": 18.0,
+        "baseline": 26.7,
+        "maximum": 42.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1082,
+            "indexByteOffset": 1260016,
+            "deltaByteOffset": 1264344,
+            "maximumDisplacementM": 0.016137003898620605
+          },
+          "maximum": {
+            "count": 1082,
+            "indexByteOffset": 1277328,
+            "deltaByteOffset": 1281656,
+            "maximumDisplacementM": 0.01613694429397583
+          }
+        },
+        "restValueOnMeasuredBody": 26.7
+      },
+      {
+        "avatarKey": "waist-to-hip-length",
+        "avatarSourceKeys": [
+          "waistHipLengthL",
+          "waistHipLengthR"
+        ],
+        "aggregation": "mean",
+        "minimum": 12.0,
+        "baseline": 20.35,
+        "maximum": 32.0,
+        "endpoints": {
+          "minimum": {
+            "count": 523,
+            "indexByteOffset": 1294640,
+            "deltaByteOffset": 1296732,
+            "maximumDisplacementM": 0.013823151588439941
+          },
+          "maximum": {
+            "count": 940,
+            "indexByteOffset": 1303008,
+            "deltaByteOffset": 1306768,
+            "maximumDisplacementM": 0.023965473045713004
+          }
+        },
+        "restValueOnMeasuredBody": 20.35
+      },
+      {
+        "avatarKey": "thoracic-curve",
+        "avatarSourceKeys": [
+          "thoracicCurve"
+        ],
+        "aggregation": "first",
+        "minimum": -2.0,
+        "baseline": 2.2,
+        "maximum": 8.0,
+        "endpoints": {
+          "minimum": {
+            "count": 9891,
+            "indexByteOffset": 1318048,
+            "deltaByteOffset": 1357612,
+            "maximumDisplacementM": 0.010016769170761108
+          },
+          "maximum": {
+            "count": 9891,
+            "indexByteOffset": 1476304,
+            "deltaByteOffset": 1515868,
+            "maximumDisplacementM": 0.010016754269599915
+          }
+        },
+        "restValueOnMeasuredBody": 2.2
+      },
+      {
+        "avatarKey": "cervical-curve",
+        "avatarSourceKeys": [
+          "cervicalCurve"
+        ],
+        "aggregation": "first",
+        "minimum": -2.0,
+        "baseline": 1.3,
+        "maximum": 6.0,
+        "endpoints": {
+          "minimum": {
+            "count": 242,
+            "indexByteOffset": 1634560,
+            "deltaByteOffset": 1635528,
+            "maximumDisplacementM": 0.005538220499748653
+          },
+          "maximum": {
+            "count": 164,
+            "indexByteOffset": 1638432,
+            "deltaByteOffset": 1639088,
+            "maximumDisplacementM": 0.0036042709229411837
+          }
+        },
+        "restValueOnMeasuredBody": 1.3
+      },
+      {
+        "avatarKey": "left-deltoid-prominence",
+        "avatarSourceKeys": [
+          "deltoidProminenceL"
+        ],
+        "aggregation": "first",
+        "minimum": 0.0,
+        "baseline": 0.0,
+        "maximum": 100.0,
+        "endpoints": {
+          "minimum": {
+            "count": 50,
+            "indexByteOffset": 1641056,
+            "deltaByteOffset": 1641256,
+            "maximumDisplacementM": 0.007835917365018083
+          },
+          "maximum": {
+            "count": 163,
+            "indexByteOffset": 1641856,
+            "deltaByteOffset": 1642508,
+            "maximumDisplacementM": 0.008959571156912653
+          }
+        },
+        "restValueOnMeasuredBody": 50.0
+      },
+      {
+        "avatarKey": "right-deltoid-prominence",
+        "avatarSourceKeys": [
+          "deltoidProminenceR"
+        ],
+        "aggregation": "first",
+        "minimum": 0.0,
+        "baseline": 0.0,
+        "maximum": 100.0,
+        "endpoints": {
+          "minimum": {
+            "count": 50,
+            "indexByteOffset": 1644464,
+            "deltaByteOffset": 1644664,
+            "maximumDisplacementM": 0.007835917365018083
+          },
+          "maximum": {
+            "count": 163,
+            "indexByteOffset": 1645264,
+            "deltaByteOffset": 1645916,
+            "maximumDisplacementM": 0.008959571156912653
+          }
+        },
+        "restValueOnMeasuredBody": 50.0
+      },
+      {
+        "avatarKey": "left-upper-arm-length",
+        "avatarSourceKeys": [
+          "shoulderElbowL"
+        ],
+        "aggregation": "first",
+        "minimum": 20.0,
+        "baseline": 31.8,
+        "maximum": 48.0,
+        "endpoints": {
+          "minimum": {
+            "count": 202,
+            "indexByteOffset": 1647872,
+            "deltaByteOffset": 1648680,
+            "maximumDisplacementM": 0.006879444816098133
+          },
+          "maximum": {
+            "count": 202,
+            "indexByteOffset": 1651104,
+            "deltaByteOffset": 1651912,
+            "maximumDisplacementM": 0.006175379466033089
+          }
+        },
+        "restValueOnMeasuredBody": 31.8
+      },
+      {
+        "avatarKey": "right-upper-arm-length",
+        "avatarSourceKeys": [
+          "shoulderElbowR"
+        ],
+        "aggregation": "first",
+        "minimum": 20.0,
+        "baseline": 31.8,
+        "maximum": 48.0,
+        "endpoints": {
+          "minimum": {
+            "count": 202,
+            "indexByteOffset": 1654336,
+            "deltaByteOffset": 1655144,
+            "maximumDisplacementM": 0.006879444816098133
+          },
+          "maximum": {
+            "count": 202,
+            "indexByteOffset": 1657568,
+            "deltaByteOffset": 1658376,
+            "maximumDisplacementM": 0.006175379466033089
+          }
+        },
+        "restValueOnMeasuredBody": 31.8
+      },
+      {
+        "avatarKey": "left-lower-arm-length",
+        "avatarSourceKeys": [
+          "elbowWristL"
+        ],
+        "aggregation": "first",
+        "minimum": 16.0,
+        "baseline": 25.5,
+        "maximum": 40.0,
+        "endpoints": {
+          "minimum": {
+            "count": 301,
+            "indexByteOffset": 1660800,
+            "deltaByteOffset": 1662004,
+            "maximumDisplacementM": 0.006891936561921646
+          },
+          "maximum": {
+            "count": 301,
+            "indexByteOffset": 1665616,
+            "deltaByteOffset": 1666820,
+            "maximumDisplacementM": 0.006891936561921646
+          }
+        },
+        "restValueOnMeasuredBody": 25.5
+      },
+      {
+        "avatarKey": "right-lower-arm-length",
+        "avatarSourceKeys": [
+          "elbowWristR"
+        ],
+        "aggregation": "first",
+        "minimum": 16.0,
+        "baseline": 25.5,
+        "maximum": 40.0,
+        "endpoints": {
+          "minimum": {
+            "count": 301,
+            "indexByteOffset": 1670432,
+            "deltaByteOffset": 1671636,
+            "maximumDisplacementM": 0.006891936561921646
+          },
+          "maximum": {
+            "count": 301,
+            "indexByteOffset": 1675248,
+            "deltaByteOffset": 1676452,
+            "maximumDisplacementM": 0.006891936561921646
+          }
+        },
+        "restValueOnMeasuredBody": 25.5
+      },
+      {
+        "avatarKey": "left-upper-arm-girth",
+        "avatarSourceKeys": [
+          "upperArmCircL"
+        ],
+        "aggregation": "first",
+        "minimum": 18.0,
+        "baseline": 26.0,
+        "maximum": 62.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1994,
+            "indexByteOffset": 1680064,
+            "deltaByteOffset": 1688040,
+            "maximumDisplacementM": 0.01645322531897143
+          },
+          "maximum": {
+            "count": 1988,
+            "indexByteOffset": 1711968,
+            "deltaByteOffset": 1719920,
+            "maximumDisplacementM": 0.028895827971260706
+          }
+        },
+        "restValueOnMeasuredBody": 29.4
+      },
+      {
+        "avatarKey": "right-upper-arm-girth",
+        "avatarSourceKeys": [
+          "upperArmCircR"
+        ],
+        "aggregation": "first",
+        "minimum": 18.0,
+        "baseline": 26.0,
+        "maximum": 62.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1994,
+            "indexByteOffset": 1743776,
+            "deltaByteOffset": 1751752,
+            "maximumDisplacementM": 0.01645322531897143
+          },
+          "maximum": {
+            "count": 1988,
+            "indexByteOffset": 1775680,
+            "deltaByteOffset": 1783632,
+            "maximumDisplacementM": 0.028895827971260706
+          }
+        },
+        "restValueOnMeasuredBody": 29.4
+      },
+      {
+        "avatarKey": "left-upper-arm-depth",
+        "avatarSourceKeys": [
+          "bicepDepthL"
+        ],
+        "aggregation": "first",
+        "minimum": 5.0,
+        "baseline": 9.2,
+        "maximum": 20.0,
+        "endpoints": {
+          "minimum": {
+            "count": 261,
+            "indexByteOffset": 1807488,
+            "deltaByteOffset": 1808532,
+            "maximumDisplacementM": 0.009991698898375034
+          },
+          "maximum": {
+            "count": 261,
+            "indexByteOffset": 1811664,
+            "deltaByteOffset": 1812708,
+            "maximumDisplacementM": 0.009991699829697609
+          }
+        },
+        "restValueOnMeasuredBody": 9.2
+      },
+      {
+        "avatarKey": "right-upper-arm-depth",
+        "avatarSourceKeys": [
+          "bicepDepthR"
+        ],
+        "aggregation": "first",
+        "minimum": 5.0,
+        "baseline": 9.2,
+        "maximum": 20.0,
+        "endpoints": {
+          "minimum": {
+            "count": 261,
+            "indexByteOffset": 1815840,
+            "deltaByteOffset": 1816884,
+            "maximumDisplacementM": 0.009991698898375034
+          },
+          "maximum": {
+            "count": 261,
+            "indexByteOffset": 1820016,
+            "deltaByteOffset": 1821060,
+            "maximumDisplacementM": 0.009991699829697609
+          }
+        },
+        "restValueOnMeasuredBody": 9.2
+      },
+      {
+        "avatarKey": "left-elbow-girth",
+        "avatarSourceKeys": [
+          "elbowCircL"
+        ],
+        "aggregation": "first",
+        "minimum": 17.0,
+        "baseline": 24.5,
+        "maximum": 44.0,
+        "endpoints": {
+          "minimum": {
+            "count": 289,
+            "indexByteOffset": 1824192,
+            "deltaByteOffset": 1825348,
+            "maximumDisplacementM": 0.004406803549824041
+          },
+          "maximum": {
+            "count": 287,
+            "indexByteOffset": 1828816,
+            "deltaByteOffset": 1829964,
+            "maximumDisplacementM": 0.0038149464363418316
+          }
+        },
+        "restValueOnMeasuredBody": 25.1
+      },
+      {
+        "avatarKey": "right-elbow-girth",
+        "avatarSourceKeys": [
+          "elbowCircR"
+        ],
+        "aggregation": "first",
+        "minimum": 17.0,
+        "baseline": 24.5,
+        "maximum": 44.0,
+        "endpoints": {
+          "minimum": {
+            "count": 289,
+            "indexByteOffset": 1833408,
+            "deltaByteOffset": 1834564,
+            "maximumDisplacementM": 0.004406803549824041
+          },
+          "maximum": {
+            "count": 287,
+            "indexByteOffset": 1838032,
+            "deltaByteOffset": 1839180,
+            "maximumDisplacementM": 0.0038149464363418316
+          }
+        },
+        "restValueOnMeasuredBody": 25.1
+      },
+      {
+        "avatarKey": "left-forearm-girth",
+        "avatarSourceKeys": [
+          "forearmCircL"
+        ],
+        "aggregation": "first",
+        "minimum": 15.0,
+        "baseline": 24.0,
+        "maximum": 43.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1793,
+            "indexByteOffset": 1842624,
+            "deltaByteOffset": 1849796,
+            "maximumDisplacementM": 0.038627203091162916
+          },
+          "maximum": {
+            "count": 1794,
+            "indexByteOffset": 1871312,
+            "deltaByteOffset": 1878488,
+            "maximumDisplacementM": 0.048755703603848524
+          }
+        },
+        "restValueOnMeasuredBody": 24.0
+      },
+      {
+        "avatarKey": "right-forearm-girth",
+        "avatarSourceKeys": [
+          "forearmCircR"
+        ],
+        "aggregation": "first",
+        "minimum": 15.0,
+        "baseline": 24.0,
+        "maximum": 43.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1793,
+            "indexByteOffset": 1900016,
+            "deltaByteOffset": 1907188,
+            "maximumDisplacementM": 0.038627203091162916
+          },
+          "maximum": {
+            "count": 1794,
+            "indexByteOffset": 1928704,
+            "deltaByteOffset": 1935880,
+            "maximumDisplacementM": 0.048755703603848524
+          }
+        },
+        "restValueOnMeasuredBody": 24.0
+      },
+      {
+        "avatarKey": "left-wrist-fullness",
+        "avatarSourceKeys": [
+          "wristCircL"
+        ],
+        "aggregation": "first",
+        "minimum": 11.0,
+        "baseline": 15.8,
+        "maximum": 28.0,
+        "endpoints": {
+          "minimum": {
+            "count": 166,
+            "indexByteOffset": 1957408,
+            "deltaByteOffset": 1958072,
+            "maximumDisplacementM": 0.003417956119433956
+          },
+          "maximum": {
+            "count": 421,
+            "indexByteOffset": 1960064,
+            "deltaByteOffset": 1961748,
+            "maximumDisplacementM": 0.005331783644199665
+          }
+        },
+        "restValueOnMeasuredBody": 15.8
+      },
+      {
+        "avatarKey": "right-wrist-fullness",
+        "avatarSourceKeys": [
+          "wristCircR"
+        ],
+        "aggregation": "first",
+        "minimum": 11.0,
+        "baseline": 15.8,
+        "maximum": 28.0,
+        "endpoints": {
+          "minimum": {
+            "count": 166,
+            "indexByteOffset": 1966800,
+            "deltaByteOffset": 1967464,
+            "maximumDisplacementM": 0.003417956119433956
+          },
+          "maximum": {
+            "count": 421,
+            "indexByteOffset": 1969456,
+            "deltaByteOffset": 1971140,
+            "maximumDisplacementM": 0.005331783644199665
+          }
+        },
+        "restValueOnMeasuredBody": 15.8
+      },
+      {
+        "avatarKey": "left-hand-length",
+        "avatarSourceKeys": [
+          "handLengthL"
+        ],
+        "aggregation": "first",
+        "minimum": 12.0,
+        "baseline": 17.9,
+        "maximum": 26.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1280,
+            "indexByteOffset": 1976192,
+            "deltaByteOffset": 1981312,
+            "maximumDisplacementM": 0.012518307236294691
+          },
+          "maximum": {
+            "count": 1266,
+            "indexByteOffset": 1996672,
+            "deltaByteOffset": 2001736,
+            "maximumDisplacementM": 0.031925781084886036
+          }
+        },
+        "restValueOnMeasuredBody": 17.9
+      },
+      {
+        "avatarKey": "right-hand-length",
+        "avatarSourceKeys": [
+          "handLengthR"
+        ],
+        "aggregation": "first",
+        "minimum": 12.0,
+        "baseline": 17.9,
+        "maximum": 26.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1280,
+            "indexByteOffset": 2016928,
+            "deltaByteOffset": 2022048,
+            "maximumDisplacementM": 0.012518307236294691
+          },
+          "maximum": {
+            "count": 1266,
+            "indexByteOffset": 2037408,
+            "deltaByteOffset": 2042472,
+            "maximumDisplacementM": 0.031925781084886036
+          }
+        },
+        "restValueOnMeasuredBody": 17.9
+      },
+      {
+        "avatarKey": "left-palm-width",
+        "avatarSourceKeys": [
+          "palmWidthL"
+        ],
+        "aggregation": "first",
+        "minimum": 5.0,
+        "baseline": 7.7,
+        "maximum": 13.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1273,
+            "indexByteOffset": 2057664,
+            "deltaByteOffset": 2062756,
+            "maximumDisplacementM": 0.0023981521888935074
+          },
+          "maximum": {
+            "count": 1260,
+            "indexByteOffset": 2078032,
+            "deltaByteOffset": 2083072,
+            "maximumDisplacementM": 0.002398171329597358
+          }
+        },
+        "restValueOnMeasuredBody": 7.7
+      },
+      {
+        "avatarKey": "right-palm-width",
+        "avatarSourceKeys": [
+          "palmWidthR"
+        ],
+        "aggregation": "first",
+        "minimum": 5.0,
+        "baseline": 7.7,
+        "maximum": 13.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1273,
+            "indexByteOffset": 2098192,
+            "deltaByteOffset": 2103284,
+            "maximumDisplacementM": 0.0023981521888935074
+          },
+          "maximum": {
+            "count": 1260,
+            "indexByteOffset": 2118560,
+            "deltaByteOffset": 2123600,
+            "maximumDisplacementM": 0.002398171329597358
+          }
+        },
+        "restValueOnMeasuredBody": 7.7
+      },
+      {
+        "avatarKey": "left-palm-girth",
+        "avatarSourceKeys": [
+          "palmCircL"
+        ],
+        "aggregation": "first",
+        "minimum": 13.0,
+        "baseline": 18.4,
+        "maximum": 30.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1689,
+            "indexByteOffset": 2138720,
+            "deltaByteOffset": 2145476,
+            "maximumDisplacementM": 0.01758675156750733
+          },
+          "maximum": {
+            "count": 1689,
+            "indexByteOffset": 2165744,
+            "deltaByteOffset": 2172500,
+            "maximumDisplacementM": 0.026827718689110013
+          }
+        },
+        "restValueOnMeasuredBody": 18.4
+      },
+      {
+        "avatarKey": "right-palm-girth",
+        "avatarSourceKeys": [
+          "palmCircR"
+        ],
+        "aggregation": "first",
+        "minimum": 13.0,
+        "baseline": 18.4,
+        "maximum": 30.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1689,
+            "indexByteOffset": 2192768,
+            "deltaByteOffset": 2199524,
+            "maximumDisplacementM": 0.01758675156750733
+          },
+          "maximum": {
+            "count": 1689,
+            "indexByteOffset": 2219792,
+            "deltaByteOffset": 2226548,
+            "maximumDisplacementM": 0.026827718689110013
+          }
+        },
+        "restValueOnMeasuredBody": 18.4
+      },
+      {
+        "avatarKey": "left-thumb-base-girth",
+        "avatarSourceKeys": [
+          "thumbBaseCircL"
+        ],
+        "aggregation": "first",
+        "minimum": 4.0,
+        "baseline": 6.3,
+        "maximum": 11.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1461,
+            "indexByteOffset": 2246816,
+            "deltaByteOffset": 2252660,
+            "maximumDisplacementM": 0.0009355176062993979
+          },
+          "maximum": {
+            "count": 1474,
+            "indexByteOffset": 2270192,
+            "deltaByteOffset": 2276088,
+            "maximumDisplacementM": 0.0010317552526992102
+          }
+        },
+        "restValueOnMeasuredBody": 6.3
+      },
+      {
+        "avatarKey": "right-thumb-base-girth",
+        "avatarSourceKeys": [
+          "thumbBaseCircR"
+        ],
+        "aggregation": "first",
+        "minimum": 4.0,
+        "baseline": 6.3,
+        "maximum": 11.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1461,
+            "indexByteOffset": 2293776,
+            "deltaByteOffset": 2299620,
+            "maximumDisplacementM": 0.0009355176062993979
+          },
+          "maximum": {
+            "count": 1474,
+            "indexByteOffset": 2317152,
+            "deltaByteOffset": 2323048,
+            "maximumDisplacementM": 0.0010317552526992102
+          }
+        },
+        "restValueOnMeasuredBody": 6.3
+      },
+      {
+        "avatarKey": "left-upper-arm-soft-tissue",
+        "avatarSourceKeys": [
+          "upperArmSoftTissueL"
+        ],
+        "aggregation": "first",
+        "minimum": 0.0,
+        "baseline": 20.0,
+        "maximum": 100.0,
+        "endpoints": {
+          "minimum": {
+            "count": 400,
+            "indexByteOffset": 2340736,
+            "deltaByteOffset": 2342336,
+            "maximumDisplacementM": 0.00415140415561253
+          },
+          "maximum": {
+            "count": 412,
+            "indexByteOffset": 2347136,
+            "deltaByteOffset": 2348784,
+            "maximumDisplacementM": 0.0056316842217039005
+          }
+        },
+        "restValueOnMeasuredBody": 50.0
+      },
+      {
+        "avatarKey": "right-upper-arm-soft-tissue",
+        "avatarSourceKeys": [
+          "upperArmSoftTissueR"
+        ],
+        "aggregation": "first",
+        "minimum": 0.0,
+        "baseline": 20.0,
+        "maximum": 100.0,
+        "endpoints": {
+          "minimum": {
+            "count": 400,
+            "indexByteOffset": 2353728,
+            "deltaByteOffset": 2355328,
+            "maximumDisplacementM": 0.00415140415561253
+          },
+          "maximum": {
+            "count": 412,
+            "indexByteOffset": 2360128,
+            "deltaByteOffset": 2361776,
+            "maximumDisplacementM": 0.0056316842217039005
+          }
+        },
+        "restValueOnMeasuredBody": 50.0
+      },
+      {
+        "avatarKey": "left-upper-leg-length",
+        "avatarSourceKeys": [
+          "crotchKneeL"
+        ],
+        "aggregation": "first",
+        "minimum": 20.0,
+        "baseline": 34.8,
+        "maximum": 53.0,
+        "endpoints": {
+          "minimum": {
+            "count": 393,
+            "indexByteOffset": 2366720,
+            "deltaByteOffset": 2368292,
+            "maximumDisplacementM": 0.025420823562753093
+          },
+          "maximum": {
+            "count": 314,
+            "indexByteOffset": 2373008,
+            "deltaByteOffset": 2374264,
+            "maximumDisplacementM": 0.017717820299242494
+          }
+        },
+        "restValueOnMeasuredBody": 34.8
+      },
+      {
+        "avatarKey": "right-upper-leg-length",
+        "avatarSourceKeys": [
+          "crotchKneeR"
+        ],
+        "aggregation": "first",
+        "minimum": 20.0,
+        "baseline": 34.8,
+        "maximum": 53.0,
+        "endpoints": {
+          "minimum": {
+            "count": 393,
+            "indexByteOffset": 2378032,
+            "deltaByteOffset": 2379604,
+            "maximumDisplacementM": 0.025420823562753093
+          },
+          "maximum": {
+            "count": 314,
+            "indexByteOffset": 2384320,
+            "deltaByteOffset": 2385576,
+            "maximumDisplacementM": 0.017717820299242494
+          }
+        },
+        "restValueOnMeasuredBody": 34.8
+      },
+      {
+        "avatarKey": "left-lower-leg-length",
+        "avatarSourceKeys": [
+          "lowerLegLengthL"
+        ],
+        "aggregation": "first",
+        "minimum": 25.0,
+        "baseline": 40.8,
+        "maximum": 58.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1307,
+            "indexByteOffset": 2389344,
+            "deltaByteOffset": 2394572,
+            "maximumDisplacementM": 0.0341660722797671
+          },
+          "maximum": {
+            "count": 1272,
+            "indexByteOffset": 2410256,
+            "deltaByteOffset": 2415344,
+            "maximumDisplacementM": 0.039989930730813465
+          }
+        },
+        "restValueOnMeasuredBody": 40.8
+      },
+      {
+        "avatarKey": "right-lower-leg-length",
+        "avatarSourceKeys": [
+          "lowerLegLengthR"
+        ],
+        "aggregation": "first",
+        "minimum": 25.0,
+        "baseline": 40.8,
+        "maximum": 58.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1307,
+            "indexByteOffset": 2430608,
+            "deltaByteOffset": 2435836,
+            "maximumDisplacementM": 0.0341660722797671
+          },
+          "maximum": {
+            "count": 1272,
+            "indexByteOffset": 2451520,
+            "deltaByteOffset": 2456608,
+            "maximumDisplacementM": 0.039989930730813465
+          }
+        },
+        "restValueOnMeasuredBody": 40.8
+      },
+      {
+        "avatarKey": "left-upper-thigh-girth",
+        "avatarSourceKeys": [
+          "thighUpperCircL"
+        ],
+        "aggregation": "first",
+        "minimum": 32.0,
+        "baseline": 62.0,
+        "maximum": 95.0,
+        "endpoints": {
+          "minimum": {
+            "count": 245,
+            "indexByteOffset": 2471872,
+            "deltaByteOffset": 2472852,
+            "maximumDisplacementM": 0.009215401485562325
+          },
+          "maximum": {
+            "count": 250,
+            "indexByteOffset": 2475792,
+            "deltaByteOffset": 2476792,
+            "maximumDisplacementM": 0.009976672008633614
+          }
+        },
+        "restValueOnMeasuredBody": 57.4
+      },
+      {
+        "avatarKey": "right-upper-thigh-girth",
+        "avatarSourceKeys": [
+          "thighUpperCircR"
+        ],
+        "aggregation": "first",
+        "minimum": 32.0,
+        "baseline": 62.0,
+        "maximum": 95.0,
+        "endpoints": {
+          "minimum": {
+            "count": 245,
+            "indexByteOffset": 2479792,
+            "deltaByteOffset": 2480772,
+            "maximumDisplacementM": 0.009215401485562325
+          },
+          "maximum": {
+            "count": 250,
+            "indexByteOffset": 2483712,
+            "deltaByteOffset": 2484712,
+            "maximumDisplacementM": 0.009976672008633614
+          }
+        },
+        "restValueOnMeasuredBody": 57.4
+      },
+      {
+        "avatarKey": "left-mid-thigh-girth",
+        "avatarSourceKeys": [
+          "thighMidCircL"
+        ],
+        "aggregation": "first",
+        "minimum": 28.0,
+        "baseline": 50.2,
+        "maximum": 85.0,
+        "endpoints": {
+          "minimum": {
+            "count": 246,
+            "indexByteOffset": 2487712,
+            "deltaByteOffset": 2488696,
+            "maximumDisplacementM": 0.01630847266249992
+          },
+          "maximum": {
+            "count": 316,
+            "indexByteOffset": 2491648,
+            "deltaByteOffset": 2492912,
+            "maximumDisplacementM": 0.021193935970795705
+          }
+        },
+        "restValueOnMeasuredBody": 50.2
+      },
+      {
+        "avatarKey": "right-mid-thigh-girth",
+        "avatarSourceKeys": [
+          "thighMidCircR"
+        ],
+        "aggregation": "first",
+        "minimum": 28.0,
+        "baseline": 50.2,
+        "maximum": 85.0,
+        "endpoints": {
+          "minimum": {
+            "count": 246,
+            "indexByteOffset": 2496704,
+            "deltaByteOffset": 2497688,
+            "maximumDisplacementM": 0.01630847266249992
+          },
+          "maximum": {
+            "count": 316,
+            "indexByteOffset": 2500640,
+            "deltaByteOffset": 2501904,
+            "maximumDisplacementM": 0.021193935970795705
+          }
+        },
+        "restValueOnMeasuredBody": 50.2
+      },
+      {
+        "avatarKey": "left-knee-fullness",
+        "avatarSourceKeys": [
+          "kneeCircL"
+        ],
+        "aggregation": "first",
+        "minimum": 24.0,
+        "baseline": 38.0,
+        "maximum": 62.0,
+        "endpoints": {
+          "minimum": {
+            "count": 281,
+            "indexByteOffset": 2505696,
+            "deltaByteOffset": 2506820,
+            "maximumDisplacementM": 0.004170340091044115
+          },
+          "maximum": {
+            "count": 262,
+            "indexByteOffset": 2510192,
+            "deltaByteOffset": 2511240,
+            "maximumDisplacementM": 0.003960196245951085
+          }
+        },
+        "restValueOnMeasuredBody": 36.8
+      },
+      {
+        "avatarKey": "right-knee-fullness",
+        "avatarSourceKeys": [
+          "kneeCircR"
+        ],
+        "aggregation": "first",
+        "minimum": 24.0,
+        "baseline": 38.0,
+        "maximum": 62.0,
+        "endpoints": {
+          "minimum": {
+            "count": 281,
+            "indexByteOffset": 2514384,
+            "deltaByteOffset": 2515508,
+            "maximumDisplacementM": 0.004170340091044115
+          },
+          "maximum": {
+            "count": 262,
+            "indexByteOffset": 2518880,
+            "deltaByteOffset": 2519928,
+            "maximumDisplacementM": 0.003960196245951085
+          }
+        },
+        "restValueOnMeasuredBody": 36.8
+      },
+      {
+        "avatarKey": "left-calf-girth",
+        "avatarSourceKeys": [
+          "calfCircL"
+        ],
+        "aggregation": "first",
+        "minimum": 22.0,
+        "baseline": 36.4,
+        "maximum": 65.0,
+        "endpoints": {
+          "minimum": {
+            "count": 277,
+            "indexByteOffset": 2523072,
+            "deltaByteOffset": 2524180,
+            "maximumDisplacementM": 0.00677131861448288
+          },
+          "maximum": {
+            "count": 304,
+            "indexByteOffset": 2527504,
+            "deltaByteOffset": 2528720,
+            "maximumDisplacementM": 0.004848107695579529
+          }
+        },
+        "restValueOnMeasuredBody": 36.4
+      },
+      {
+        "avatarKey": "right-calf-girth",
+        "avatarSourceKeys": [
+          "calfCircR"
+        ],
+        "aggregation": "first",
+        "minimum": 22.0,
+        "baseline": 36.4,
+        "maximum": 65.0,
+        "endpoints": {
+          "minimum": {
+            "count": 277,
+            "indexByteOffset": 2532368,
+            "deltaByteOffset": 2533476,
+            "maximumDisplacementM": 0.00677131861448288
+          },
+          "maximum": {
+            "count": 304,
+            "indexByteOffset": 2536800,
+            "deltaByteOffset": 2538016,
+            "maximumDisplacementM": 0.004848107695579529
+          }
+        },
+        "restValueOnMeasuredBody": 36.4
+      },
+      {
+        "avatarKey": "left-ankle-girth",
+        "avatarSourceKeys": [
+          "ankleCircL"
+        ],
+        "aggregation": "first",
+        "minimum": 15.0,
+        "baseline": 22.5,
+        "maximum": 40.0,
+        "endpoints": {
+          "minimum": {
+            "count": 374,
+            "indexByteOffset": 2541664,
+            "deltaByteOffset": 2543160,
+            "maximumDisplacementM": 0.006761305034160614
+          },
+          "maximum": {
+            "count": 401,
+            "indexByteOffset": 2547648,
+            "deltaByteOffset": 2549252,
+            "maximumDisplacementM": 0.006310548633337021
+          }
+        },
+        "restValueOnMeasuredBody": 22.5
+      },
+      {
+        "avatarKey": "right-ankle-girth",
+        "avatarSourceKeys": [
+          "ankleCircR"
+        ],
+        "aggregation": "first",
+        "minimum": 15.0,
+        "baseline": 22.5,
+        "maximum": 40.0,
+        "endpoints": {
+          "minimum": {
+            "count": 374,
+            "indexByteOffset": 2554064,
+            "deltaByteOffset": 2555560,
+            "maximumDisplacementM": 0.006761305034160614
+          },
+          "maximum": {
+            "count": 401,
+            "indexByteOffset": 2560048,
+            "deltaByteOffset": 2561652,
+            "maximumDisplacementM": 0.006310548633337021
+          }
+        },
+        "restValueOnMeasuredBody": 22.5
+      },
+      {
+        "avatarKey": "left-knee-alignment",
+        "avatarSourceKeys": [
+          "kneeAngleL"
+        ],
+        "aggregation": "first",
+        "minimum": -15.0,
+        "baseline": 0.0,
+        "maximum": 15.0,
+        "endpoints": {
+          "minimum": {
+            "count": 574,
+            "indexByteOffset": 2566464,
+            "deltaByteOffset": 2568760,
+            "maximumDisplacementM": 0.023350597779212157
+          },
+          "maximum": {
+            "count": 475,
+            "indexByteOffset": 2575648,
+            "deltaByteOffset": 2577548,
+            "maximumDisplacementM": 0.02084772129137662
+          }
+        },
+        "restValueOnMeasuredBody": 0.0
+      },
+      {
+        "avatarKey": "right-knee-alignment",
+        "avatarSourceKeys": [
+          "kneeAngleR"
+        ],
+        "aggregation": "first",
+        "minimum": -15.0,
+        "baseline": 0.0,
+        "maximum": 15.0,
+        "endpoints": {
+          "minimum": {
+            "count": 574,
+            "indexByteOffset": 2583248,
+            "deltaByteOffset": 2585544,
+            "maximumDisplacementM": 0.023350597779212157
+          },
+          "maximum": {
+            "count": 475,
+            "indexByteOffset": 2592432,
+            "deltaByteOffset": 2594332,
+            "maximumDisplacementM": 0.02084772129137662
+          }
+        },
+        "restValueOnMeasuredBody": 0.0
+      },
+      {
+        "avatarKey": "left-foot-length",
+        "avatarSourceKeys": [
+          "footLengthL"
+        ],
+        "aggregation": "first",
+        "minimum": 18.0,
+        "baseline": 24.1,
+        "maximum": 34.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1141,
+            "indexByteOffset": 2600032,
+            "deltaByteOffset": 2604596,
+            "maximumDisplacementM": 0.040642932057380676
+          },
+          "maximum": {
+            "count": 1140,
+            "indexByteOffset": 2618288,
+            "deltaByteOffset": 2622848,
+            "maximumDisplacementM": 0.031627848744392395
+          }
+        },
+        "restValueOnMeasuredBody": 24.1
+      },
+      {
+        "avatarKey": "right-foot-length",
+        "avatarSourceKeys": [
+          "footLengthR"
+        ],
+        "aggregation": "first",
+        "minimum": 18.0,
+        "baseline": 24.1,
+        "maximum": 34.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1141,
+            "indexByteOffset": 2636528,
+            "deltaByteOffset": 2641092,
+            "maximumDisplacementM": 0.040642932057380676
+          },
+          "maximum": {
+            "count": 1140,
+            "indexByteOffset": 2654784,
+            "deltaByteOffset": 2659344,
+            "maximumDisplacementM": 0.031627848744392395
+          }
+        },
+        "restValueOnMeasuredBody": 24.1
+      },
+      {
+        "avatarKey": "left-foot-width",
+        "avatarSourceKeys": [
+          "footWidthL"
+        ],
+        "aggregation": "first",
+        "minimum": 6.0,
+        "baseline": 9.2,
+        "maximum": 15.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1143,
+            "indexByteOffset": 2673024,
+            "deltaByteOffset": 2677596,
+            "maximumDisplacementM": 0.01374797523021698
+          },
+          "maximum": {
+            "count": 1143,
+            "indexByteOffset": 2691312,
+            "deltaByteOffset": 2695884,
+            "maximumDisplacementM": 0.018105261027812958
+          }
+        },
+        "restValueOnMeasuredBody": 9.2
+      },
+      {
+        "avatarKey": "right-foot-width",
+        "avatarSourceKeys": [
+          "footWidthR"
+        ],
+        "aggregation": "first",
+        "minimum": 6.0,
+        "baseline": 9.2,
+        "maximum": 15.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1143,
+            "indexByteOffset": 2709600,
+            "deltaByteOffset": 2714172,
+            "maximumDisplacementM": 0.01374797523021698
+          },
+          "maximum": {
+            "count": 1143,
+            "indexByteOffset": 2727888,
+            "deltaByteOffset": 2732460,
+            "maximumDisplacementM": 0.018105261027812958
+          }
+        },
+        "restValueOnMeasuredBody": 9.2
+      },
+      {
+        "avatarKey": "left-ball-girth",
+        "avatarSourceKeys": [
+          "ballGirthL"
+        ],
+        "aggregation": "first",
+        "minimum": 16.0,
+        "baseline": 22.6,
+        "maximum": 35.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1150,
+            "indexByteOffset": 2746176,
+            "deltaByteOffset": 2750776,
+            "maximumDisplacementM": 0.013837550403079945
+          },
+          "maximum": {
+            "count": 1183,
+            "indexByteOffset": 2764576,
+            "deltaByteOffset": 2769308,
+            "maximumDisplacementM": 0.020252481086677303
+          }
+        },
+        "restValueOnMeasuredBody": 22.6
+      },
+      {
+        "avatarKey": "right-ball-girth",
+        "avatarSourceKeys": [
+          "ballGirthR"
+        ],
+        "aggregation": "first",
+        "minimum": 16.0,
+        "baseline": 22.6,
+        "maximum": 35.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1150,
+            "indexByteOffset": 2783504,
+            "deltaByteOffset": 2788104,
+            "maximumDisplacementM": 0.013837550403079945
+          },
+          "maximum": {
+            "count": 1183,
+            "indexByteOffset": 2801904,
+            "deltaByteOffset": 2806636,
+            "maximumDisplacementM": 0.020252481086677303
+          }
+        },
+        "restValueOnMeasuredBody": 22.6
+      },
+      {
+        "avatarKey": "left-arch-height",
+        "avatarSourceKeys": [
+          "archHeightL"
+        ],
+        "aggregation": "first",
+        "minimum": 0.0,
+        "baseline": 2.1,
+        "maximum": 6.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1089,
+            "indexByteOffset": 2820832,
+            "deltaByteOffset": 2825188,
+            "maximumDisplacementM": 0.016317270696163177
+          },
+          "maximum": {
+            "count": 1138,
+            "indexByteOffset": 2838256,
+            "deltaByteOffset": 2842808,
+            "maximumDisplacementM": 0.013297215104103088
+          }
+        },
+        "restValueOnMeasuredBody": 2.1
+      },
+      {
+        "avatarKey": "right-arch-height",
+        "avatarSourceKeys": [
+          "archHeightR"
+        ],
+        "aggregation": "first",
+        "minimum": 0.0,
+        "baseline": 2.1,
+        "maximum": 6.0,
+        "endpoints": {
+          "minimum": {
+            "count": 1089,
+            "indexByteOffset": 2856464,
+            "deltaByteOffset": 2860820,
+            "maximumDisplacementM": 0.016317270696163177
+          },
+          "maximum": {
+            "count": 1138,
+            "indexByteOffset": 2873888,
+            "deltaByteOffset": 2878440,
+            "maximumDisplacementM": 0.013297215104103088
+          }
+        },
+        "restValueOnMeasuredBody": 2.1
+      },
+      {
+        "avatarKey": "upper-body-distribution",
+        "avatarSourceKeys": [
+          "upperBodyDistribution"
+        ],
+        "aggregation": "first",
+        "minimum": 0.0,
+        "baseline": 42.0,
+        "maximum": 100.0,
+        "endpoints": {
+          "minimum": {
+            "count": 5036,
+            "indexByteOffset": 2892096,
+            "deltaByteOffset": 2912240,
+            "maximumDisplacementM": 0.01337239146232605
+          },
+          "maximum": {
+            "count": 5006,
+            "indexByteOffset": 2972672,
+            "deltaByteOffset": 2992696,
+            "maximumDisplacementM": 0.01337239146232605
+          }
+        },
+        "restValueOnMeasuredBody": 48.0
+      },
+      {
+        "avatarKey": "lower-body-tone",
+        "avatarSourceKeys": [
+          "lowerBodyDistribution"
+        ],
+        "aggregation": "first",
+        "minimum": 0.0,
+        "baseline": 58.0,
+        "maximum": 100.0,
+        "endpoints": {
+          "minimum": {
+            "count": 874,
+            "indexByteOffset": 3052768,
+            "deltaByteOffset": 3056264,
+            "maximumDisplacementM": 0.008139787232064094
+          },
+          "maximum": {
+            "count": 1263,
+            "indexByteOffset": 3066752,
+            "deltaByteOffset": 3071804,
+            "maximumDisplacementM": 0.01158855142271741
+          }
+        },
+        "restValueOnMeasuredBody": 55.0
+      }
+    ]
+  }
 }

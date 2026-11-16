@@ -642,12 +642,14 @@
                                         Header="Reverse side B direction"
                                         IsEnabled="False"
                                         Toggled="OnReverseSeamSideBToggled" />
+                                    <!--  Shown only while the garment has a closure to act on.  -->
                                     <ToggleSwitch
                                         x:Name="ClosureStateToggle"
                                         AutomationProperties.Name="Close selected temporary garment closure"
                                         Header="Closure engaged"
                                         IsEnabled="False"
-                                        Toggled="OnClosureStateToggled" />
+                                        Toggled="OnClosureStateToggled"
+                                        Visibility="Collapsed" />
                                     <TextBlock
                                         x:Name="AssemblyRelationshipLocationText"
                                         FontSize="11"
@@ -759,7 +761,7 @@
                         VerticalContentAlignment="Stretch"
                         Header="3D DRAPE"
                         IsClosable="False">
-                        <Grid Background="#0B0C10">
+                        <Grid x:Name="DrapeTabGrid" Background="#0B0C10">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
@@ -769,6 +771,7 @@
                                 x:Name="StaleSimulationNotice"
                                 Grid.Row="0"
                                 Padding="12,8"
+                                SizeChanged="OnStaleSimulationNoticeSizeChanged"
                                 AutomationProperties.Name="3D cloth is out of date"
                                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                 BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
@@ -888,11 +891,26 @@
                                     Content="Oblique"
                                     Tag="oblique" />
                                 <Button
+                                    x:Name="DrapeRearObliqueCameraButton"
+                                    AutomationProperties.AutomationId="DrapeRearObliqueCameraButton"
+                                    AutomationProperties.Name="Show rear oblique cloth view"
+                                    Click="OnDrapeCameraViewClicked"
+                                    Content="Rear oblique"
+                                    Tag="rear-oblique" />
+                                <Button
                                     x:Name="DrapeFitCameraButton"
                                     AutomationProperties.AutomationId="DrapeFitCameraButton"
                                     AutomationProperties.Name="Reset three dimensional camera"
                                     Click="OnResetDrapeCameraClicked"
                                     Content="Fit view" />
+                                <ToggleButton
+                                    x:Name="SolvedDrapeToggle"
+                                    AutomationProperties.AutomationId="SolvedDrapeToggle"
+                                    AutomationProperties.Name="Show the solved cloth reference"
+                                    Checked="OnSolvedDrapeToggled"
+                                    Content="Solved cloth"
+                                    ToolTipService.ToolTip="Show the packaged reference solve on the body it was solved against, whatever this document currently says. Use it to compare; the view above already shows accepted cloth whenever it matches your pattern."
+                                    Unchecked="OnSolvedDrapeToggled" />
                             </StackPanel>
 
                             <Border
@@ -1577,6 +1595,14 @@
                             <ComboBoxItem Content="Balanced" />
                             <ComboBoxItem Content="Erect" />
                         </ComboBox>
+
+                        <Button
+                            x:Name="ResetMeasurementsButton"
+                            Margin="0,4,0,0"
+                            HorizontalAlignment="Left"
+                            AutomationProperties.Name="Reset all detailed measurements to their defaults"
+                            Click="OnResetMeasurementsClicked"
+                            Content="Reset measurements to defaults" />
 
                         <ItemsControl ItemsSource="{x:Bind MeasurementGroups, Mode=OneWay}">
                             <ItemsControl.ItemTemplate>

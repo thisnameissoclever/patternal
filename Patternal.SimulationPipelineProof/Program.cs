@@ -417,6 +417,23 @@ await File.WriteAllTextAsync(
     new UTF8Encoding(false));
 if (patternOnly)
 {
+    // Returning here skips the pipeline, and with it the topology compiler
+    // that is the only thing which checks a panel boundary for crossing
+    // itself. A graded panel whose boundary folds over still measures and
+    // still serialises; it fails much later, inside the mesher, as a
+    // degenerate-triangle error that names no cause. Run the compiler's own
+    // check here so the pattern is refused where it was made.
+    try
+    {
+        PatternTopologyCompiler.Compile(garment);
+    }
+    catch (PatternTopologyException exception)
+    {
+        Console.Error.WriteLine("The graded pattern is not usable:");
+        Console.Error.WriteLine($"  {exception.Message}");
+        return 2;
+    }
+
     string patternOnlyPath = Path.Combine(outputRoot, "pattern-only.specification.json");
     await File.WriteAllTextAsync(
         patternOnlyPath,

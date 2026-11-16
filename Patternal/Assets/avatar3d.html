@@ -8,7 +8,10 @@
     html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #090b10; font-family: "Segoe UI Variable", "Segoe UI", sans-serif; }
     canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
     canvas:active { cursor: grabbing; }
-    #hud { position: fixed; left: 22px; top: 74px; width: 270px; padding: 10px 12px; color: #f6f2fa; background: rgba(15, 17, 25, .72); border: 1px solid rgba(255,255,255,.10); border-radius: 7px; pointer-events: none; backdrop-filter: blur(10px); }
+    /* The panel sits at the bottom because the figure's arms reach out at
+       shoulder height on both sides, and a panel at the top left covered one
+       of them under every camera angle. */
+    #hud { position: fixed; left: 22px; bottom: 22px; width: 270px; padding: 10px 12px; color: #f6f2fa; background: rgba(15, 17, 25, .72); border: 1px solid rgba(255,255,255,.10); border-radius: 7px; pointer-events: none; backdrop-filter: blur(10px); }
     #hud .eyebrow { color: #a9f0d0; font-size: 10px; font-weight: 750; letter-spacing: 1.4px; }
     #hud .value { margin-top: 5px; font-size: 17px; font-weight: 650; }
     #hud .meta { margin-top: 7px; color: #c1bccb; font-size: 12px; line-height: 1.45; }
@@ -113,6 +116,12 @@
           vec3 high = vec3(1.0, 0.24, 0.36);
           return v < 0.5 ? mix(low, mid, v * 2.0) : mix(mid, high, (v - 0.5) * 2.0);
         }
+        /* Filmic tone curve (the common ACES fit). Without it a lit surface
+           saturates to a flat white the moment key light plus specular pass
+           1.0, which is what made every highlight read as plastic. */
+        vec3 filmic(vec3 x) {
+          return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
+        }
         void main() {
           float interpolatedNormalLength = length(vNormal);
           vec3 n = interpolatedNormalLength > 0.0001 ? vNormal / interpolatedNormalLength : vec3(0.0, 0.0, 1.0);
@@ -140,23 +149,71 @@
               n = normalize(n - tangent * heightGradient.x * uSurfaceRelief - bitangent * heightGradient.y * uSurfaceRelief);
             }
           }
-          float keyDiffuse = max(dot(n, keyLight), 0.0);
-          float fillDiffuse = max(dot(n, fillLight), 0.0);
-          float skyDiffuse = n.y * 0.5 + 0.5;
-          float rim = pow(1.0 - max(dot(n, viewDirection), 0.0), 3.0);
           vec4 textureSample = uTextureEnabled > 0.5 ? texture(uTexture, sampledUv) : vec4(1.0);
           if (textureSample.a < uAlphaCutoff) discard;
           float fabricFiber = dot(textureSample.rgb, vec3(0.2126, 0.7152, 0.0722));
+
+          /* Everything is lit in linear light and converted to sRGB once at
+             the end. The body already came through that path; the garment,
+             the grid and every untextured mesh were lit in display space,
+             which is why they never sat under the same light as the skin. A
+             colour given as sRGB is linearised here and comes back out at the
+             same value under full light, so calibrated fabric colours are
+             unchanged; only the way shading falls across them changes. */
           vec3 sampledColor = uSrgbBaseColor > 0.5 ? srgbToLinear(textureSample.rgb) : textureSample.rgb;
+          vec3 tint = srgbToLinear(uColor);
           vec3 base = uGarment > 0.5 && uTextureEnabled > 0.5
-            ? uColor * mix(0.70, 1.12, fabricFiber)
-            : uColor * sampledColor;
-          if (uGarment > 0.5 && uStressEnabled > 0.5) base = mix(base, stressColor(vStress), 0.68);
+            ? tint * mix(0.62, 1.18, fabricFiber)
+            : tint * sampledColor;
+          if (uGarment > 0.5 && uStressEnabled > 0.5) base = mix(base, srgbToLinear(stressColor(vStress)), 0.68);
           if (uGarment < 0.5 && uTextureEnabled < 0.5) {
             float skinVariation = sin(vWorld.y * 17.0 + vWorld.x * 11.0) * sin(vWorld.z * 23.0) * 0.008;
             float pores = sin(vWorld.y * 73.0 + vWorld.x * 43.0) * sin(vWorld.z * 61.0) * 0.004;
             base += vec3(skinVariation + pores * (0.40 + uPhotoDetail * 0.60), skinVariation * 0.48, skinVariation * 0.30);
           }
+
+          /* Ambient comes from a sky above and a warmer, darker ground below,
+             instead of the flat 0.30 floor that lit the underside of a chin
+             as brightly as the top of a shoulder. */
+          float hemisphere = n.y * 0.5 + 0.5;
+          vec3 ambient = mix(vec3(0.085, 0.075, 0.070), vec3(0.19, 0.21, 0.25), hemisphere);
+
+          /* Folds. Where a surface turns concave, less of the sky reaches it,
+             which is most of what makes cloth read as cloth rather than as a
+             shell. The turn is measured from how fast the normal changes
+             across the screen relative to how fast the position does, and its
+             sign from whether the normal turns towards or away from the eye.
+             Skin is left alone: a body's creases are shallow, and the same
+             term on it reads as dirt. */
+          float foldOcclusion = 1.0;
+          if (uGarment > 0.5) {
+            vec3 normalDx = dFdx(n);
+            vec3 normalDy = dFdy(n);
+            vec3 positionDxCurv = dFdx(vWorld);
+            vec3 positionDyCurv = dFdy(vWorld);
+            float travelSquared = dot(positionDxCurv, positionDxCurv) + dot(positionDyCurv, positionDyCurv) + 0.0000001;
+            /* This is 1 / radius of curvature in render units, positive where
+               the surface turns away from the eye (a valley), negative on a
+               ridge. Render units are metres times two, so a fold 5 cm across
+               reads as about 10. Full occlusion is reached at 2 cm. */
+            float concave = -(dot(normalDx, positionDxCurv) + dot(normalDy, positionDyCurv)) / travelSquared;
+            float fold = clamp(concave / 25.0, 0.0, 1.0);
+            foldOcclusion = 1.0 - 0.65 * fold;
+          }
+          ambient *= foldOcclusion;
+
+          /* Skin scatters light a little way past the terminator; cloth does
+             not. The wrapped key is what puts a soft edge on the shadow side
+             of a cheek or an upper arm rather than a hard cut. */
+          float wrap = uGarment > 0.5 ? 0.06 : 0.30;
+          float keyWrapped = clamp((dot(n, keyLight) + wrap) / (1.0 + wrap), 0.0, 1.0);
+          float fillDiffuse = max(dot(n, fillLight), 0.0);
+          vec3 lit = base * ambient + base * (keyWrapped * 0.92 * mix(1.0, foldOcclusion, 0.35) + fillDiffuse * 0.16 * foldOcclusion);
+          if (uGarment < 0.5) {
+            float terminator = keyWrapped * (1.0 - keyWrapped) * 4.0;
+            lit += base * vec3(0.42, 0.11, 0.05) * terminator * 0.30;
+          }
+
           vec3 halfVector = keyLight + viewDirection;
           float halfLength = length(halfVector);
           halfVector = halfLength > 0.0001 ? halfVector / halfLength : vec3(0.0, 0.0, 1.0);
@@ -166,16 +223,12 @@
             ? mix(0.78, 1.08, fabricFiber)
             : 1.0;
           float specular = pow(max(dot(n, halfVector), 0.0), specularPower) * mix(0.22, 0.025, uRoughness) * fresnel * fiberSpecular;
-          float diffuseLight = 0.30 + keyDiffuse * 0.48 + fillDiffuse * 0.12 + skyDiffuse * 0.10;
-          vec3 lit = base * diffuseLight;
-          if (uGarment < 0.5) {
-            float wrappedKey = clamp((dot(n, keyLight) + 0.35) / 1.35, 0.0, 1.0);
-            lit += base * vec3(0.16, 0.055, 0.035) * (1.0 - wrappedKey) * 0.55;
-          }
-          lit += rim * (uGarment > 0.5 ? vec3(0.025, 0.035, 0.055) : vec3(0.075, 0.035, 0.025));
-          lit += vec3(specular);
-          if (uSrgbBaseColor > 0.5) lit = linearToSrgb(lit);
-          outColor = vec4(clamp(lit, vec3(0.0), vec3(1.0)), uAlpha * textureSample.a);
+          float rim = pow(1.0 - max(dot(n, viewDirection), 0.0), 3.0);
+          lit += rim * (uGarment > 0.5 ? vec3(0.012, 0.018, 0.030) : vec3(0.045, 0.020, 0.012));
+          lit += vec3(specular) * keyWrapped;
+
+          lit = linearToSrgb(filmic(lit * 1.25));
+          outColor = vec4(lit, uAlpha * textureSample.a);
         }`;
 
       function compile(type, source) {
@@ -230,7 +283,8 @@
           calfCircL: 36.4, calfCircR: 36.4, ankleCircL: 22.5, ankleCircR: 22.5,
           inseamL: 77, inseamR: 77, footLengthL: 24.1, footLengthR: 24.1,
           footWidthL: 9.2, footWidthR: 9.2, pelvicTilt: 8, torsoLean: 0,
-          shoulderSlopeL: 22, shoulderSlopeR: 21.5, softTissue: 58, showBra: false
+          shoulderSlopeL: 22, shoulderSlopeR: 21.5, softTissue: 58, showBra: false,
+          previewChangedKeys: []
         },
         fabric: { key: 'cotton', weight: 180, stretch: 35, bend: 8, friction: 0.4 },
         autoRotate: false,
@@ -258,6 +312,8 @@
         productionDisplayBody: null,
         productionDisplayAssets: [],
         displayAvatarMode: null,
+        mhrMorphBasis: null,
+        mhrPreviewState: null,
         displayBodyTexture: null,
         displayBodyColor: [1,1,1],
         garmentTexture: null,
@@ -733,13 +789,29 @@
         return {
           positions,
           normals,
+          basePositions:positions.slice(),
+          baseNormals:normals.slice(),
           texcoords,
           stress:new Float32Array(sourcePositions.length/3),
           indices:readGlbAccessor(document,binary,primitive.indices,{indices:true})
         };
       }
 
-      async function decodeCandidateGlb(buffer,manifest) {
+      function decodeMhrMorphBasis(manifest,morphBuffer,bodyVertexCount) {
+        const basis=manifest.morphBasis;
+        if(!basis)return null;
+        if(!morphBuffer||basis.schemaVersion!=='patterna.mhr-morph-basis/1.0'||basis.accepted!==false||basis.previewOnly!==true)throw new Error('MHR morph basis is not an explicit preview-only contract.');
+        if(basis.vertexCount!==bodyVertexCount||basis.floatsPerEndpoint!==bodyVertexCount*3)throw new Error('MHR morph basis vertex count does not match the packaged body.');
+        if(basis.floatEncoding!=='little-endian-float32'||morphBuffer.byteLength!==basis.bytes||morphBuffer.byteLength%4!==0)throw new Error('MHR morph basis binary layout is invalid.');
+        const deltas=new Float32Array(morphBuffer);
+        for(const parameter of basis.parameters||[]) {
+          if(!Number.isFinite(parameter.baseline)||!Number.isFinite(parameter.minimum)||!Number.isFinite(parameter.maximum)||parameter.minimum>=parameter.baseline||parameter.maximum<=parameter.baseline)throw new Error(`MHR morph parameter ${parameter.avatarKey||'unknown'} has invalid bounds.`);
+          for(const offset of [parameter.minimumFloatOffset,parameter.maximumFloatOffset])if(!Number.isInteger(offset)||offset<0||offset+parameter.floatCount>deltas.length)throw new Error(`MHR morph parameter ${parameter.avatarKey||'unknown'} exceeds the binary payload.`);
+        }
+        return {...basis,deltas};
+      }
+
+      async function decodeCandidateGlb(buffer,manifest,morphBuffer=null) {
         const {document,binary}=parseGlb(buffer),scene=document.scenes?.[document.scene??0];
         if(!scene||!Array.isArray(scene.nodes))throw new Error('Candidate GLB has no active scene.');
         const textureIndices=new Set(),entries=[];
@@ -795,7 +867,8 @@
           bodyTexture:bodyEntry.texture,
           bodyColor:bodyEntry.color,
           assets,
-          mode:String(manifest.displayMode||'antonia-candidate')
+          mode:String(manifest.displayMode||'antonia-candidate'),
+          morphBasis:decodeMhrMorphBasis(manifest,morphBuffer,bodyEntry.data.positions.length/3)
         };
       }
 
@@ -807,15 +880,29 @@
           manifest=await manifestResponse.json();
         }
         if(manifest.schemaVersion!=='patterna.display-avatar-glb/1.0'||manifest.accepted!==false||manifest.candidateOnly!==true)throw new Error('GLB avatar manifest crosses the production acceptance boundary.');
-        const [geometryResponse,licenseResponse]=await Promise.all([fetch(`${baseUrl}${manifest.geometry}`),fetch(`${baseUrl}${manifest.licenseFile}`)]);
-        if(!geometryResponse.ok||!licenseResponse.ok)throw new Error(`GLB avatar HTTP ${geometryResponse.status}/${licenseResponse.status}`);
-        const [geometryBuffer,licenseBuffer]=await Promise.all([geometryResponse.arrayBuffer(),licenseResponse.arrayBuffer()]);
+        const morph=manifest.morphBasis;
+        const [geometryResponse,licenseResponse,morphResponse]=await Promise.all([
+          fetch(`${baseUrl}${manifest.geometry}`),
+          fetch(`${baseUrl}${manifest.licenseFile}`),
+          morph?fetch(`${baseUrl}${morph.file}`):Promise.resolve(null)
+        ]);
+        if(!geometryResponse.ok||!licenseResponse.ok||(morph&&(!morphResponse||!morphResponse.ok)))throw new Error(`GLB avatar HTTP ${geometryResponse.status}/${licenseResponse.status}/${morphResponse?.status??'none'}`);
+        const [geometryBuffer,licenseBuffer,morphBuffer]=await Promise.all([
+          geometryResponse.arrayBuffer(),
+          licenseResponse.arrayBuffer(),
+          morphResponse?morphResponse.arrayBuffer():Promise.resolve(null)
+        ]);
         if(geometryBuffer.byteLength!==manifest.geometryBytes)throw new Error('GLB avatar byte count does not match its manifest.');
-        const [geometryHash,licenseHash]=await Promise.all([sha256Hex(geometryBuffer),sha256Hex(licenseBuffer)]);
+        const [geometryHash,licenseHash,morphHash]=await Promise.all([
+          sha256Hex(geometryBuffer),
+          sha256Hex(licenseBuffer),
+          morphBuffer?sha256Hex(morphBuffer):Promise.resolve(null)
+        ]);
         if(geometryHash!==String(manifest.geometrySha256).toLowerCase())throw new Error('GLB avatar geometry hash does not match its manifest.');
         if(licenseHash!==String(manifest.licenseSha256).toLowerCase())throw new Error('GLB avatar license hash does not match its manifest.');
+        if(morph&&(morphBuffer.byteLength!==morph.bytes||morphHash!==String(morph.sha256).toLowerCase()||String(morph.baseGeometrySha256).toLowerCase()!==geometryHash))throw new Error('MHR morph basis identity does not match the packaged avatar.');
         if(manifest.measurementFit?.accepted!==true)throw new Error('GLB avatar measurement fit is not accepted.');
-        return decodeCandidateGlb(geometryBuffer,manifest);
+        return decodeCandidateGlb(geometryBuffer,manifest,morphBuffer);
       }
 
       async function loadCandidateDisplayAvatar(baseUrl='Candidate/MHR/') {
@@ -860,7 +947,29 @@
         const assets=loaded.filter(asset=>asset.key!=='body').map(asset=>({
           ...asset,...(materialSettings[asset.key]||{roughness:.72,alphaCutoff:.08})
         }));
-        return {bodyData:body.data,bodyTexture:body.texture,bodyColor:body.color,assets};
+        let morphBasis=null;
+        const morphDeclaration=manifest.morph_basis;
+        if(morphDeclaration&&morphDeclaration.file) {
+          /* The morph path rewinds to a pristine copy of the mesh before it
+             applies anything, and it needs typed arrays to do that. The GLB
+             decoder hands both back; an OBJ parses into plain arrays with no
+             copy, so without this a basis would load, verify, and then quietly
+             move nothing. */
+          for(const mesh of [body.data,...assets.map(asset=>asset.data)]) {
+            if(mesh.basePositions)continue;
+            mesh.positions=new Float32Array(mesh.positions);
+            mesh.normals=new Float32Array(mesh.normals);
+            mesh.basePositions=mesh.positions.slice();
+            mesh.baseNormals=mesh.normals.slice();
+          }
+          const morphResponse=await fetch(`${baseUrl}${morphDeclaration.file}`);
+          if(!morphResponse.ok)throw new Error(`Display avatar morph basis HTTP ${morphResponse.status}`);
+          const morphBuffer=await morphResponse.arrayBuffer();
+          if(morphBuffer.byteLength!==morphDeclaration.bytes)throw new Error('Display avatar morph basis byte count does not match its manifest.');
+          if(await sha256Hex(morphBuffer)!==String(morphDeclaration.sha256).toLowerCase())throw new Error('Display avatar morph basis hash does not match its manifest.');
+          morphBasis=buildSparseMorphBasis(morphDeclaration,morphBuffer,body.data);
+        }
+        return {bodyData:body.data,bodyTexture:body.texture,bodyColor:body.color,assets,morphBasis};
       }
 
       function discardDisplayAvatar(displayAvatar) {
@@ -878,13 +987,21 @@
         if(globalThis.chrome?.webview)globalThis.chrome.webview.postMessage({type:'bra-availability',available});
       }
 
-      function applyDisplayAvatar(displayAvatar) {
+      /* An accepted revision is a fixed pair: one garment settled on one body.
+         The display body is what gets drawn, so morphing it to follow the
+         measurements being edited would show that cloth on a body it was never
+         solved against, which is the one thing the accepted view promises not
+         to do. Those callers pass morphable false. */
+      function applyDisplayAvatar(displayAvatar,morphable=true) {
         deleteDisplayTextures(state.displayBodyTexture,state.productionDisplayAssets);
         state.productionDisplayBody=displayAvatar.bodyData;
         state.displayAvatarMode=displayAvatar.mode||'production';
+        state.mhrMorphBasis=displayAvatar.morphBasis||null;
+        state.mhrPreviewState=null;
         state.displayBodyTexture=displayAvatar.bodyTexture;
         state.displayBodyColor=displayAvatar.bodyColor;
         state.productionDisplayAssets=displayAvatar.assets;
+        if(morphable)applyMhrMorphPreview();
         reportBraAvailability();
       }
 
@@ -892,10 +1009,262 @@
         deleteDisplayTextures(state.displayBodyTexture,state.productionDisplayAssets);
         state.productionDisplayBody=null;
         state.displayAvatarMode=null;
+        state.mhrMorphBasis=null;
+        state.mhrPreviewState=null;
         state.displayBodyTexture=null;
         state.displayBodyColor=[1,1,1];
         state.productionDisplayAssets=[];
         reportBraAvailability();
+      }
+
+      /* Recomputes smooth normals after the positions have moved.
+
+         A render vertex is one corner of one UV island, so a source vertex on
+         a seam exists several times over. Accumulating per render vertex gives
+         each copy only the triangles on its own side of the seam, and the
+         body lights up as flat facets along every island boundary, which on a
+         MakeHuman body is most of the torso. So accumulate per source vertex,
+         the way the loader did, and hand the result to every copy. */
+      function recalculateIndexedNormals(data) {
+        const positions=data.positions,normals=data.normals,indices=data.indices;
+        const source=data.sourceVertexIndices;
+        const renderCount=positions.length/3;
+        let sourceCount=renderCount;
+        if(source){sourceCount=0;for(const s of source)if(s+1>sourceCount)sourceCount=s+1;}
+        const accumulated=new Float32Array(sourceCount*3);
+        const owner=render=>source?source[render]:render;
+        for(let index=0;index<indices.length;index+=3) {
+          const ra=indices[index],rb=indices[index+1],rc=indices[index+2];
+          const ia=ra*3,ib=rb*3,ic=rc*3;
+          const abx=positions[ib]-positions[ia],aby=positions[ib+1]-positions[ia+1],abz=positions[ib+2]-positions[ia+2];
+          const acx=positions[ic]-positions[ia],acy=positions[ic+1]-positions[ia+1],acz=positions[ic+2]-positions[ia+2];
+          const nx=aby*acz-abz*acy,ny=abz*acx-abx*acz,nz=abx*acy-aby*acx;
+          for(const render of [ra,rb,rc]){
+            const offset=owner(render)*3;
+            accumulated[offset]+=nx;accumulated[offset+1]+=ny;accumulated[offset+2]+=nz;
+          }
+        }
+        for(let offset=0;offset<accumulated.length;offset+=3) {
+          const length=Math.hypot(accumulated[offset],accumulated[offset+1],accumulated[offset+2])||1;
+          accumulated[offset]/=length;accumulated[offset+1]/=length;accumulated[offset+2]/=length;
+        }
+        for(let render=0;render<renderCount;render++) {
+          const from=owner(render)*3,to=render*3;
+          normals[to]=accumulated[from];normals[to+1]=accumulated[from+1];normals[to+2]=accumulated[from+2];
+        }
+      }
+
+      /* The modesty shells hug the body but have their own topology, so they
+         cannot share its morph targets. Each shell vertex instead borrows the
+         movement of the body vertex it sits against, which is what conforming
+         to a surface means. The pairing is computed once against the unmorphed
+         body and cached, because it does not change when the body does. */
+      function buildBodyCorrespondence(data,bodyBase) {
+        if(data.bodyCorrespondence)return data.bodyCorrespondence;
+        const cell=.05,buckets=new Map();
+        const cellKey=(x,y,z)=>`${Math.floor(x/cell)},${Math.floor(y/cell)},${Math.floor(z/cell)}`;
+        for(let index=0;index<bodyBase.length;index+=3) {
+          const key=cellKey(bodyBase[index],bodyBase[index+1],bodyBase[index+2]);
+          let list=buckets.get(key);
+          if(!list){list=[];buckets.set(key,list);}
+          list.push(index/3);
+        }
+        const correspondence=new Int32Array(data.basePositions.length/3);
+        for(let vertex=0;vertex<correspondence.length;vertex++) {
+          const x=data.basePositions[vertex*3],y=data.basePositions[vertex*3+1],z=data.basePositions[vertex*3+2];
+          const cx=Math.floor(x/cell),cy=Math.floor(y/cell),cz=Math.floor(z/cell);
+          let best=-1,bestDistance=Infinity;
+          for(let dx=-2;dx<=2;dx++)for(let dy=-2;dy<=2;dy++)for(let dz=-2;dz<=2;dz++) {
+            const list=buckets.get(`${cx+dx},${cy+dy},${cz+dz}`);
+            if(!list)continue;
+            for(const candidate of list) {
+              const ox=bodyBase[candidate*3]-x,oy=bodyBase[candidate*3+1]-y,oz=bodyBase[candidate*3+2]-z;
+              const distance=ox*ox+oy*oy+oz*oz;
+              if(distance<bestDistance){bestDistance=distance;best=candidate;}
+            }
+          }
+          if(best<0) {
+            /* A shell vertex further from the body than the search window, such
+               as a strap standing away from the skin. Fall back to the whole
+               body rather than leaving it behind when the body moves. */
+            for(let candidate=0;candidate<bodyBase.length/3;candidate++) {
+              const ox=bodyBase[candidate*3]-x,oy=bodyBase[candidate*3+1]-y,oz=bodyBase[candidate*3+2]-z;
+              const distance=ox*ox+oy*oy+oz*oz;
+              if(distance<bestDistance){bestDistance=distance;best=candidate;}
+            }
+          }
+          correspondence[vertex]=best<0?0:best;
+        }
+        data.bodyCorrespondence=correspondence;
+        return correspondence;
+      }
+
+      function applyMorphedShell(data,bodyBase,bodyMorphed,heightScale) {
+        if(!data?.basePositions)return false;
+        const correspondence=buildBodyCorrespondence(data,bodyBase);
+        data.positions.set(data.basePositions);
+        data.normals.set(data.baseNormals);
+        for(let vertex=0;vertex<correspondence.length;vertex++) {
+          const source=correspondence[vertex]*3,target=vertex*3;
+          data.positions[target]+=bodyMorphed[source]-bodyBase[source];
+          data.positions[target+1]+=bodyMorphed[source+1]-bodyBase[source+1];
+          data.positions[target+2]+=bodyMorphed[source+2]-bodyBase[source+2];
+        }
+        for(let offset=0;offset<data.positions.length;offset+=3) {
+          data.positions[offset]*=heightScale;
+          data.positions[offset+1]=-1.67+(data.positions[offset+1]+1.67)*heightScale;
+          data.positions[offset+2]*=heightScale;
+        }
+        return true;
+      }
+
+      /* A sparse basis names, per endpoint, only the source vertices that
+         actually moved. A palm width moves a few hundred of the body's 13380,
+         and storing every vertex for every endpoint would cost tens of
+         megabytes to record almost nothing. */
+      function buildSparseMorphBasis(declaration,buffer,bodyData) {
+        const sourceCount=Number(declaration.sourceVertexCount);
+        if(!Number.isFinite(sourceCount)||sourceCount<1)throw new Error('The morph basis declares no source vertices.');
+        const sourceIndices=bodyData.sourceVertexIndices;
+        for(const source of sourceIndices) {
+          if(!(source>=0&&source<sourceCount))throw new Error('The morph basis does not cover the display body it was loaded with.');
+        }
+        /* One source vertex becomes several render vertices wherever a UV
+           island splits it, so a delta has to reach all of them. This is the
+           usual counting sort into a flat bucket array. */
+        const starts=new Uint32Array(sourceCount+1);
+        for(const source of sourceIndices)starts[source+1]++;
+        for(let index=0;index<sourceCount;index++)starts[index+1]+=starts[index];
+        const cursor=starts.slice(0,sourceCount);
+        const renderVertices=new Uint32Array(sourceIndices.length);
+        for(let render=0;render<sourceIndices.length;render++) {
+          renderVertices[cursor[sourceIndices[render]]++]=render;
+        }
+        const readEndpoint=(parameter,label)=>{
+          const entry=parameter.endpoints&&parameter.endpoints[label];
+          if(!entry)throw new Error(`The morph basis parameter ${parameter.avatarKey} has no ${label} endpoint.`);
+          const count=Number(entry.count)||0;
+          return {
+            indices:new Uint32Array(buffer,entry.indexByteOffset,count),
+            deltas:new Float32Array(buffer,entry.deltaByteOffset,count*3)
+          };
+        };
+        const parameters=(declaration.parameters||[]).map(parameter=>({
+          ...parameter,
+          minimumEndpoint:readEndpoint(parameter,'minimum'),
+          maximumEndpoint:readEndpoint(parameter,'maximum')
+        }));
+        if(!parameters.length)throw new Error('The morph basis declares no parameters.');
+        return {
+          format:'sparse-source-vertex',
+          sourceVertexCount:sourceCount,
+          baselineHeightCm:Number(declaration.baselineHeightCm),
+          parameters,starts,renderVertices
+        };
+      }
+
+      function addSparseMorphEndpoint(basis,body,endpoint,weight) {
+        const {indices,deltas}=endpoint,{starts,renderVertices}=basis,positions=body.positions;
+        for(let entry=0;entry<indices.length;entry++) {
+          const source=indices[entry],base=entry*3;
+          /* The basis is written in Blender metres, which parseTexturedObj
+             maps to render space as [x*2, z*2, y*2] plus a floor shift. A
+             difference of two positions drops the shift and keeps the rest. */
+          const dx=deltas[base]*2*weight,dy=deltas[base+2]*2*weight,dz=deltas[base+1]*2*weight;
+          for(let slot=starts[source];slot<starts[source+1];slot++) {
+            const offset=renderVertices[slot]*3;
+            positions[offset]+=dx;positions[offset+1]+=dy;positions[offset+2]+=dz;
+          }
+        }
+      }
+
+      function mhrParameterValue(parameter,heightScale) {
+        const sourceKeys=Array.isArray(parameter.avatarSourceKeys)&&parameter.avatarSourceKeys.length
+          ?parameter.avatarSourceKeys
+          :[parameter.avatarKey];
+        const values=sourceKeys.map(key=>Number(state.avatar[key])).filter(Number.isFinite);
+        if(values.length!==sourceKeys.length)return null;
+        /* Several source keys means a left and a right, or two names for one
+           span. Their mean is the value the parameter stands for, and reading
+           only the first would ignore the other side. */
+        const aggregation=parameter.aggregation||(sourceKeys.length>1?'mean':'first');
+        const value=aggregation==='mean'
+          ?values.reduce((sum,item)=>sum+item,0)/values.length
+          :values[0];
+        return value/heightScale;
+      }
+
+      function applyMhrMorphPreview() {
+        const basis=state.mhrMorphBasis,body=state.productionDisplayBody;
+        if(!basis||!body?.basePositions||state.avatar.template!=='feminine')return false;
+        const requestedHeight=Number(state.avatar.height);
+        const heightScale=Number.isFinite(requestedHeight)&&requestedHeight>0
+          ?requestedHeight/Number(basis.baselineHeightCm)
+          :1;
+        body.positions.set(body.basePositions);
+        const limitedKeys=[];
+        const supportedKeys=new Set(['height']);
+        for(const parameter of basis.parameters||[]) {
+          const sourceKeys=Array.isArray(parameter.avatarSourceKeys)&&parameter.avatarSourceKeys.length
+            ?parameter.avatarSourceKeys
+            :[parameter.avatarKey];
+          for(const key of sourceKeys)supportedKeys.add(key);
+        }
+        const changedKeys=Array.isArray(state.avatar.previewChangedKeys)
+          ?state.avatar.previewChangedKeys.filter(key=>typeof key==='string')
+          :['preview-change-contract-missing'];
+        const unsupportedKeys=changedKeys.filter(key=>!supportedKeys.has(key));
+        let mappedValues=0,changedValues=0;
+        for(const parameter of basis.parameters||[]) {
+          const requested=mhrParameterValue(parameter,heightScale);
+          if(requested===null)continue;
+          const represented=clamp(requested,parameter.minimum,parameter.maximum);
+          if(Math.abs(represented-requested)>.0001)limitedKeys.push(parameter.avatarKey);
+          const lower=represented<parameter.baseline;
+          const endpoint=lower?parameter.minimum:parameter.maximum;
+          const denominator=endpoint-parameter.baseline;
+          const weight=denominator===0?0:(represented-parameter.baseline)/denominator;
+          if(basis.format==='sparse-source-vertex') {
+            addSparseMorphEndpoint(basis,body,lower?parameter.minimumEndpoint:parameter.maximumEndpoint,weight);
+          } else {
+            const floatOffset=lower?parameter.minimumFloatOffset:parameter.maximumFloatOffset;
+            for(let index=0;index<parameter.floatCount;index++)body.positions[index]+=basis.deltas[floatOffset+index]*weight;
+          }
+          mappedValues++;
+          if(Math.abs(requested-parameter.baseline)>.001)changedValues++;
+        }
+        /* Carry the body's movement into every asset that sits on or inside it
+           before the height scale is applied, because both sides of the
+           difference have to be in the same, unscaled space.
+
+           All of them, not a chosen few. Eyes, teeth, brows, lashes and hair
+           were left to height scaling alone, which was invisible while the only
+           morphs were torso girths: nothing near a face moved, so borrowing
+           that movement was zero either way. A basis that reshapes a skull
+           makes the omission visible immediately, as eyes and hair standing
+           outside the head they belong to. */
+        for(const asset of state.productionDisplayAssets) {
+          applyMorphedShell(asset.data,body.basePositions,body.positions,heightScale);
+        }
+        for(let offset=0;offset<body.positions.length;offset+=3) {
+          body.positions[offset]*=heightScale;
+          body.positions[offset+1]=-1.67+(body.positions[offset+1]+1.67)*heightScale;
+          body.positions[offset+2]*=heightScale;
+        }
+        recalculateIndexedNormals(body);
+        const exactBaseline=changedKeys.length===0&&changedValues===0&&Math.abs(heightScale-1)<.00001;
+        state.displayAvatarMode=unsupportedKeys.length||limitedKeys.length
+          ?'mhr-unsupported-preview'
+          :exactBaseline?'mhr-baseline-preview':'mhr-morph-preview';
+        state.mhrPreviewState={mappedValues,limitedKeys,unsupportedKeys,exactBaseline,morphed:changedValues>0};
+        state.acceptedBuildLabel=unsupportedKeys.length
+          ?`3D drape unsupported for this revision · ${unsupportedKeys.length} values the body preview cannot represent · 2D remains authoritative`
+          :limitedKeys.length
+            ?`3D drape unsupported for this revision · ${limitedKeys.length} values exceed the preview envelope · 2D remains authoritative`
+            :exactBaseline
+              ?'Measurement baseline preview · numerical fit evidence recorded · visual, collider, cloth, and product gates open'
+              :`Partial measurement preview · ${mappedValues} mapped values · no matching collider or cloth`;
+        return true;
       }
 
       function matchesEditableDefaultAvatar() {
@@ -906,7 +1275,12 @@
 
       async function refreshEditableDefaultAvatar() {
         if(state.productionAssetsReady)return;
-        if(!matchesEditableDefaultAvatar()) {
+        if(state.productionDisplayBody&&state.mhrMorphBasis&&state.avatar.template==='feminine') {
+          applyMhrMorphPreview();
+          scheduleRebuild();
+          return;
+        }
+        if(state.avatar.template!=='feminine') {
           if(state.productionDisplayBody)clearDisplayAvatar();
           scheduleRebuild();
           return;
@@ -914,14 +1288,31 @@
         if(state.productionDisplayBody)return;
         const requestSequence=++state.assetRequestSequence;
         try {
-          const displayAvatar=await loadCandidateDisplayAvatar();
+          /* Prefer whichever packaged body can actually follow the
+             measurements. The MHR candidate's basis reaches 13 of the 151
+             dimensions a user can edit, because its fitter only moves
+             horizontal torso sections. The MPFB display avatar reaches 97 when
+             a basis is packaged with it, and it is already the body the
+             packaged solve is shown on, so preferring it also stops the two
+             views disagreeing about whose body is on screen. Until that basis
+             ships, the MPFB body would stand still under every measurement, so
+             the candidate is the better answer and is used. */
+          let displayAvatar=null;
+          try {
+            displayAvatar=await loadDisplayAvatar();
+            if(!displayAvatar.morphBasis) {
+              discardDisplayAvatar(displayAvatar);
+              displayAvatar=await loadCandidateDisplayAvatar();
+            }
+          } catch(productionError) {
+            displayAvatar=await loadCandidateDisplayAvatar();
+          }
           if(requestSequence!==state.assetRequestSequence){discardDisplayAvatar(displayAvatar);return;}
           applyDisplayAvatar(displayAvatar);
-          state.acceptedBuildLabel='MHR candidate · measurement, rig, anatomy, and pose gates accepted · cloth and product visual gates pending';
           scheduleRebuild();
         } catch(error) {
           if(requestSequence!==state.assetRequestSequence)return;
-          document.getElementById('buildLabel').textContent=`MHR candidate unavailable · ${error.message}`;
+          document.getElementById('buildLabel').textContent=`Body preview unavailable · ${error.message}`;
         }
       }
 
@@ -948,7 +1339,7 @@
           state.productionGarmentSeamData=state.productionGarmentData.seamLines;
           state.productionGarmentEdgeData=state.productionGarmentData.edgeLines;
           state.garmentTexture=fabricTexture;
-          applyDisplayAvatar(displayAvatar);
+          applyDisplayAvatar(displayAvatar,false);
           state.productionAssetsReady=true;
           document.getElementById('error').style.display='none';
           const surfaceVertexCount=state.productionGarmentData.sourceSurfaceVertexCount||state.productionGarmentData.positions.length/3;
@@ -980,7 +1371,7 @@
           state.productionGarmentSeamData=state.productionGarmentData.seamLines;
           state.productionGarmentEdgeData=state.productionGarmentData.edgeLines;
           state.garmentTexture=fabricTexture;
-          if(displayAvatar)applyDisplayAvatar(displayAvatar);
+          if(displayAvatar)applyDisplayAvatar(displayAvatar,false);
           else clearDisplayAvatar();
           state.productionAssetsReady=true;
           document.getElementById('error').style.display='none';
@@ -1004,7 +1395,8 @@
         state.productionGarmentData=null;
         state.productionGarmentSeamData=null;
         state.productionGarmentEdgeData=null;
-        clearDisplayAvatar();
+        const keepMhrPreview=Boolean(state.productionDisplayBody&&state.mhrMorphBasis&&state.avatar.template==='feminine');
+        if(!keepMhrPreview)clearDisplayAvatar();
         state.acceptedBuildLabel='Measurements or pattern changed · run Simulate for a matching body and cloth';
         document.getElementById('legend').style.display='none';
         scheduleRebuild();
@@ -1708,18 +2100,25 @@
 
         const numericCount=Object.entries(a).filter(([key,value])=>key!=='photos'&&typeof value==='number').length;
         const candidateAvatar=String(state.displayAvatarMode||'').endsWith('-candidate');
-        const mhrCandidate=state.displayAvatarMode==='mhr-candidate';
-        document.getElementById('avatarEyebrow').textContent=candidateAvatar
-          ?'FITTED AVATAR CANDIDATE'
+        const mhrBaselinePreview=state.displayAvatarMode==='mhr-baseline-preview';
+        const mhrMorphPreview=state.displayAvatarMode==='mhr-morph-preview';
+        const mhrUnsupportedPreview=state.displayAvatarMode==='mhr-unsupported-preview';
+        const mhrPreview=mhrBaselinePreview||mhrMorphPreview||mhrUnsupportedPreview;
+        document.getElementById('avatarEyebrow').textContent=mhrPreview
+          ?(mhrUnsupportedPreview?'3D UNSUPPORTED FOR REVISION':'MEASUREMENT PREVIEW ONLY')
+          :candidateAvatar?'FITTED AVATAR CANDIDATE'
           :'MEASUREMENT PREVIEW';
-        document.getElementById('bodyLabel').textContent=candidateAvatar
-          ?`${Math.round(a.height)} cm · fitted GLB candidate`
+        document.getElementById('bodyLabel').textContent=mhrPreview
+          ?`${Math.round(a.height)} cm · ${state.mhrPreviewState?.mappedValues||0} mapped measurements · not accepted cloth`
+          :candidateAvatar?`${Math.round(a.height)} cm · fitted GLB candidate`
           :`${Math.round(a.height)} cm · ${numericCount} mapped values`;
         if(globalThis.chrome?.webview)globalThis.chrome.webview.postMessage({
           type:'avatar-state',
-          mode:mhrCandidate?'fitted-mhr-candidate':candidateAvatar?'fitted-antonia-candidate':'editable-measurement-mesh',
+          mode:mhrBaselinePreview?'mhr-baseline-preview':mhrMorphPreview?'mhr-morph-preview':mhrUnsupportedPreview?'mhr-unsupported-preview':candidateAvatar?'fitted-antonia-candidate':'editable-measurement-mesh',
           height:a.height,
-          mappedValues:numericCount
+          mappedValues:mhrPreview?(state.mhrPreviewState?.mappedValues||0):numericCount,
+          limitedKeys:mhrPreview?(state.mhrPreviewState?.limitedKeys||[]):[],
+          unsupportedKeys:mhrPreview?(state.mhrPreviewState?.unsupportedKeys||[]):[]
         });
         const name={silk:'Silk charmeuse',cotton:'Lightweight cotton jersey',linen:'Linen twill',wool:'Wool crepe'}[f.key]||'Custom fabric';
         document.getElementById('fabricLabel').innerHTML=`${name}<br>${Math.round(f.weight)} g/m² · ${Math.round(f.stretch)}% stretch`;
@@ -1802,7 +2201,9 @@
         const projection=perspective(Math.PI/4.3,canvas.width/canvas.height,.1,50),eye=[0,.04+state.pitch*1.8,state.distance];
         const view=lookAt(eye,[0,-.12,0],[0,1,0]),model=rotationY(state.yaw),mvp=multiply(multiply(projection,view),model);
         gl.uniform3fv(locations.cameraPosition,new Float32Array(eye));
-        drawMesh(state.grid,[.22,.23,.27],false,now,mvp,model);
+        /* The grid is a reference, not a subject. Under the linear lighting it
+           came up as bright as the figure, so it is kept well below the skin. */
+        drawMesh(state.grid,[.10,.11,.135],false,now,mvp,model);
         drawMesh(state.body,state.displayBodyTexture?(state.displayBodyColor||[1,1,1]):[.72,.49,.39],false,now,mvp,model,state.displayBodyTexture,.66,.01,true);
         for(const feature of state.face)drawMesh(feature.mesh,feature.color,false,now,mvp,model);
         for(const asset of state.displayMeshes)if(asset.key!=='bra')drawMesh(asset.mesh,asset.color||[1,1,1],false,now,mvp,model,asset.texture,asset.roughness,asset.alphaCutoff,true);
@@ -1845,6 +2246,10 @@
           rear:{yaw:0,pitch:.01,distance:5.35},
           left:{yaw:90,pitch:.01,distance:5.35},
           oblique:{yaw:145,pitch:.01,distance:5.45},
+          /* The acceptance contract asks for six semantic views. This is the
+             rear counterpart of the front oblique, mirrored about the body's
+             own axis so the two obliques show the same corner from each side. */
+          'rear-oblique':{yaw:35,pitch:.01,distance:5.45},
           fit:{yaw:145,pitch:.01,distance:5.65}
         };
         const view=views[String(viewName).toLowerCase()];

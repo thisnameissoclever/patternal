@@ -42,11 +42,12 @@ function Get-DirectoryIdentity {
 
     $resolvedPath = (Resolve-Path -LiteralPath $Path).Path
     $rootPrefix = $resolvedPath.TrimEnd('\') + '\'
-    $lines = foreach ($file in Get-ChildItem -LiteralPath $resolvedPath -File -Recurse | Sort-Object FullName) {
+    [string[]]$lines = foreach ($file in Get-ChildItem -LiteralPath $resolvedPath -File -Recurse) {
         $relativePath = $file.FullName.Substring($rootPrefix.Length).Replace('\', '/')
         $hash = Get-PatternalFileSha256 -Path $file.FullName
         "$relativePath`t$($file.Length)`t$hash"
     }
+    [Array]::Sort($lines, [StringComparer]::Ordinal)
     $bytes = [Text.Encoding]::UTF8.GetBytes(($lines -join "`n"))
     $sha256 = [System.Security.Cryptography.SHA256]::Create()
     try {

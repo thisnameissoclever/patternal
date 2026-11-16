@@ -151,8 +151,8 @@ def validate_display_fit_report(
     report_path: Path,
 ) -> tuple[Path, dict[str, object], Path]:
     resolved, report = require_json(report_path, "display avatar fit report")
-    if report.get("schema_version") != "patterna.mpfb-avatar-fit/1.2":
-        raise ValueError("Display avatar promotion requires MPFB fit report schema 1.2.")
+    if report.get("schema_version") != "patterna.mpfb-avatar-fit/1.3":
+        raise ValueError("Display avatar promotion requires MPFB fit report schema 1.3.")
     if report.get("accepted") is not True:
         raise ValueError("Display avatar promotion requires an accepted MPFB fit report.")
     source_body = require_file(Path(str(report["output_body"])), "MPFB source body")

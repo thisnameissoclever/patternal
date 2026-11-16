@@ -34,10 +34,7 @@ $request = [ordered]@{
 }
 [IO.File]::WriteAllText($localRequestPath, ($request | ConvertTo-Json -Depth 5), [Text.UTF8Encoding]::new($false))
 
-$vm = Assert-PatternalHyperVAccess -VmName $VmName
-if ($vm.State -ne 'Running') {
-    Start-VM -Name $VmName | Out-Null
-}
+$vm = Start-PatternalVmForAutomation -VmName $VmName
 
 $credential = Get-PatternalGuestCredential -VmName $VmName
 $session = New-PatternalVmSession -VmName $VmName -Credential $credential

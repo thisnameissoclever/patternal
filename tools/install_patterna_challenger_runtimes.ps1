@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('All', 'MHR', 'PPF')]
+    [ValidateSet('All', 'MHR', 'PPF', 'Anny', 'LibUIPC')]
     [string]$Component = 'All',
     [string]$DestinationRoot = (Join-Path $env:LOCALAPPDATA 'Patterna\ChallengerRuntimes'),
     [string]$DownloadRoot = (Join-Path $env:LOCALAPPDATA 'Patterna\ChallengerRuntimes\downloads'),
@@ -46,6 +46,28 @@ $ppf = [ordered]@{
     ReadmeSha256 = '2ca503cea50681dcd019f08fd1127de7976686c50ef03273850ac5a41c2fb423'
     ThirdPartyLicenseRelativePath = 'THIRD_PARTY_LICENSES.txt'
     ThirdPartyLicenseSha256 = '4f726f1f78e405925c4f58a856d749756c9f91288bb0ef61bc5ab5bfbf103462'
+}
+
+$anny = [ordered]@{
+    Name = 'Anny'
+    Version = 'v0.6.0-py312-torch2.13.0-cu126'
+    WheelDirectoryName = 'anny-wheels-py312-cu126'
+    LockName = 'anny-py312-cu126-requirements.txt'
+    WheelName = 'anny-0.6.0-py3-none-any.whl'
+    WheelBytes = 47705473L
+    WheelSha256 = '050a0b24a3e7fdb89b46dc3581947ea84225305425ac9a1a97b65ea997fb2ad6'
+    ReleaseTagCommit = '72104cac8242d1735ec06433b65bec5e26953ce7'
+    WheelUri = 'https://files.pythonhosted.org/packages/67/a5/59594be242b7239d725ce982bacbe5fa6a7e37075cc62488396234f2c4f8/anny-0.6.0-py3-none-any.whl'
+}
+$libuipc = [ordered]@{
+    Name = 'LibUIPC'
+    Version = 'v0.0.25-py312-cuda'
+    WheelDirectoryName = 'libuipc-wheels-py312'
+    LockName = 'libuipc-py312-requirements.txt'
+    WheelName = 'pyuipc-0.0.25-cp312-cp312-win_amd64.whl'
+    WheelBytes = 32078944L
+    WheelSha256 = 'b636a64689e1f63e58cef177dce6edd6cea2d454d534234d1f953d5b8ad5b074'
+    WheelUri = 'https://files.pythonhosted.org/packages/85/11/999268750624872f57660ca7311ef10b755214af8664ff19528605fa6194/pyuipc-0.0.25-cp312-cp312-win_amd64.whl'
 }
 
 function Get-LowerSha256 {
@@ -188,6 +210,234 @@ function Promote-StagedRuntime {
     }
     Move-Item -LiteralPath $Staging -Destination $Final
     return [pscustomobject]@{ Path = $Final; Reused = $false; Backup = $null }
+}
+
+function Assert-PinnedPythonLane {
+    param([Parameter(Mandatory)][string]$Description)
+    if (-not (Test-Path -LiteralPath $PythonPath -PathType Leaf)) {
+        throw "Python 3.12 was not found at $PythonPath"
+    }
+    $pythonVersion = (& $PythonPath -c 'import sys; print(".".join(map(str, sys.version_info[:3])))').Trim()
+    if ($LASTEXITCODE -ne 0 -or -not $pythonVersion.StartsWith('3.12.')) {
+        throw "$Description requires the pinned Python 3.12 lane; found $pythonVersion."
+    }
+    return $pythonVersion
+}
+
+function Assert-WheelhouseMatchesLock {
+    param(
+        [Parameter(Mandatory)][string]$WheelRoot,
+        [Parameter(Mandatory)][string]$LockPath,
+        [Parameter(Mandatory)][string]$Description
+    )
+    if (-not (Test-Path -LiteralPath $LockPath -PathType Leaf)) {
+        throw "Missing $Description wheel lock at $LockPath"
+    }
+    $lockHashes = @(
+        Select-String -LiteralPath $LockPath -Pattern '--hash=sha256:([0-9a-f]{64})' -AllMatches |
+            ForEach-Object { $_.Matches } |
+            ForEach-Object { $_.Groups[1].Value }
+    )
+    if ($lockHashes.Count -eq 0) {
+        throw "$Description wheel lock declares no hashes: $LockPath"
+    }
+    $wheels = @(Get-ChildItem -LiteralPath $WheelRoot -Filter '*.whl' -File -ErrorAction Stop)
+    if ($wheels.Count -ne $lockHashes.Count) {
+        throw "$Description wheelhouse holds $($wheels.Count) wheels; the lock declares $($lockHashes.Count)."
+    }
+    $actualHashes = @($wheels | ForEach-Object { Get-LowerSha256 $_.FullName } | Sort-Object)
+    if (@(Compare-Object ($lockHashes | Sort-Object) $actualHashes).Count -ne 0) {
+        throw "The $Description offline wheel cache does not match the committed hash lock."
+    }
+    return @(
+        $wheels | Sort-Object Name | ForEach-Object {
+            [ordered]@{ filename = $_.Name; bytes = $_.Length; sha256 = Get-LowerSha256 $_.FullName }
+        }
+    )
+}
+
+function Install-AnnyRuntime {
+    $pythonVersion = Assert-PinnedPythonLane -Description 'Anny'
+    $wheelRoot = Join-Path $DownloadRoot $anny.WheelDirectoryName
+    $lockPath = Join-Path $PSScriptRoot ('runtime-locks\' + $anny.LockName)
+    $wheelInventory = Assert-WheelhouseMatchesLock -WheelRoot $wheelRoot -LockPath $lockPath -Description 'Anny'
+    $annyWheelPath = Join-Path $wheelRoot $anny.WheelName
+    Assert-FileIdentity $annyWheelPath $anny.WheelBytes $anny.WheelSha256 'Anny 0.6.0 release wheel'
+    Invoke-CheckedProcess $PythonPath @(
+        (Join-Path $PSScriptRoot 'verify_anny_release_wheel.py'), '--wheel', $annyWheelPath
+    ) 'Anny release wheel verification'
+
+    $componentRoot = Join-Path $DestinationRoot $anny.Name
+    $final = Join-Path $componentRoot $anny.Version
+    if (Test-InstalledRuntime -Path $final -Version $anny.Version) {
+        return [pscustomobject]@{ Name = $anny.Name; Version = $anny.Version; Path = $final; Reused = $true; Backup = $null }
+    }
+    New-Item -ItemType Directory -Path $componentRoot -Force | Out-Null
+    $staging = Join-Path $componentRoot ('.staging-' + [Guid]::NewGuid().ToString('N'))
+    try {
+        New-Item -ItemType Directory -Path $staging -Force | Out-Null
+        $venv = Join-Path $staging '.venv'
+        Invoke-CheckedProcess $PythonPath @('-m', 'venv', $venv) 'Anny virtual environment creation'
+        $venvPython = Join-Path $venv 'Scripts\python.exe'
+        Invoke-CheckedProcess $venvPython @(
+            '-m', 'pip', 'install', '--disable-pip-version-check', '--no-index', '--no-deps',
+            '--find-links', $wheelRoot, '--require-hashes', '-r', $lockPath
+        ) 'Anny offline dependency installation'
+        Invoke-CheckedProcess $venvPython @(
+            '-m', 'pip', 'check', '--disable-pip-version-check'
+        ) 'Anny installed dependency consistency check'
+
+        $smokeTool = Join-Path $PSScriptRoot 'run_anny_install_smoke.py'
+        $smokeReports = @()
+        foreach ($runIndex in 1, 2) {
+            $cacheDir = Join-Path $staging "anny-cache-run$runIndex"
+            $reportPath = Join-Path $staging "anny-install-smoke-run$runIndex.json"
+            Invoke-CheckedProcess $venvPython @(
+                $smokeTool, '--cache-dir', $cacheDir, '--output', $reportPath
+            ) "Anny offline neutral-body smoke test run $runIndex"
+            $smokeReports += $reportPath
+        }
+        $firstRun = Get-Content -LiteralPath $smokeReports[0] -Raw | ConvertFrom-Json
+        $secondRun = Get-Content -LiteralPath $smokeReports[1] -Raw | ConvertFrom-Json
+        $firstDeterministic = $firstRun.deterministic | ConvertTo-Json -Depth 8
+        $secondDeterministic = $secondRun.deterministic | ConvertTo-Json -Depth 8
+        if ($firstDeterministic -ne $secondDeterministic) {
+            throw 'Two clean Anny smoke runs produced different deterministic sections.'
+        }
+        $firstCacheNames = ($firstRun.cacheFileNames | ConvertTo-Json -Depth 4)
+        $secondCacheNames = ($secondRun.cacheFileNames | ConvertTo-Json -Depth 4)
+        if ($firstCacheNames -ne $secondCacheNames) {
+            throw 'Two clean Anny smoke runs wrote different cache file sets.'
+        }
+
+        $packageList = & $venvPython -m pip list --format json --disable-pip-version-check | ConvertFrom-Json
+        if ($LASTEXITCODE -ne 0) {
+            throw 'Anny package inventory failed.'
+        }
+        $entrypoints = [ordered]@{
+            '.venv\Scripts\python.exe' = Get-LowerSha256 $venvPython
+            'anny-install-smoke-run1.json' = Get-LowerSha256 $smokeReports[0]
+            'anny-install-smoke-run2.json' = Get-LowerSha256 $smokeReports[1]
+        }
+        $manifest = [ordered]@{
+            schemaVersion = 'patterna.challenger-runtime/1.0'
+            name = $anny.Name
+            version = $anny.Version
+            installedAtUtc = [DateTimeOffset]::UtcNow.ToString('O')
+            archive = [ordered]@{ uri = $anny.WheelUri; bytes = $anny.WheelBytes; sha256 = $anny.WheelSha256 }
+            releaseTagCommit = $anny.ReleaseTagCommit
+            python = [ordered]@{ baseVersion = $pythonVersion; packages = $packageList }
+            wheelLockSha256 = Get-LowerSha256 $lockPath
+            wheelhouse = $wheelInventory
+            neutralVerticesSha256 = $firstRun.deterministic.verticesSha256
+            entrypoints = $entrypoints
+        }
+        Write-JsonAtomic $manifest (Join-Path $staging 'runtime-manifest.json')
+        $promotion = Promote-StagedRuntime -Staging $staging -Final $final -Version $anny.Version
+        return [pscustomobject]@{ Name = $anny.Name; Version = $anny.Version; Path = $promotion.Path; Reused = $promotion.Reused; Backup = $promotion.Backup }
+    }
+    catch {
+        if (Test-Path -LiteralPath $staging) {
+            Remove-Item -LiteralPath $staging -Recurse -Force
+        }
+        throw
+    }
+}
+
+function Install-LibUipcRuntime {
+    $pythonVersion = Assert-PinnedPythonLane -Description 'LibUIPC'
+    $wheelRoot = Join-Path $DownloadRoot $libuipc.WheelDirectoryName
+    $lockPath = Join-Path $PSScriptRoot ('runtime-locks\' + $libuipc.LockName)
+    $wheelInventory = Assert-WheelhouseMatchesLock -WheelRoot $wheelRoot -LockPath $lockPath -Description 'LibUIPC'
+    $pyuipcWheelPath = Join-Path $wheelRoot $libuipc.WheelName
+    Assert-FileIdentity $pyuipcWheelPath $libuipc.WheelBytes $libuipc.WheelSha256 'pyuipc 0.0.25 CUDA wheel'
+
+    $componentRoot = Join-Path $DestinationRoot $libuipc.Name
+    $final = Join-Path $componentRoot $libuipc.Version
+    if (Test-InstalledRuntime -Path $final -Version $libuipc.Version) {
+        return [pscustomobject]@{ Name = $libuipc.Name; Version = $libuipc.Version; Path = $final; Reused = $true; Backup = $null }
+    }
+    New-Item -ItemType Directory -Path $componentRoot -Force | Out-Null
+    $staging = Join-Path $componentRoot ('.staging-' + [Guid]::NewGuid().ToString('N'))
+    try {
+        New-Item -ItemType Directory -Path $staging -Force | Out-Null
+        $venv = Join-Path $staging '.venv'
+        Invoke-CheckedProcess $PythonPath @('-m', 'venv', $venv) 'LibUIPC virtual environment creation'
+        $venvPython = Join-Path $venv 'Scripts\python.exe'
+        Invoke-CheckedProcess $venvPython @(
+            '-m', 'pip', 'install', '--disable-pip-version-check', '--no-index', '--no-deps',
+            '--find-links', $wheelRoot, '--require-hashes', '-r', $lockPath
+        ) 'LibUIPC offline dependency installation'
+        Invoke-CheckedProcess $venvPython @(
+            '-m', 'pip', 'check', '--disable-pip-version-check'
+        ) 'LibUIPC installed dependency consistency check'
+
+        $siteCustomize = @'
+"""Patterna LibUIPC challenger runtime bootstrap.
+
+Prepends the venv-local NVIDIA CUDA runtime DLL directories to the process
+PATH so the libuipc CUDA backend's dependent DLLs (cudart, cuBLAS, cuSOLVER,
+cuSPARSE, nvJitLink) resolve without a system CUDA toolkit installation or a
+machine-level PATH change.
+"""
+import os
+from pathlib import Path
+
+_nvidia_root = Path(__file__).resolve().parent / "nvidia"
+if _nvidia_root.is_dir():
+    _dll_dirs = sorted({str(p.parent) for p in _nvidia_root.rglob("*.dll")})
+    for _dir in _dll_dirs:
+        try:
+            os.add_dll_directory(_dir)
+        except OSError:
+            pass
+    os.environ["PATH"] = os.pathsep.join(_dll_dirs + [os.environ.get("PATH", "")])
+'@
+        $siteCustomizePath = Join-Path $venv 'Lib\site-packages\sitecustomize.py'
+        [System.IO.File]::WriteAllText($siteCustomizePath, $siteCustomize, [System.Text.UTF8Encoding]::new($false))
+
+        $smokeTool = Join-Path $PSScriptRoot 'run_libuipc_install_smoke.py'
+        $workspace = Join-Path $staging 'engine-probe-workspace'
+        $reportPath = Join-Path $staging 'libuipc-install-smoke.json'
+        Invoke-CheckedProcess $venvPython @(
+            $smokeTool, '--workspace', $workspace, '--output', $reportPath
+        ) 'LibUIPC offline import and CUDA engine smoke test'
+        $smoke = Get-Content -LiteralPath $reportPath -Raw | ConvertFrom-Json
+        if ($smoke.pyuipcVersion -ne '0.0.25') {
+            throw "The installed pyuipc version is $($smoke.pyuipcVersion); expected 0.0.25."
+        }
+
+        $packageList = & $venvPython -m pip list --format json --disable-pip-version-check | ConvertFrom-Json
+        if ($LASTEXITCODE -ne 0) {
+            throw 'LibUIPC package inventory failed.'
+        }
+        $entrypoints = [ordered]@{
+            '.venv\Scripts\python.exe' = Get-LowerSha256 $venvPython
+            '.venv\Lib\site-packages\sitecustomize.py' = Get-LowerSha256 $siteCustomizePath
+            'libuipc-install-smoke.json' = Get-LowerSha256 $reportPath
+        }
+        $manifest = [ordered]@{
+            schemaVersion = 'patterna.challenger-runtime/1.0'
+            name = $libuipc.Name
+            version = $libuipc.Version
+            installedAtUtc = [DateTimeOffset]::UtcNow.ToString('O')
+            archive = [ordered]@{ uri = $libuipc.WheelUri; bytes = $libuipc.WheelBytes; sha256 = $libuipc.WheelSha256 }
+            python = [ordered]@{ baseVersion = $pythonVersion; packages = $packageList }
+            wheelLockSha256 = Get-LowerSha256 $lockPath
+            wheelhouse = $wheelInventory
+            licenseFindings = $smoke.pyuipcLicenseConflict
+            entrypoints = $entrypoints
+        }
+        Write-JsonAtomic $manifest (Join-Path $staging 'runtime-manifest.json')
+        $promotion = Promote-StagedRuntime -Staging $staging -Final $final -Version $libuipc.Version
+        return [pscustomobject]@{ Name = $libuipc.Name; Version = $libuipc.Version; Path = $promotion.Path; Reused = $promotion.Reused; Backup = $promotion.Backup }
+    }
+    catch {
+        if (Test-Path -LiteralPath $staging) {
+            Remove-Item -LiteralPath $staging -Recurse -Force
+        }
+        throw
+    }
 }
 
 function Install-MhrRuntime {
@@ -359,8 +609,14 @@ if ($Component -in @('All', 'MHR')) {
 if ($Component -in @('All', 'PPF')) {
     $results += Install-PpfRuntime
 }
+if ($Component -in @('All', 'Anny')) {
+    $results += Install-AnnyRuntime
+}
+if ($Component -in @('All', 'LibUIPC')) {
+    $results += Install-LibUipcRuntime
+}
 $catalogEntries = @()
-foreach ($componentDirectory in @(Get-ChildItem -LiteralPath $DestinationRoot -Directory -ErrorAction SilentlyContinue | Where-Object Name -in @('MHR', 'PPF'))) {
+foreach ($componentDirectory in @(Get-ChildItem -LiteralPath $DestinationRoot -Directory -ErrorAction SilentlyContinue | Where-Object Name -in @('MHR', 'PPF', 'Anny', 'LibUIPC'))) {
     foreach ($versionDirectory in @(Get-ChildItem -LiteralPath $componentDirectory.FullName -Directory -ErrorAction SilentlyContinue | Where-Object Name -notlike '.staging-*')) {
         $manifestPath = Join-Path $versionDirectory.FullName 'runtime-manifest.json'
         if (Test-Path -LiteralPath $manifestPath -PathType Leaf) {

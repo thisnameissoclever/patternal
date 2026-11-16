@@ -1,5 +1,86 @@
 # Lessons learned
 
+### 2026-08-28: A visual cloth defect can be a derivable number rather than a judgement call
+
+- **What happened:** The first settled garment was covered in dense mesh-scale crumple. The obvious next move was to try bending-stiffness values until the renders looked better, which the challenger contract forbids as parameter fishing. Instead the coefficient was derived: the discrete shell bending energy is linear in its coefficient, so one cantilever experiment in the same solver measures the constant that maps the coefficient to physical flexural rigidity. The declared fabric needed about 4523; the run had used 0.05.
+- **Root cause:** The bending coefficient had been copied from an assembly-only calibration whose own documentation said it was not fabric acceptance data, and no one had checked it against the fabric's physical constants. Nothing errored, because any positive value produces a running simulation.
+- **Prevention:** When a solver parameter has a continuum meaning, derive it from the declared physical constants and confirm the mapping with one experiment whose answer is known analytically. Wrinkle wavelength is set by bending stiffness, so mesh-scale buckling is evidence of a wrong coefficient rather than a reason to smooth the render.
+- **Verification:** Two probes three orders of magnitude apart must agree on the coefficient-times-deflection constant, and the calibrated value must reproduce the analytic cantilever deflection. The settled garment then reaches equilibrium in 27 frames instead of 384 and shows garment-scale folds.
+
+### 2026-08-28: A UI probe must commit the control the way a user does
+
+- **What happened:** A local UI Automation check set the chest, waist, and hip ease boxes through the value pattern and reported that the measured-garment readout never moved, which read as a serious app defect. The controls were fine. A WinUI NumberBox commits on Enter or lost focus, so setting the text alone left the app's value unchanged and no re-draft ever ran.
+- **Root cause:** The probe modeled the control's storage rather than the user's interaction. Any commit-on-blur control will look dead to an automation client that never blurs or presses Enter.
+- **Prevention:** Drive input controls through the full user gesture: focus, set, then commit with Enter, and prove the probe by confirming a control that is known to work responds. Treat a no-response result from an unproven probe as a probe defect until the probe itself is validated.
+- **Verification:** After adding the focus-and-Enter commit, waist ease 6 to 20 moved the readout from 88.0 cm to 102.0 cm and restored exactly, on the same build that had appeared unresponsive.
+
+### 2026-08-28: A derived-data cache must be pinned when a chaotic consumer amplifies its low-order bits
+
+- **What happened:** Two same-seed Anny worker runs produced meshes differing by up to 7 cm. The runs differed only in their `ANNY_CACHE_DIR`: one loaded the existing all-labels model-data cache, the other rebuilt it. Rebuilds produce byte-different safetensors of identical size (summation-order noise in the blend-shape assembly), the model tensors differ in low-order bits, and 420 steps of bounded differentiable fitting amplify that to centimeter-scale parameter divergence.
+- **Root cause:** The cache was treated as a transparent performance detail. For the default configuration it is (the install smoke proved identical neutral meshes across fresh caches), but the fit is a chaotic consumer for which any sub-ulp model difference forks the optimization path.
+- **Prevention:** Pin one cache build as a content-addressed runtime artifact, record its hashes in the runtime evidence, and define worker determinism as same pinned cache plus same seed. Never compare determinism across cache rebuilds of a chaotic pipeline.
+- **Verification:** Two worker runs against the same pinned cache directory must produce identical canonical mesh hashes; two runs against independently built caches are expected to differ and must not be used as a determinism proof.
+
+### 2026-08-28: A borrowed convention scalar must be verified against the target system's anchor order
+
+- **What happened:** The Anny avatar worker set phenotype gender to 0.0, the value that means fully female in the MakeHuman macro convention Patterna's MPFB lane used. Anny orders its gender anchors male-first, so 0.0 built a fully male body. The fit then pressed 151 female measurements onto a male frame, every breast blend shape was multiplied by a zero female weight, cup size and firmness had exactly zero mesh effect, and the optimizer silently satisfied the bust circumference by inflating the ribcage.
+- **Root cause:** A same-named scalar was copied across systems that share ancestry without checking the anchor order that gives it meaning. Nothing errored, because 0.0 is a valid value in both systems.
+- **Prevention:** When mapping any normalized control between model families, read the target system's anchor or variation table (`PHENOTYPE_VARIATIONS` in anny) and prove the semantic direction with a mesh-derived check, such as evaluating the control at both extremes and measuring the region it should move, before committing the mapping.
+- **Verification:** Evaluating cupsize 0.0 and 1.0 on the corrected female base must produce materially different bust projections; on the male base it produced byte-identical meshes.
+
+### 2026-08-28: An isotropic-moduli API silently destroys a split stretch-and-shear calibration
+
+- **What happened:** The libuipc arrangement executor fed the assembly calibration's separate 60 kPa stretch and 600 Pa shear values into `ElasticModuli2D.youngs_shear`. That pair implies a Poisson ratio of 49 and a negative Lame lambda; the toy shell exploded to a 73-meter displacement in thirty frames, and at scale the runaway velocities inflated the contact broad phase to 23 GB of GPU memory before crashing.
+- **Root cause:** The calibration lists three constants from a Baraff-Witkin-style parameterization, but the pinned constitution accepts one isotropic pair. Combining constants across parameterizations without checking the implied derived values produced a physically invalid material that no error message reported.
+- **Prevention:** When a solver API takes fewer material constants than a calibration declares, derive the implied remaining constants and reject the configuration if any falls outside physical bounds (Poisson within [0, 0.5)). Record the adaptation in the declared schedule instead of quietly dropping a constant.
+- **Verification:** A single translated-and-stretched quad under the corrected `youngs_poisson` moduli relaxes toward rest instead of diverging, and the full 14-panel scene initializes and advances without memory growth.
+
+### 2026-08-28: Escape-sensitive file content must come from script files, not inline shell strings
+
+- **What happened:** Two hash-locked pip requirement files were generated through inline heredoc and quoted-string Python, and both times the backslash-newline continuation reached disk as a literal backslash plus the letter n, which pip rejected as an invalid requirement.
+- **Root cause:** Bash heredocs and PowerShell quoting each rewrite backslash sequences under their own rules before Python sees the source, so the same escape text produces different bytes depending on the wrapper shell.
+- **Prevention:** Write generators that emit escape-sensitive bytes as real script files and run them by path. Never pipe multi-line escape-bearing source through a shell string. Verify emitted continuations by byte inspection before consuming them.
+- **Verification:** `od -c` on the generated lock shows `\` followed by a newline character, and `pip install --require-hashes -r` parses every line.
+
+### 2026-08-23: A legacy numerical fit cannot become a new avatar-worker acceptance claim
+
+- **What happened:** The historical Anny 0.5 fitter could apply a custom two-pass torso cage, write `accepted: true` after local measurement and watertightness checks, and feed that Boolean to its GarmentCode body preparer. It had no complete 151-control report, independent display review, collider-registration acceptance, or product acceptance boundary.
+- **Root cause:** One Boolean represented local numerical success and looked reusable as broader avatar acceptance. The old report schema did not encode the scope clearly enough to prevent that interpretation.
+- **Prevention:** The new immutable output manifest is incompatible with `patterna.anny-profile-fit/1.0`. It requires every output role and every control row, binds them to the exact avatar-worker input, and keeps all producer acceptance claims false. Independent verifiers own later numerical and visual decisions.
+- **Verification:** Create two outputs from the same recipe and require identical output IDs. Reject a producer acceptance claim, an incomplete control report, changed artifact bytes, and an Anny 0.5 fit report substituted for the control-application report.
+
+### 2026-08-22: A saved VM can resume an already-initiated guest shutdown
+
+- **What happened:** A packaged UI run restored the dedicated guest from a saved state, opened a PowerShell Direct session, and then hung because Windows completed a shutdown that had been initiated before the VM was saved.
+- **Root cause:** The host treated Hyper-V `Saved` as an ordinary stopped state. Saving freezes the guest exactly where it is, including after `shutdown.exe` has already started. The result poll also used an unbounded remote call, so its own 600-second deadline could not run after the guest disappeared.
+- **Prevention:** All routine guest entry points now stabilize a resumed saved state and boot once from a clean `Off` state if the resumed guest completes a pending shutdown. UI result polling checks the Hyper-V state and bounds each PowerShell Direct status query to 15 seconds.
+- **Verification:** Save a healthy guest and require the normal path to remain running through the stabilization window. Separately save a disposable guest after initiating shutdown, then require one clean reboot or a bounded explicit failure without leaving a host process stranded.
+
+### 2026-08-22: Routine packaged UI checks must not perform an implicit dependency restore
+
+- **What happened:** The isolated guest synchronization command built the application with the .NET default restore behavior even when the intended check needed only already-cached Debug dependencies.
+- **Root cause:** Packaging and dependency acquisition were coupled in one normal-path command. A visual regression run could therefore contact package feeds or change the local dependency cache without making that boundary visible.
+- **Prevention:** Guest payload synchronization now disables restore by default. A caller must use the explicit `-AllowRestore` switch only after reviewing and authorizing dependency installation.
+- **Verification:** Build the x64 Debug package with restore disabled, run the static isolated-harness contract, and require the normal synchronization path to fail with an authorization hint if cached packages are missing.
+
+## Cross-PowerShell directory hashes need ordinal path ordering
+
+### What happened
+
+The host materialized and transferred a 95-file AppX payload, but the guest rejected it because the recomputed directory identity differed. A read-only file inventory proved that every relative path, byte length, and SHA-256 was identical on both sides.
+
+### Root cause
+
+The host used PowerShell 7 and the guest used Windows PowerShell 5.1. Both identity functions sorted absolute file paths through `Sort-Object FullName`, whose culture-sensitive ordering differed for the mixed-case package paths. The hash therefore depended on the shell and machine even though the directory did not.
+
+### Prevention rule
+
+Construct canonical identity lines from normalized relative paths, byte lengths, and lowercase hashes, then sort those complete lines with `StringComparer.Ordinal` before hashing. Never use culture-sensitive shell sorting in a cross-runtime content identity.
+
+### How to verify
+
+Run `Test-PatternalIsolatedUiHarness.ps1` and require both host and guest identity implementations to use ordinal sorting. Prepare and install an AppX containing mixed-case asset paths, and require the host identity, expanded guest identity, file count, and per-file hashes to match exactly.
+
 ## A drawn dart is not cloth topology
 
 ### What happened
@@ -2503,6 +2584,16 @@ Compute piece extents outside the UI, pack deterministic non-overlapping cells, 
 
 Require the 14-piece adaptive shirt to pack inside the bounded canvas with no overlapping placement rectangles. Build the packaged app, capture startup and post-Fit 2D views at 1920 by 1080, and confirm all 14 pieces and labels are visible. Invoke Zoom in, Zoom out, and Fit by stable automation ID; require the visible percentage to increase, return, and then decrease from a zoomed view. Reviewed run `20260809-025650-0625b0e8` demonstrated 89 percent, 109 percent, 89 percent, and a final fitted 89 percent without host input injection.
 
+### 2026-08-22: Fit the occupied pattern bounds, not the drafting paper
+
+**What happened:** The current shelf pack occupied about 506 of the canvas's forced 720 vertical pixels. Fit included the blank drafting area, leaving avoidable vertical whitespace, while collar and cuff geometry remained difficult to inspect until the separate Frame command was invoked.
+
+**Root cause:** Auto layout optimized only whether an item could fit on an existing shelf at a fixed width. Viewport Fit then used the full minimum canvas instead of the union of placed piece cells. The piece list changed selection without bringing the selected geometry into an inspectable view.
+
+**Prevention rule:** Pack piece cells against the target canvas aspect ratio, preserve the larger drafting canvas separately, and calculate Fit from the occupied bounds. Selecting a piece through the accessible list must frame that piece, including small finishing components. Clicking filled pattern geometry must select it without changing the user's current pan or zoom. Queue the first Fit only after both the pattern layout and real viewport dimensions exist; a `SizeChanged` event alone does not prove that rendering has produced layout bounds.
+
+**How to verify:** Require the 14-piece shirt's occupied bounds to have an aspect ratio from 1.15 to 1.55 and at least 500 pixels of content height without overlap. Fit-all must return valid centered offsets from the occupied bounds. Framing the left front collar in an 800 by 600 viewport must reach at least 400 percent zoom while remaining within the 16x product limit. The packaged guest must select a visible piece through guest-local pointer input and prove the zoom label remains unchanged.
+
 ## Inspect serialized JSON, not PowerShell's shallow object rendering
 
 ### What happened
@@ -3400,3 +3491,1012 @@ Before a screenshot-bearing acceptance run, resolve the single owned Explorer se
 ### How to verify
 
 Run the host preflight against both active and disconnected guest states. Require `GuestSession.active: true`, record whether console recovery occurred, capture all expected PNGs, and retain `hostInputInjected: false` plus `vmConnectLaunched: false` in the result.
+# 2026-08-22: Pre-solve geometry and complete edit identity must gate avatar and cloth claims
+
+## What happened
+
+The MHR preview represented 11 values while the product exposed 151 numeric avatar values. An unmapped edit could leave the mesh unchanged and still receive exact-candidate wording. Separately, repeated cloth work attempted to compensate for bad assembly with sewing, projection, staged constraints, and solver changes. A fresh input diagnostic found 142 body intersections, 4,157 self-intersections, 469 near-degenerate triangles, 703 extreme slivers, 893 triangles below a 5-degree minimum angle, and 4.128 cm penetration before a meaningful solve. The PPF adapter also ignored `output_mesh_path` and silently reloaded `physical_mesh_path`.
+
+## Root cause
+
+Acceptance status was inferred inside individual subsystems instead of being derived from one complete revision identity. The viewer counted only represented morph changes. Solver adapters owned implicit input selection. The arrangement gate measured some aggregate geometry values but did not hard-gate exact body and self-intersection evidence before simulation.
+
+## Prevention rule
+
+Every avatar and cloth claim must bind the complete current edit set and exact source bundle. Unsupported edits fail closed. Every worker consumes only declared bundle roles and hashes. No solver starts until the exact arrangement proves zero body and self-intersections, minimum clearance, orientation, topology, material-space, seam-proximity, and triangle-quality gates. After one frozen diagnostic confirms a bad input class, stop tuning it.
+
+## Verification
+
+`tools/revision_bundle.py verify` rejects changed, missing, extra, escaped, or acceptance-claiming source bundles. The MHR renderer reports baseline, partial, and unsupported preview modes separately and receives `previewChangedKeys` from WinUI. The current rejected arrangement and one-frame diagnostic remain under `artifacts/revision-proof-day1-control`; their reports preserve the exact hashes and failure counts.
+
+### 2026-08-22: Arrangement cannot be both immutable source and derived worker output
+
+**What happened:** The first revision-bundle contract required `arrangement` as a source input even though the replacement architecture expected the arrangement worker to create it.
+
+**Root cause:** The bundle froze every file used by the old solver invocation without separating authored authority from derived evidence. That produced a circular contract and risked laundering a known-rejected placement into later workers as source truth.
+
+**Prevention rule:** Immutable source bundles contain only authored inputs. Arrangement artifacts and their independent verification reports are separate content-addressed stages. No producer can accept its own output, and no solver can consume diagnostic or rejected geometry.
+
+**Verification:** Current bundle creation rejects an `arrangement` input. The legacy 1.0 and source-only 1.1 verifiers still validate their frozen historical bundles without rewriting them.
+
+### 2026-08-22: Global seam links require an authoritative panel index map
+
+**What happened:** The first exact-topology worker correctly switched from reconstructed edge order to the authoritative seam-link file, then could not map those global vertex IDs back to source panels without guessing.
+
+**Root cause:** Revision bundle 1.1 included the global seam labels and per-panel meshes but omitted the generated global-to-panel index map that relates their two index spaces.
+
+**Prevention rule:** Any source contract that carries global vertex constraints must also carry a complete, reversible ownership map. Never infer ownership from coincident positions, serialization order, or filenames.
+
+**Verification:** Revision bundle 1.2 requires `panelIndexMap`. The worker validates every mapped global vertex against the exact panel and local counts before compiling constraints.
+# 2026-08-22: A clean solver plan is not a solver result
+
+## What happened
+
+The new contact-aware arrangement route produced a deterministic, hash-bound libuipc scene plan with clean spread-panel geometry and complete seam constraints. It would have been easy to describe that as the arrangement path "working" before the dependency had even been installed.
+
+## Root cause
+
+Adapter integrity, runtime execution, arrangement acceptance, cloth acceptance, and packaged visual acceptance are different claims. Collapsing them rewards paperwork-shaped evidence while leaving the difficult physics entirely unobserved.
+
+## Prevention rule
+
+Every generated artifact must state its acceptance scope and keep later claims false. A plan verifier may accept immutable plan integrity only. The worker always emits an unaccepted arrangement artifact, and only a separate verifier may accept that arrangement. Cloth and packaged UI gates remain later boundaries.
+
+## Verification
+
+Run `tools/verify_libuipc_arrangement_plan.py` against the immutable scene plan and source bundle. Confirm the result says `scope: immutable-plan-integrity-only`, `executionAuthorized: false`, `arrangementAccepted: false`, and `clothAccepted: false`.
+
+# 2026-08-22: Execute reviewed releases, not convenient source checkouts
+
+## What happened
+
+The first Anny worker contract pinned a post-release repository commit because the v0.6 release was not yet visible during the earlier audit. A later fresh inventory found the official 0.6.0 wheel and tag. The post-release commit was one six-line keypoint-device fix ahead, but its packaging metadata referenced a `LICENSE_THINGS` file absent from the repository tree.
+
+## Root cause
+
+Source review identity and executable dependency identity were treated as the same choice. A commit is excellent provenance, but a mutable checkout with incomplete packaging metadata is a worse runtime artifact than a complete, hashed release wheel when the only later change is outside the worker's path.
+
+## Prevention rule
+
+Bind each third-party worker to a reviewed source identity and a separately verified execution artifact. Prefer a complete official wheel with a fixed hash, embedded data inventory, and embedded licenses. Do not patch installed third-party code to chase an irrelevant post-release fix. If the required fix is relevant, wait for a release or maintain a formally versioned fork with its own provenance.
+
+## How to verify
+
+Require Anny wheel SHA-256 `050a0b24a3e7fdb89b46dc3581947ea84225305425ac9a1a97b65ea997fb2ad6`, 1,559 data files, 107,825,068 uncompressed data bytes, the Apache-2.0 code license, and the MPFB2 CC0 license. Compare tag `72104cac8242d1735ec06433b65bec5e26953ce7` to reviewed commit `81ca83e202273b306205c1cc15f33734be31e48c` and require that the six-line keypoint change remains outside the body worker path.
+
+# 2026-08-22: Proof tools must not depend on an accidental Python environment
+
+## What happened
+
+The continuous body-clearance verifier originally used SciPy's `cKDTree`. It passed in the earlier analysis runtime, then could not even import after the machine's default Python moved to 3.14 and the available Python 3.12 environment lacked SciPy.
+
+## Root cause
+
+A small candidate-selection optimization quietly became an undeclared runtime dependency. The exact distance proof needed NumPy, but it did not require SciPy's broader surface area.
+
+## Prevention rule
+
+Keep independent geometry proof tools on the smallest declared dependency set. Use a conservative repository-owned spatial hash when its completeness is easy to prove. Explicitly select the capable interpreter during verification rather than relying on the current `python` launcher order.
+
+## How to verify
+
+Run `tools.test_triangle_surface_clearance` in the bundled Python 3.12 runtime with NumPy and no SciPy. Require the cross-cell boundary fixture to retain its candidate, the near surfaces to fail, the separated surfaces to prove the threshold, and the far surfaces to require zero exact pair evaluations.
+
+# 2026-08-22: An independent verifier cannot import its producer
+
+## What happened
+
+The libuipc plan verifier imported two schema strings from the plan producer. Importing the producer also imported Warp, so immutable-plan verification failed on a machine without the arrangement runtime even though the verifier did not need Warp.
+
+## Root cause
+
+The artifact contract lived inside the implementation that produced it. Python imports execute the producer's entire dependency surface, accidentally coupling proof to the software under test.
+
+## Prevention rule
+
+Put shared schema identifiers and passive data contracts in dependency-free modules. Producers and independent verifiers may both import the contract, but a verifier must never import a producer or solver adapter.
+
+## How to verify
+
+Run `tools.test_libuipc_arrangement_plan` in a Python environment with no Warp installation. All four immutable-plan tests must pass, including hash tampering, authorization tampering, and undeclared-file rejection.
+
+# 2026-08-28: Asset identity does not imply product acceptance
+
+## What happened
+
+A packaged cloth integration verified the hashes of a diagnostic body and garment, then exposed them through a path and control named `AcceptedDrape`. The same asset report explicitly kept producer acceptance, packaged visual quality, calibrated fabric, and correct-body drafting false. Hash verification proved the files were unchanged, but the viewport path still presented a visibly rejected garment as an accepted solve.
+
+## Root cause
+
+Artifact identity and renderer compatibility were treated as sufficient authorization to display an asset under an acceptance label. Neither check answers whether the garment is correct, physically credible, drafted for the body, made from calibrated material, or approved in exact multi-angle renders.
+
+## Prevention rule
+
+Keep diagnostic assets outside accepted product paths. Product-visible drape must pass one fail-closed gate that checks every acceptance scope, requires no open gates, binds an accepted six-view review by hash, and rejects any missing or false claim. Never infer acceptance from a directory name, a successful parser, equilibrium, or matching file hashes.
+
+## How to verify
+
+Run `python -m unittest tools.test_product_drape_acceptance`, then run `tools/product_drape_acceptance.py` against the packaged asset and renderer reports. The current rejected diagnostic asset must exit with code `2` and enumerate the false claims. A synthetic fixture may exit with code `0` only when every product and visual gate is explicitly true.
+
+# 2026-08-28: Constraining one angle of a pose leaves the other one wherever it was
+
+## What happened
+
+The dressing stance drove each arm's elevation to horizontal and never mentioned azimuth. Both arms came out horizontal and 28 degrees forward of the line through the shoulders, so the body wore the shirt in a stance no garment is drafted for. Every arrangement and settle gate passed, because the sleeves were staged along the collider's own fitted arm axes and the result was internally consistent. Only the packaged side view showed it.
+
+## Root cause
+
+A direction in space needs two angles. The search optimised the one that was written down and left the other at whatever the rest pose happened to hold, and no gate compared the stance against anything outside the run, so a self-consistent wrong stance satisfied all of them.
+
+## Prevention rule
+
+When a solver targets an orientation, name every independent angle of that orientation in the target and in the report, and fail when any of them misses tolerance. Consistency gates confirm that a result agrees with its own inputs; they cannot notice that the inputs describe the wrong pose. Look at the render.
+
+## How to verify
+
+Read `search` in the pose report: each side must carry both `achievedElevationDegrees` and `achievedAzimuthDegrees` within `stanceToleranceDegrees` of their targets. On the exported body, fit the principal axis of the vertices beyond 45 cm from the centreline above 105 cm; its lateral component must dominate and its depth component must be near zero.
+
+# 2026-08-28: A coordinate contract is not the frame the renderer draws in
+
+## What happened
+
+The first packaged export put the body in the revision bundle's own frame, which places the anatomical front along +z. The viewport expects the front along -z: its front camera sits at yaw 180 and its rear camera at yaw 0. Every camera showed the opposite of its label, and the result read as a modelling fault rather than a frame error.
+
+## Root cause
+
+Two correct conventions met with nothing between them. The exporter carried geometry from a frame defined by an artifact contract into a frame defined by a renderer, and assumed they agreed because both were described as Y-up with the floor at zero.
+
+## Prevention rule
+
+Where geometry crosses from one frame's owner to another's, convert explicitly and check the result against the consumer, not the producer. Use a rotation rather than a mirror so winding, surface orientation, and the body's own left and right survive. Gate the facing so the error cannot return silently.
+
+## How to verify
+
+Run `tools/verify_packaged_drape_assets.py`. It reports `body.facesFrontCamera` and fails with a named issue when the head centroid sits at non-negative z. Running it against `artifacts/packaged-drape-assets-v1` must exit with code 1 and name the facing; running it against the current assets must exit 0.
+
+# 2026-08-28: A UI Automation descendants search can silently return a partial tree
+
+## What happened
+
+Two UI Automation faults hid controls that were plainly on screen. A `TreeScope.Descendants` search over the Patternal window returned 93 elements and never reached the camera buttons or the solved-cloth toggle that sit beside the hosted browser control, while a raw tree walk over the same window reached 594 elements and found all of them. Separately, the window element of an exited process stayed in the automation tree with its subtree frozen, so a lookup by window name attached to the corpse of the previous run rather than the app that was actually running.
+
+## Root cause
+
+Both failures return absence rather than an error. A truncated search and a dead window element each answer "not found", which reads as a missing control rather than a broken lookup.
+
+## Prevention rule
+
+Walk the raw tree when a control must be found, and bind to the main window handle of a process that is currently running rather than to the first element with a matching name. Wait for controls that appear only after asynchronous work, with a bounded timeout that fails loudly.
+
+## How to verify
+
+Run `tools/Invoke-PatternalDrapeViewCapture.ps1` against a running app and confirm it finds every camera button and the toggle. Restart the app and run it again without any pause: it must attach to the new window rather than timing out on the old one.
+
+# 2026-08-28: A layout height computed from the page ignores what sits above it
+
+## What happened
+
+The 3D surface took an explicit height of the page height minus the command bar minus a fixed allowance. That allowance covered the tab strip but not the out-of-date notice above the surface, so whenever the notice was showing the surface was taller than its container and the bottom of the 3D view was clipped away, taking the information panel with it.
+
+## Root cause
+
+The height was computed from a distant ancestor and a constant, so it could not follow a sibling whose height changes with visibility. Removing the explicit height is not an option either: the hosted browser control collapses to nothing when it is left to its star-sized row alone.
+
+## Prevention rule
+
+When an explicit size is genuinely required, subtract every sibling that shares the space, measure those siblings rather than assuming them, and recompute from their own size changes, because an element reports a height only after it has been laid out.
+
+## How to verify
+
+Run `tools/Invoke-PatternalDrapeViewCapture.ps1` with the out-of-date notice showing and again with it hidden. The captured viewport must fill the tab in both states, and the panel in the lower left must be complete in every image.
+
+# 2026-08-28: A drafting refusal thrown from a value-changed handler ends the process
+
+## What happened
+
+Typing 24 into the sleeve cap height box closed the application. The box accepts 5 to 30, and 24 is inside that range. The drafter refused the request with `Sleeve attachment left-sleeve-f/edge-1 requires 3.570 cm of endpoint redrafting, outside the 0.75 cm construction limit`, which is the right answer. The refusal was an exception thrown inside a NumberBox ValueChanged handler, nothing caught it, and the process terminated with every unsaved edit in it. Windows recorded it as a fault in the XAML framework, which pointed away from the real cause.
+
+## Root cause
+
+The drafting contract and the interaction contract disagreed about what a refusal is. To the drafter it is a normal outcome for an unsatisfiable request. To the UI framework an exception crossing a control event is fatal. Nothing sat between them, and roughly forty call sites reach the drafter, so no single caller could be made responsible.
+
+## Prevention rule
+
+Validate at the point where unvalidated input enters, not at every point that consumes it. A control that accepts a number the engine can refuse must attempt the work first, and on refusal restore the previous value, leave the model untouched, and name both the control and the reason. A range on a spin box only bounds the number; it says nothing about whether the combination can be built.
+
+## How to verify
+
+Run `tools/Invoke-PatternalControlSweep.ps1` against a running app. Every slider and numeric box must be found and restored, and the application must still be running when the sweep finishes. Then set the sleeve cap height to 24: the value must return to its previous setting and the application must show a message naming the control and quoting the construction limit.
+
+# 2026-08-28: A control with no readout is indistinguishable from a dead control
+
+## What happened
+
+The control sweep flagged six numeric boxes that accepted a value and changed no readout anywhere. Reading the panels showed why: the construction summary reports neck, shoulder, and armscye figures but never back neck depth or sleeve cap height, and the bust summary reports intake and separation but never projection, mouth offset, or shoulder share. Capturing the pattern canvas before and after showed that back neck depth does redraft the pattern, so the control works and only its feedback is missing.
+
+## Root cause
+
+Each section's summary text was written to report a chosen few of its own values rather than to confirm the edit the user just made. A control whose value never appears in any readout gives the user nothing to check against.
+
+## Prevention rule
+
+Every control that changes the model needs an observable that moves with it. Where a summary cannot carry every value, the automated sweep must fall back to the rendered artifact, so "no readout moved" is never mistaken for "the control does nothing".
+
+## How to verify
+
+Run `tools/Invoke-PatternalCanvasEffectProbe.ps1`. It changes each quiet control and compares captures of the pattern canvas, separating controls that redraft the pattern from controls with nothing to show.
+
+# 2026-08-28: A length matcher used as a shape editor folds a dart over itself
+
+## What happened
+
+Re-grading the shirt to a different body produced a front torso panel that would not mesh. GarmentCode reported degenerate triangles, which names a symptom in the mesher and says nothing about the cause. Three attempts chasing the mesher, the hip measurement, and the armhole all failed the same way.
+
+The cause was in the grader. A bust dart is a seam whose two sides are edges of the same piece. `MatchConstructionSeamLengths` treated it as two panels to reconcile, so `MatchCurveLength` bowed one leg toward the other along what it calls the outward normal, which for a self-seam points straight into the opposing leg. The mismatch it was closing was 0.0444 cm over a 21.8 cm seam, two hundredths of one percent. Arc length grows quadratically with the bow near zero, so buying that fraction of a millimetre cost 1.685 cm of sideways travel across a wedge 1.6 cm wide. The dart legs crossed, the boundary self-intersected, and the mesher was handed a bowtie.
+
+## Root cause
+
+Two separate mistakes compounded. The routine did not distinguish a seam joining two panels from a dart closure drafted into one, and it had no floor below which closing a mismatch is not worth any deformation. Neither is visible from the mesher's error.
+
+## Prevention rule
+
+Never reconcile the two sides of a seam that lives on one piece; its geometry was drafted together and is not two independent measurements. Put a relative floor under any length matcher, because a fit that is already inside sewing tolerance must not be bought with shape. And when a routine can only add length by adding curvature, bound the curvature by the clearance to the nearest other boundary edge and fail loudly rather than emitting a crossing.
+
+## How to verify
+
+Run GarmentCode's own per-panel check on a specification before meshing it:
+
+    from pygarment.pattern.core import BasicPattern
+    pattern = BasicPattern(path)
+    print([name for name in pattern.pattern["panels"] if pattern._is_panel_self_intersecting(name)])
+
+It returns `['front_torso']` for both failing re-grades and `[]` for the original, in about two seconds. That one line settles in seconds what three attempts through the mesher could not.
+
+# 2026-08-28: A tool that skips the pipeline skips the pipeline's checks
+
+## What happened
+
+`Patternal.SimulationPipelineProof --pattern-only` writes a graded specification and returns before the simulation pipeline runs. The repository already had a check that would have named this fault in one line: `PatternTopologyCompiler.ValidateSimpleBoundary` reports "Pattern piece {id} self-intersects between boundary segments". It never ran, because the compiler is inside the pipeline the flag exists to skip. GarmentCode's own self-intersection check also ran and printed a warning rather than raising, so it scrolled past above the traceback.
+
+## Root cause
+
+The fast path was built by removing work rather than by removing only the expensive work. Validation went out with the solver because both lived behind the same return.
+
+## Prevention rule
+
+A shortcut may skip expensive work; it may not skip correctness checks. When adding a flag that returns early, list what the skipped path validated and re-run those checks before the early return. A warning that a downstream stage will crash must raise, not print.
+
+## How to verify
+
+Give `--pattern-only` a garment whose panel boundary crosses itself. It must exit 2 and name the piece, before writing any specification.
+
+# 2026-08-28: Fixing broken geometry can uncover the disagreement it was hiding
+
+## What happened
+
+With the dart fix in place, the re-grade stopped producing a self-intersecting panel and immediately failed somewhere new: `The requested 48.00 cm armscye cannot be drafted at the measured 21.80 cm armhole depth`. Running the same command with the original measurements fails identically, off by 2.39 cm, so this is not a property of the new body at all. The armhole depth and armscye circumference in the profile bridge are not consistent with this block, and they never were.
+
+The refusal was previously unreachable. The self-intersecting panel made the graded garment unmeasurable, `TryMeasureConstructionProfile` returned nothing, and the armscye fit was skipped entirely. A broken panel was standing in for a passing check.
+
+## Root cause
+
+A failure that returns "cannot measure" and a code path that treats "cannot measure" as "nothing to do" combine into a silent skip. The pipeline appeared to work because a defect upstream was suppressing a gate downstream.
+
+## Prevention rule
+
+Distinguish "this does not apply" from "this could not be evaluated". A stage that cannot measure its input must say so and stop, not fall through as though the input needed no work. Expect a real fix to surface further failures, and treat the first one after a fix as evidence rather than as a regression.
+
+## How to verify
+
+Run the re-grade with only `--measurement chest=112`, which reproduces the original grading inputs. It must fail with the armscye refusal, proving the disagreement predates any change of body.
+
+# 2026-08-28: Grading faithfully to a rejected body reproduces its errors in cloth
+
+## What happened
+
+The shirt was graded to the avatar's own measured values, ran the whole pipeline, and passed all twelve gates twice with zero intersections. The renders were worse than the garment it replaced: blousy through the body, a horizontal roll across the waist, a hem that flared and lifted. It was kept out of the packaged application.
+
+The avatar's hip measures 113.45 cm against its 108 cm target, and 36 of its 73 objectives sit outside tolerance. Grading to that hip and adding the pattern's 8 cm hip ease asked for a 121.45 cm garment hip, so the drape showed the avatar's fitting error with ease stacked on top of it.
+
+## Root cause
+
+Two correct-looking stages composed into a wrong result. The avatar fit is producer-rejected and says so, and the grader faithfully reproduces whatever measurements it is given. Neither is wrong on its own, and no gate spans them, because the cloth gates ask whether the garment is physically valid on the body rather than whether the body is the one that was asked for.
+
+## Prevention rule
+
+Do not grade a garment to a body that has not met its own measurement targets. Where a rejected artifact feeds a later stage, make the later stage refuse it rather than relying on judgement; the repository already does this in `tools/prepare_anny_garmentcode_body.py`, which will not read an unaccepted fit report, and the failure here came from reaching for a path that has no such gate. Passing every downstream gate says nothing about whether the upstream input was accepted.
+
+## How to verify
+
+Compare `artifacts/packaged-drape-views-regraded` with `artifacts/packaged-drape-views-restored`. Both are accepted arrangements with zero intersections on the same body; the first is graded to the measured values and is visibly worse. Then confirm the numbers: the avatar measurement report lists hip achieved 113.45 against target 108, and the re-grade resolved a garment hip of 121.45 cm.
+
+# 2026-08-28: The avatar's measurement failures are a range limit, not a fitting failure
+
+## What happened
+
+The Anny fit leaves 36 of 73 measurement objectives outside tolerance, and every downstream problem traces back to it. The obvious reading is that the optimiser needs more steps or better weighting. It does not. Its fitted parameters span exactly minus one to plus one, and twelve of the sixty-five sit on a bound. Four of those twelve are the controls for objectives the garment depends on, and each is pushed to its maximum and still short:
+
+    shoulder breadth      control at +1.0, still 2.77 cm short of target
+    underbust girth       control at +1.0, still 3.39 cm short
+    chest depth           control at +1.0, still 5.78 cm short
+    bust projection       control at +1.0, still 2.87 cm short
+
+No further optimisation can close those. The model has been asked for a body outside the range it can express.
+
+A second failure is structural rather than a range limit. The front hip arc and the back hip arc are driven by one shared control, and they need it to move in opposite directions: the front arc is 8.14 cm too long while the back arc is 2.70 cm too short. One parameter cannot satisfy both, at any value.
+
+The targets themselves explain it. They are the Antonia measurement set, and Antonia is a CharMorph body. The pipeline has been asking one parametric human model to reproduce a body authored in a different one.
+
+## Root cause
+
+A target set was carried across from one avatar family and used as the acceptance criteria for another, and the fit report records a loss without recording that its parameters had run out of room. A saturated control and a control that is simply not converged look identical in a loss curve.
+
+## Prevention rule
+
+Acceptance targets must come from a body the model can actually produce. When a fit misses, check whether its controls are on their bounds before spending effort on the optimiser: a parameter at its limit is a statement about the model's range, not about the search. Report bound saturation in the fit report so this is visible without re-deriving it, and never let two objectives that must move in opposite directions depend on a single shared control.
+
+## How to verify
+
+Run `tools/audit_anny_fit_saturation.py` against the fit report and the measurement report. It sorts every missed objective into a range limit, a contended control, or something a better search could still close, and on the current fit it reports 6 range-limited, 10 contended, and 20 improvable, with 4 of the range-limited ones garment-critical.
+
+By hand: read `fittedParameters` in `artifacts/anny-worker-run-v9/anny-fit-report.json`. Twelve of sixty-five are exactly plus or minus one. Cross-reference them against the `targets` list of each failing objective: `measure-shoulder-dist-incr`, `measure-underbust-circ-incr`, `torso-scale-depth-incr`, and `phenotype:cupsize` are all at plus one while their objectives remain outside tolerance. Confirm the shared-control case by checking that `arc-length|front-hip` and `arc-length|back-hip` both list only `hip-trans-forward`.
+
+# 2026-08-28: The body model that reaches the measurements was already installed
+
+## What happened
+
+Three candidate bodies were compared against the measurements a garment is drafted from, and all three failed: Anny saturates its controls, MHR has parameters for girths and depths only, and Antonia matches the numbers only because they were taken from her and has no controls at all. The conclusion drawn was that a new body model had to be found.
+
+A fourth candidate was sitting in the repository the whole time. MPFB2 is vendored in `third_party/MPFB2`, mirrored into the simulation runtime, and installed as a live Blender 4.5 extension, carrying all 1,258 morph targets including all 40 `measure-*` targets. Anny's 17 named measurement controls are a strict subset of those 40. `tools/generate_mpfb_avatar.py` already fits a body to measurements through them, and its accepted output is shipped at `Patternal/Assets/Production/patterna-full-bust-default-fit-report.json`.
+
+That report hits all twenty of its measurements within a 0.15 cm tolerance, with a largest error of 0.142 cm, no blocking failures, and nothing marked unreachable. It reaches underbust, waist, hip, and neck, the values Anny misses by 3.4 to 5.5 cm with its controls at maximum.
+
+MPFB was not overlooked by accident. It was evaluated, and demoted for appearance rather than capability: the audit records "Useful body controls, but prior MakeHuman-family appearance failed." The most recent reassessment already reverses that and recommends "one CC0 MakeHuman-derived avatar family, evaluated by Patterna-owned morph code."
+
+## Root cause
+
+A rejection was recorded without recording what it was a rejection of. "MakeHuman-family appearance failed" became "MakeHuman is not the answer", and the measurement capability that was never in question went with it. Later work then searched outward for a replacement while the capable option sat vendored, installed, and passing its own acceptance report.
+
+## Prevention rule
+
+Record what a rejection covers and what it leaves standing. An asset rejected on appearance is still a candidate on capability, and the next person to face a capability problem needs to see that. Before searching outward for a replacement component, audit what is already vendored against the requirement, because a repository that has accumulated several attempts probably already contains the answer to at least one of them.
+
+## How to verify
+
+Run `tools/audit_avatar_control_coverage.py` with `--mpfb-fit-report`. It reports MPFB2 as within tolerance on every group its fit exercised, against Anny saturated on four groups and shared on two. Three groups, station depths, front and back arcs, and bust position and projection, are not in that fit report; the targets for them exist in `tools/mpfb_morph_controls.py`, so they are unproven rather than absent.
+
+# 2026-08-28: None of the three bodies on hand can be driven to the measurements a pattern needs
+
+## What happened
+
+The body choice had been argued from renders and from fit losses, and neither settles it. What settles it is whether a model owns an independent control for each quantity a pattern is drafted from, because a missing control cannot be fitted and a control shared between two measurements cannot satisfy both. Measuring all three candidates against the seven control groups the cage contract names gives:
+
+    control group                     Anny        MHR                     Antonia
+    vertical landmarks                shared      no parameter            reaches it
+    station girths                    saturated   5 quantities            reaches it
+    station depths                    saturated   5 quantities            reaches it
+    independent front and back arcs   shared      no parameter            reaches it
+    bust position and projection      saturated   no parameter            reaches it
+    shoulder and armscye              saturated   1 quantity              reaches it
+    neck                              missed      no parameter            reaches it
+
+Anny is parametric and fails every group: four by saturation, where its control is at its bound and the target is still missed, two because a single control is shared between measurements that need it to move in opposite directions, and one it simply misses. MHR carries eleven morph parameters covering girths and depths only, with nothing for vertical landmarks, front and back arcs, bust position or projection, or the neck. Antonia reaches every value, because the target set was measured from her, and has no controls at all: she is one authored body and cannot represent anyone else.
+
+So the two models that can be changed cannot reach the targets, and the one that reaches the targets cannot be changed.
+
+## Root cause
+
+Each candidate was adopted for a different strength: Antonia for appearance, MHR for its rig and shell, Anny for differentiable fitting. None was ever checked against the list of measurements a garment is actually drafted from, so the gap only surfaced as a fit that would not converge and a garment that would not hang.
+
+## Prevention rule
+
+Before adopting a body model, enumerate the measurements the product drafts from and require the model to declare an independent control for each. Treat a saturated control and a shared control as failures of the model rather than of the fitter. Appearance, licensing, and rig quality are all necessary and none of them is this check.
+
+## How to verify
+
+Run `tools/audit_avatar_control_coverage.py` against the Anny fit report, the Anny measurement report, and the MHR manifest. It prints the table above and writes the per-objective detail, including which controls are on a bound and which are shared.
+
+# 2026-08-28: A control no garment can enable is dead, not merely disabled
+
+## What happened
+
+Two seam toggles live in the assembly overlay and had never been exercised, because they are hidden until the overlay is opened and a relationship is selected in it. Selecting the first relationship enabled one of them and left the other disabled, which reads like correct behaviour: the first entry is a seam, and the other toggle applies to a closure.
+
+Trying every relationship changes the reading. The crew-neck offers 38 and the wrap dress offers 14, and all 52 are typed as seams. Neither garment the application ships contains a single closure, so `ClosureStateToggle` cannot be enabled by any action a user can take. Two of the crew-neck's entries are even named "Left side bust dart closure" and "Right side bust dart closure" while being typed as seams, which is consistent with the drafting side, where a bust dart is a seam whose two sides belong to one piece.
+
+## Root cause
+
+A test that selects the first item confirms the control responds to the case it happens to land on and says nothing about the others. Disabled is a legitimate state, so a control that is always disabled looks the same as one that is correctly disabled right now, and only trying every case that should enable it tells them apart.
+
+## Prevention rule
+
+For a control that is enabled by a selection, search the selection space for something that enables it, and report the control as unreachable when nothing does. Never conclude from one selection that a disabled control is behaving correctly.
+
+## How to verify
+
+Run `tools/Invoke-PatternalWorkspaceSweep.ps1`. It opens the assembly overlay and walks the relationships until each toggle becomes enabled, recording which relationship did it.
+
+The fix is that the closure control now appears only while the garment declares a closure. The sweep reads the overlay's own summary to separate the two cases, so an inapplicable control is reported as absent by design against a garment with zero closures, and a control that is missing for any other reason still fails.
+
+# 2026-08-28: Coherence is checkable without an instrument; calibration is not
+
+## What happened
+
+The fabric a garment is solved with shipped as fifteen numbers with no provenance: no swatch, no citation, no test method, and an areal density that simply matched a slider preset. The acceptance gate asks for a calibrated fabric, which needs real cloth on a real instrument, so the numbers sat unexamined behind a gate nothing could move.
+
+They were examinable all along, because they are not independent. Areal density and thickness imply a packing fraction against cotton fibre's own density. Flexural rigidity and areal density imply a bending length, the quantity a Peirce cantilever test measures, which has published ranges by fabric class. Shear is always a fraction of tensile in a cloth, never a multiple. On the shipped fabric all six such relations hold: packing 0.234, bending length 1.34 cm inside the 0.8 to 1.8 cm jersey range, membrane stiffness 103 N/m, shear at a tenth of tensile, friction 0.312.
+
+That is not calibration and the audit says so in its own claims. It is the check that comes before it, and this project has already been bitten twice by skipping it: a shear modulus that implied a Poisson ratio of 49 and a negative Lame parameter, and a bending coefficient ninety thousand times too soft. Both are caught by these relations, and both are used as negative tests.
+
+## Root cause
+
+An unreachable gate absorbed a reachable question. Because the fabric could not be certified, it was never asked whether it was even self-consistent, and two material bugs reached the solver that arithmetic would have stopped.
+
+## Prevention rule
+
+When a gate needs evidence you cannot produce, separate what it is really asking from what can still be checked, and check that. Physical parameters constrain each other; verify those relations before simulating anything, and keep coherence and calibration as distinct claims so neither is mistaken for the other.
+
+## How to verify
+
+Run `tools/audit_fabric_coherence.py` against the solver report. The shipped fabric passes all six relations. Perturbing shear above tensile, softening the bending coefficient by five orders of magnitude, or thinning the cloth until its density is impossible each makes it exit non-zero and name the relation that broke.
+
+# 2026-08-28: A blocker was reported for hours without being re-checked
+
+## What happened
+
+The isolated packaged user-interface gate was described, repeatedly and across a whole working session, as unable to run: it needed an official Windows installation image and a one-time elevated Hyper-V bootstrap, so it had never been executed. Every status report repeated that.
+
+It was not true. A Hyper-V guest named `Patternal-UI` existed, was provisioned, carried a clean Windows snapshot from 2026-08-06, and was running at the time the claim was being repeated. `tools/isolated-ui/Get-PatternalIsolatedUiStatus.ps1` reports the host service running, management access granted, the guest running, the guest credential present, a payload staged, and a next step of "Run Invoke-PatternalGuestUiSmoke.ps1". Running it took one command.
+
+The gate then ran to completion in 370 seconds against a payload built from the current source: 47 actions, 46 passed, 25 screenshots, user-interface trees for both workspaces, and a pattern round trip, with no host input injected and no fatal error. One action failed, "Current accepted cloth is available", for the reason this project already understood: the packaged baseline only presents accepted cloth when the document matches nine exact conditions.
+
+## Root cause
+
+A blocker was established once, written down, and then restated from memory instead of from the machine. Nothing re-read the status the repository already published, and the guest was provisioned at some point after the note was written.
+
+## Prevention rule
+
+Re-check a blocker before repeating it, especially one being used to explain why something has not been done. Prefer asking the machine over quoting an earlier answer: a status tool that exists is cheaper to run than a paragraph is to write. Treat "this cannot run" as a claim with a shelf life.
+
+## How to verify
+
+Run `tools/isolated-ui/Get-PatternalIsolatedUiStatus.ps1`. It reports guest state, credential presence, payload identity and the next command, and needs no elevation.
+
+# 2026-08-28: A diagnostic that lists possibilities hides the answer it already has
+
+## What happened
+
+The packaged application has shown "3D cloth is out of date" on a freshly created default pattern for as long as anyone has looked, and the isolated packaged gate fails on exactly one action for the same reason: "the packaged baseline has no accepted cloth for its current pattern, body, assembly, and fabric revision". The message explaining it read "the neckline, shoulder, armscye, sleeve cap, width distribution, or balance differs from the simulated pattern", which names six candidates and commits to none.
+
+The code comparing them had every number in hand. Reporting the differences instead of the categories gives the answer immediately: ten of the eleven construction values differ, and one is not drift at all.
+
+    front width share    51.272 against 48.058
+    neckline width       14.207 against 15.823 cm
+    front neck depth      9.065 against  9.497 cm
+    back neck depth       4.142 against  4.339 cm
+    shoulder length      11.640 against 12.970 cm
+    shoulder drop         2.370 against  2.483 cm
+    armscye depth        19.153 against 20.065 cm
+    armscye scoop         2.127 against -9.111 cm
+    sleeve cap height    15.193 against 15.657 cm
+    front balance         0.032 against  0.034 cm
+
+An armscye scoop of 2.13 cm against minus 9.11 cm is an eleven centimetre difference in one construction value. The shipped cloth was not solved from a slightly older version of the default pattern; it was solved from a materially different garment. The application cannot present it as current, and is right not to.
+
+## Root cause
+
+The message was written to describe a category of failure rather than to report a measurement, so a large and specific divergence was displayed for months as a vague list. Nobody could act on it because nobody could see it.
+
+## Prevention rule
+
+When a check compares numbers, its failure message reports the numbers. Naming the possibilities is the shape of a message written before anyone had the values, and it survives long after they are available. A diagnostic that cannot be acted on is a defect in its own right.
+
+## How to verify
+
+Open the 3D tab on a freshly created pattern and read the out-of-date notice. It now names each differing construction value and both sides of the comparison, so the divergence can be measured rather than guessed at.
+
+# 2026-08-28: Two halves of one check measured different stages of the pipeline
+
+## What happened
+
+With the out-of-date notice finally reporting numbers, the construction comparison could be traced to its two sides, and they were not measuring the same thing.
+
+`MeasurementAwareConstructionProfile` filled the construction controls from `_adaptiveShirtDocument`, the ungraded source block. `GetBundledProductionBaselineMismatch` compared those controls against the construction measured from `BuildBundledProductionGarmentDocument`, which is that same source after `AdaptiveShirtPatternGrader.Adapt` has graded it. Grading moves the construction; that is its job. So the aligner and the checker read opposite ends of one pipeline, and no value the aligner could write would ever satisfy the checker.
+
+The aligner now measures the graded document, which is also the honest number to show a user, because the graded pattern is the one they get. That is a real correction and it stands on its own.
+
+It did not by itself clear the notice. The construction controls hold the same values before and after, so `AlignConstructionControlsToBundledSource` is returning early in this state, through one of its three guards or through `IsBodyAtSourceReference`. That is where the next person should look; the comparison itself is no longer suspect.
+
+## Root cause
+
+Two functions written at different times each picked a reasonable reference document, and nothing required them to pick the same one. The generic failure message hid the disagreement for as long as it existed.
+
+## Prevention rule
+
+When one value is written by one function and checked by another, both must name the same source, and that source should be a single named accessor rather than a document each rebuilds for itself. Where a pipeline has stages, say which stage a measurement belongs to.
+
+## How to verify
+
+Read the out-of-date notice on the 3D tab. It reports each differing construction value with both sides, so the aligner and the checker can be compared directly instead of inferred.
+
+# 2026-08-28: A pattern that does not know what body it was cut to can never match one
+
+## What happened
+
+The packaged application had never once presented its own accepted cloth. Every fresh document showed "3D cloth is out of date", and the isolated packaged gate failed on exactly one action of forty-seven: "Current accepted cloth is available".
+
+The chain runs from a single absent field. `PatternaProductionCrewNeck.specification.json` records `body_parameter_count: 26` and none of the twenty-six values, so the imported garment's `BodyReference` is null. `IsBodyAtSourceReference` returns false on a null reference before comparing anything, so it is false always. `MeasurementAwareConstructionProfile` therefore never takes its measuring branch and fills the construction controls by fitting an armscye instead, giving 51.272, 14.207 and an armscye scoop of 2.127. The baseline check compares those against the graded canonical garment's 48.058, 15.823 and minus 9.111. They can never agree, so `IsBundledProductionBaseline` is permanently false, so the accepted cloth is permanently hidden.
+
+Supplying the body reference at import closes all of it. The application now reports "Accepted Style3D cloth" and shows the Newton Style3D equilibrium on its own default document, and the isolated packaged gate passes 47 of 47 with no host input.
+
+The reference was supplied at import rather than by editing the specification, because that file's hash is declared as its `SourceRevision` and other artifacts reference it; editing it would break provenance across the chain to record a fact the chain already agrees on.
+
+## Root cause
+
+An exporter wrote how many body parameters had been used and dropped their values. Everything downstream needed those values to answer whether the body still matched the pattern, and with them missing the answer defaulted to no, silently and permanently. A count is not a record.
+
+## Prevention rule
+
+When serialising a derived artifact, write the inputs it was derived from, not a count of them. Where a comparison depends on a field that may be absent, distinguish absent from different: `IsBodyAtSourceReference` returning false for a null reference is indistinguishable from a body that genuinely differs, and that ambiguity hid the defect for as long as it existed.
+
+## How to verify
+
+Open the 3D tab on a fresh pattern. The out-of-date notice must be absent and the status must read "Accepted Style3D cloth". Then run `tools/isolated-ui/Invoke-PatternalGuestUiSmoke.ps1`: it must exit zero with 47 of 47 actions passed, including "Current accepted cloth is available".
+
+# 2026-08-29: The fabric gate has an open standard and published readings behind it
+
+## What happened
+
+The calibrated-fabric gate had been treated as a wall: it needs cloth on an instrument, so nothing could be done. Looking outside the repository, which had not been done once, found two things that change what can be said about it.
+
+The field has an open exchange format for exactly this data. Kyosev's 2022 work in the Textile Research Journal defines a JSON and XML structure for the material parameters a drape simulation needs, covering weight and thickness, tensile, shear and bending behaviour, with an MIT-licensed reader and writer at `virtualtextiles/fabrics-drape-data`. It carries no measurements, but it settles what a calibrated fabric record should look like, which had been undefined here.
+
+Published KES-FB2 readings give a range to check against. Bending rigidity for cotton knit fabrics is reported at 0.002 to 0.050 gram-force centimetre squared per centimetre, which converts to 1.96e-07 to 4.90e-06 newton metres. The shipped fabric's 4.21e-06 sits inside it, near the stiff end.
+
+That is not calibration and the audit still reports `calibratedFabric` false, because these are readings of other fabrics of the same class rather than of this cloth. It is a real narrowing all the same: a value outside the range no instrument has reported for this class is a value no swatch would produce either.
+
+## Root cause
+
+A gate that needed a physical measurement was read as a gate nothing could be done about, so the literature behind it went unread for a whole working session even though the user had explicitly asked for open alternatives to be considered.
+
+## Prevention rule
+
+When a requirement needs something you cannot produce, read what the field publishes about it before concluding nothing can be done. A standard defines the shape of the answer, and published measurements bound it, and both are useful long before the measurement itself exists.
+
+## How to verify
+
+Run `tools/audit_fabric_coherence.py`. The seventh relation compares flexural rigidity against the converted published KES-FB2 range and shows the conversion in its working.
+
+# 2026-08-29: The insane bodies were a garment shell that did not follow the body
+
+## What happened
+
+The complaint that started this whole avatar investigation was that the three-dimensional people looked wrong. Nothing in the measurement work explained it, because the measurements were not the cause.
+
+Moving the chest slider to 124 cm tears the figure open. The bust and hips show holes with skin coming through, the shorts have ragged edges, and the body reads as broken geometry. The application says "3D unsupported for this revision, 56 unmapped values, 2D remains authoritative" while rendering it, which is honest about the numbers and says nothing about what is on screen.
+
+The cause is in the display assets, not the morphs. The morph weights are clamped correctly. But the modesty top and briefs are body-conformed shells that receive only height scaling, never the girth morphs, exactly as the asset manifest declares in its own limitations. So the body grows and its clothing does not, and the body comes through it. The shells are valid on one body, the unmorphed one.
+
+They now follow the body instead. Conforming to a surface means moving with it, so each shell vertex borrows the movement of the body vertex it sits against, paired once against the unmorphed body and cached because the pairing does not change when the body does. At chest 124 and hip 122 the shells are intact and sit correctly on the enlarged figure, and the honest unsupported message is unchanged.
+
+Withholding them was the first fix and it removed the tearing, but it left the figure bare while editing, which is worse than it needs to be in an application about clothing. Borrowing the movement keeps them on.
+
+## Root cause
+
+A limitation was written down in the asset manifest and then not enforced anywhere. "Hair, eyes, and modesty assets receive height scaling but not local body fitting" describes a condition under which those assets must not be drawn, and nothing connected the sentence to the renderer.
+
+## Prevention rule
+
+When an asset declares the conditions it is valid under, the code that draws it must read that declaration and honour it. A limitation recorded only in prose is a defect waiting for someone to hit it. And check the visual complaint against the render before assuming it comes from the model that feeds it.
+
+## How to verify
+
+Run `tools/Invoke-PatternalAvatarResponseCheck.ps1`. It moves each body measurement, captures the viewport before and after, and reports whether the body moved. Look at `artifacts/avatar-response/ChestSlider-after.png`: the figure must be intact, with no skin through the modesty shells.
+
+# 2026-08-29: Count what a control sweep cannot reach before trusting its coverage
+
+## What happened
+
+The control sweep reported 29 numeric boxes and the interface inventory said the application has about 151 measurement parameters, and the difference went unexamined. Opening every measurement group first reaches 175 measurement controls, of which 154 are body dimensions rather than garment ease or construction values. The sweep had been exercising a fifth of what exists, and reporting that fifth as though it were the set.
+
+What the wider reach found is mostly reassuring. Of ten sampled body dimensions, seven were accepted and visibly moved the three-dimensional body, spanning the legs, neck, hips, torso and head. Two probes were clamped as out of range, correctly. One, `Total crotch length`, was accepted and moved nothing.
+
+## Root cause
+
+A sweep enumerates what the accessibility tree currently exposes, and a collapsed expander exposes nothing. Coverage was therefore a function of which panels happened to be open when the sweep ran, and nothing compared the count found against the count expected.
+
+## Prevention rule
+
+A coverage number is only meaningful next to the total it is a fraction of. Before sweeping a user interface, open everything that hides controls, count what is reachable, and compare that against what the source declares. A sweep that silently tests a subset is worse than one that fails, because it reports success.
+
+## How to verify
+
+Expand every measurement group and count the spin controls: 175, against 78 with the groups closed.
+
+
+# 2026-08-29: A two-way binding has not run yet when the control's own event fires
+
+## What happened
+
+Changing `Total crotch length` from 70.4 to 76.4 left the avatar readout saying "MHR baseline preview", as though nothing had been entered. The correct message, "3D unsupported for this revision", did appear, but only after the next edit. Timestamped logging in the message handler and in the value-changed handler showed why: the handler receives `newValue=76.4` while the `MeasurementParameter` behind the box still holds 70.4. A WinUI `NumberBox` raises `ValueChanged` from its own value change, before the `Mode=TwoWay` binding writes that value into the source.
+
+Every consumer in that handler reads the source rather than the event. So the pattern draft, the fit report, the draftability probe and the three-dimensional body were all built from the value the user had just replaced. The readout was not lying about the body; it was describing the previous one, and each edit shifted the lag forward by one.
+
+The draftability probe is the serious part. It calls `BuildCurrentGarmentDocument()` to find out whether the entered value can be drafted, and catches the exception to revert the box. Probing the previous document means it answered a question nobody asked, so for detailed measurements that guard had never tested anything.
+
+The handler now writes the committed value into the bound measurement before any of that work runs, and the revert path restores the measurement as well as the box. The binding's later write matches what is already stored and does nothing, because both measurement models ignore a write inside their own tolerance.
+
+## Root cause
+
+The handler was written as though the binding had already run. Nothing in the type system or the event signature says otherwise, and the defect is invisible on any control that is read by name instead of through its data context, which is why the garment ease and construction boxes on the same page were unaffected.
+
+## Prevention rule
+
+When a control's changed-event handler reads the model the control is bound to, commit the event's value to that model first. Do not infer ordering between a control event and its binding. The tell is a handler that takes `args.NewValue` and then never uses it.
+
+## How to verify
+
+Move `Total crotch length` off its default and read `DrapeAvatarPreviewState`. It must say "3D unsupported for this revision" within a few seconds, not after the following edit. Before the fix the correct message arrived 53 seconds later, on the next change.
+
+# 2026-08-29: Realising a bound control raises its changed event, and a handler cannot tell that from an edit
+
+## What happened
+
+Opening the ten measurement groups took 295 seconds, of which 2 were the probe's own sleeps. Each `NumberBox` inside a newly expanded group starts with no value and raises `ValueChanged` when the binding fills in the value the measurement already holds. The handler treated each of those as an edit: it marked the measurement as manually entered and ran a full re-draft, roughly a second per box, for boxes the user had done nothing to but scroll past.
+
+The cost was the visible symptom. The provenance damage was worse. `IsUserOverride` is exported in the bridge document as "manual" against "estimated", and it gates `SetEstimatedValue`, so measurements the user never touched were recorded as hand-entered and stopped tracking their estimates.
+
+The handler now returns early when the bound measurement already holds the incoming value. Opening the same ten groups takes 3.6 seconds, and a genuine edit still registers and still restores.
+
+## Root cause
+
+`ValueChanged` was read as "the user changed this". It means the control's value changed, which also happens when the control first receives one.
+
+## Prevention rule
+
+A changed-event handler on a templated, bound control must establish that the value is new before treating it as input. Comparing against the bound model is enough and costs nothing. Do not use a null or empty previous value as the test: a user who clears a box and retypes produces exactly that.
+
+## How to verify
+
+Expand every measurement group and time it. It must take seconds, not minutes. Then move one measurement and confirm the avatar readout changes, so the early return has not swallowed real edits.
+
+# 2026-08-29: A screenshot probe measures the window, not the thing you named it after
+
+## What happened
+
+`Invoke-PatternalAvatarResponseCheck.ps1` moved a measurement, hashed the viewport before and after, and reported `avatarChanged`. It reported that every probed dimension moved the body, including dimensions the shipped morph basis has no parameter for. Two separate reasons, found in that order.
+
+The viewport draws its own status panel in the bottom left, and that panel names the current preview mode. Changing a dimension the preview cannot represent switches the text to "3D unsupported for this revision", which rewrites those pixels. The probe recorded the body as having moved when what moved was the label describing the body as unmoved. Excluding the bottom strip removed that.
+
+The second reason has no fix available from the probe side. The viewport draws the body and the garment together, and changing a body measurement re-drafts the pattern, so the garment can account for every changed pixel on its own. The page exposes a `setGarmentVisible` entry point, but nothing in the application calls it, so the garment cannot be hidden through the interface.
+
+The coverage question was answered instead by reading the declarations: `tools/audit_preview_dimension_coverage.py` compares the dimensions the inspector exposes against the parameters the morph basis ships, and needs no running application. The response check kept its narrower, still useful job and its fields were renamed to `viewportChanged` and `changedTheViewport` to say only what it observes.
+
+## Root cause
+
+The probe was named for the conclusion wanted rather than the quantity captured, and the name then stood in for evidence across several sessions. A hash over a rendered window is a fact about the window. Everything drawn in it, including text about the thing being measured, is inside the measurement.
+
+## Prevention rule
+
+Name a probe after what it captures, not what you hope to infer. Before trusting a visual difference, list everything drawn in the captured region and account for each one; if any of them can move independently of the subject, the probe cannot answer the question alone. Prefer reading declarations over rendering when the question is about capability rather than appearance.
+
+## How to verify
+
+Run `python tools/audit_preview_dimension_coverage.py`. It reports 151 editable body dimensions against 13 the preview can move, from source and manifest alone, with no application running and no pixels involved.
+
+# 2026-08-29: A derived value reported as a user change turns a round trip into a permanent complaint
+
+## What happened
+
+Moving the chest slider from 112 to 124 and straight back to 112 left the avatar readout saying "3D unsupported for this revision, 46 unmapped values, 2D remains authoritative", and it stayed there. Nothing the user could see had changed, and no control was left off its starting value.
+
+`ApplyLinkedBaselineMeasurements` derives roughly fifty detailed measurements from the six primary ones, and the payload sent to the viewport counted any detailed measurement more than 0.001 cm from its declared default as a change the preview had to represent. Two things then combine. The derived estimates are rounded to two decimal places, so they do not come back to exactly where they started. And several do not equal their declared defaults even at rest: `headCirc` is derived as `height * 0.337`, which at 167 cm is 56.28 against a declared default of 56.2.
+
+So a slider round trip left dozens of derived values a few hundredths of a centimetre off their declared defaults, each was counted as a dimension the user had asked for, and almost none of them has a morph parameter, so the preview downgraded itself from "MHR baseline preview" to a standing claim that 46 dimensions could not be drawn.
+
+The payload now counts a detailed measurement only when the user actually set it. A derived value carries nothing the six primary measurements do not already carry, and those are reported separately, so counting it again was double counting. The same round trip now reports "MHR partial preview, 11 mapped values", and a measurement the user really does set, such as `crotchLength`, still reports "1 unmapped values" within a few seconds.
+
+## Root cause
+
+Distance from a declared default was used as a proxy for "the user changed this". They are different questions whenever the application can write the value itself, and this application writes about fifty of them.
+
+## Prevention rule
+
+When a field can be set by the user or derived by the application, do not infer which happened from the value. Record it. This model already had `IsUserOverride`; the reporting path simply did not consult it. And when a derived default and a declared default are meant to agree, assert that they do, because here three of them never had.
+
+## How to verify
+
+Press "Reset measurements to defaults", confirm the readout says "MHR baseline preview", move the chest slider to 124 and back to 112, and read it again. It must not claim any unmapped values. Then move `Total crotch length` off its default and confirm it reports exactly one.
+
+# 2026-08-29: A basis built by probing one control at a time must be proven to return to rest
+
+## What happened
+
+The first MPFB morph basis reported that all 85 controls moved the body, which looked like a complete success. The per-control numbers said otherwise. Every control's minimum displacement equalled the previous control's maximum, the figures climbed monotonically through the run, and the count of moved vertices grew from 4,160 to the body's full 13,380 and stayed there. Dozens of unrelated controls, from calf girth to arch height, all reported exactly 12.607 cm.
+
+Each probe was measuring itself plus everything probed before it. `evaluate_morph_controls` skips a control whose source measurements are absent from the profile, and skipping it also means never writing its targets back to rest. Probing such a control set its weight, and nothing ever cleared it, so it stayed in the body for every later probe. The deltas were cumulative sums rather than independent contributions, and a basis like that would have deformed the body into nonsense the moment two measurements were used together.
+
+Each control's targets are now cleared explicitly after its endpoints. The tool also re-measures the body once every probe is done and refuses to write anything if it has not returned to its baseline, which is the check that would have caught this before the numbers had to be read carefully.
+
+## Root cause
+
+The probe loop assumed that setting the inputs for probe N also unset the inputs for probe N-1. That holds only for controls the profile drives, and the profile drives some of them.
+
+## Prevention rule
+
+A basis built by perturbing one input at a time is only valid if every perturbation is undone. Do not infer that from the code that applies the next one; measure the rest state at the end and fail the build if it moved. And read per-item output for shape, not just for success: identical values across items that should differ, or a monotone climb through a loop, is accumulation until proven otherwise.
+
+## How to verify
+
+`tools/generate_mpfb_morph_basis.py` prints "baseline drift after all probes" and exits without writing if that exceeds the displacement floor. In a correct run the per-control maxima vary with the control, and the moved-vertex counts stay local: a bust projection moves far fewer vertices than a body-wide tone control.
+
+# 2026-08-29: A morph basis is anchored to two things, and both have to be the ones that ship
+
+## What happened
+
+The MPFB morph basis loaded, verified, and deformed the body before anything had been edited. The packaged shirt cut through the bust in the first render of it. Two separate anchors were wrong, and each would have been enough on its own.
+
+The first is the value at which a control does nothing. The basis recorded each control's own default, taken from `mpfb_morph_controls`, whose specs were authored around the MakeHuman baseline body. For 29 of the 85 controls that is not what the application ships as the default measurement: `upperBustFullness` rests at 50 where the application ships 85, `deltoidProminence` at 50 where the application ships 0, `chestDepth` at 23.2 where the application ships 31. The preview read the shipped defaults, compared them against those baselines, concluded it was far from rest, and morphed accordingly. Anchoring each parameter to the application's own default fixes it: at the default measurements every weight is zero and the body drawn is the body that ships, while each endpoint still lands exactly on the body measured there.
+
+The second is the body itself. A delta is a difference from the body it was measured on, and it gets added to the body that ships. Those were not the same body. `generate_mpfb_avatar.py` run today produces a display body 7.09 cm away from the packaged `Production/Avatar/body.obj`, so the packaged avatar predates the current pipeline. Nothing in the file formats reveals this: both bodies have 13,380 vertices in the same order, so every count and index check passes.
+
+A third mistake sat underneath: the basis tool ran only the ruler passes of the fit and stopped before the loop that compensates for local deformations, which also re-applies the height. Its baseline body came out 171.7 cm against a requested 167. The fitting sequence is now one shared function that both tools call rather than a full copy and a partial one.
+
+## Root cause
+
+Both anchors were taken from whatever was nearest to hand: the control library's defaults because the control library was already imported, and the packaged body because it was already on disk. Neither was checked against the thing it had to agree with.
+
+## Prevention rule
+
+A basis of differences is defined by where it rests and what it rests on. State both explicitly, and verify both against the artifacts that will actually be used: compare the resting values against the application's declared defaults, and compare the measured body against the packaged body vertex by vertex. Equal vertex counts are not evidence that two meshes are the same mesh.
+
+## How to verify
+
+`tools/package_mpfb_morph_basis.py` prints how many parameters it re-anchored and how far the measured body sits from the packaged one, and refuses to package beyond 0.2 cm of separation. It currently refuses, reporting 7.09 cm, which is correct until the display avatar is regenerated from the current pipeline.
+
+# 2026-08-29: A packaged asset that no tool in the repository can rebuild is a dead end you find late
+
+## What happened
+
+Packaging an MPFB morph basis needs the basis and the body to be the same body. They were not, and chasing why turned into an account of how the packaged avatar was made.
+
+The packaged set is internally coherent. `Production/Avatar/body.obj` and `Production/patterna-mpfb-female.obj` are the same 13,380 vertices in the same order, one with Z up carrying texture coordinates and one with Y up, triangulated, feet on zero, agreeing to within a millionth of a centimetre. The garment was settled on that body. Nothing about the packaged assets is wrong.
+
+What is missing is the ability to rebuild them. Running `generate_mpfb_avatar.py` today produces a body 6.94 cm away from the packaged one after removing any rigid shift, with 85.6% of vertices more than a centimetre out. The garment's own fit report says why: it was produced under `C:\Users\myema\Documents\Codex\2026-07-17\build-a-clothing-pattern-making-windows`, a different working copy, by a version of the pipeline that has since moved on. The conversion between the two body conventions did not exist in this repository at all; it lived in whatever process produced those files.
+
+So the deltas could not be measured against the packaged body, and re-measuring them against a body the current tools produce would need that body packaged, which would need the garment settled on it again.
+
+The conversion step is now `tools/prepare_style3d_body.py`, which reproduces the packaged Y-up triangulated collision body from the packaged Z-up source body exactly, and `tools/build_style3d_source.py` run against a freshly built body reproduces the packaged topology exactly, 133,870 vertices, 262,814 faces and 1,974 seam links.
+
+## Root cause
+
+The packaged assets were promoted as files plus hashes, which proves what they are and not where they came from. Everything needed to re-derive them, the exact tool versions and the steps between them, lived outside the repository, so the assets became a fixed point that later work has to fit around instead of a build product.
+
+## Prevention rule
+
+An asset that cannot be rebuilt from the repository is a constraint on every future change, whether or not anyone notices. When promoting a generated asset, promote the command that generates it too, and prove the claim by rebuilding it and comparing. If a step of the chain only exists in someone's shell history, it does not exist.
+
+## How to verify
+
+`python tools/prepare_style3d_body.py --input Patternal/Assets/Production/patterna-mpfb-female.source.obj --output <temp>` must reproduce `Patternal/Assets/Production/patterna-mpfb-female.obj`: 26,756 triangles and vertices agreeing to 5e-7 cm. Rebuilding the display body itself does not yet reproduce the packaged one, and that gap is the finding.
+
+# 2026-08-29: One application, three different human bodies
+
+## What happened
+
+Chasing why a morph basis could not be packaged ended in an inventory of which body the application is actually using, and the answer is that it depends which part of it you are looking at.
+
+The interactive preview loads the MHR candidate avatar from `Assets/Candidate/MHR/`, a GLB whose morph basis reaches 13 of the 151 measurements a user can edit.
+
+The packaged production assets are MPFB. `Production/patterna-mpfb-female.obj` is the body the shipped garment was settled on, and `Production/Avatar/body.obj` is the same mesh in display form. Their own fit report says they were produced in a different working copy by a version of the pipeline that has since moved on, and running the current tools reproduces neither.
+
+The application's own Simulate flow builds a third body. `SimulationPipeline.cs` runs `generate_charmorph_avatar.py` and requires, in its own words, a "measurement-fitted Antonia display GLB". The MPFB path in that file sits inside `RunLegacyWarpAsync`.
+
+So the body the user edits, the body the packaged cloth was solved on, and the body a fresh simulation would produce are three different models from three different projects. Each pairing inside the application is self-consistent, which is why nothing looks broken from any single view, and why the inconsistency only surfaces when something has to span two of them.
+
+## Root cause
+
+Each body arrived to solve the problem in front of it: MHR for a riggable preview, MPFB because it could hit the measurements, Antonia for appearance. None of the three arrivals removed the one before it, and nothing in the build fails when they disagree, because no artifact is required to be derived from the same body as the artifact next to it.
+
+## Prevention rule
+
+When a project evaluates several implementations of the same thing, adopting one has to include retiring the others, and the build should be able to state which one is in force. A candidate that stays wired in becomes a second answer to a question that can only have one.
+
+## How to verify
+
+`python tools/audit_preview_dimension_coverage.py` reports what the preview's body can represent. `Production/patterna-mpfb-female.obj` names the packaged body. `grep -n "generate_charmorph_avatar\|generate_mpfb_avatar" Patternal/SimulationPipeline.cs` shows which one a fresh simulation would build. Today those are three different bodies.
+
+# 2026-08-29: When two artifacts cannot be made to match, ask whether they need to
+
+## What happened
+
+The interactive preview could only move 13 of the 151 measurements a user can edit. A basis built from MPFB would move 97, and the basis was built, tested and ready. It could not be packaged, because a basis of differences is only valid against the body those differences were measured on, and the body the current tools produce sits 6.94 cm from the body the application ships. Not a rounding difference either: 85.6% of vertices more than a centimetre out.
+
+The obvious way forward was to make them the same body, by regenerating the packaged one. That meant re-solving the garment on it and re-running the six-view acceptance, a pipeline job with several stages that only assemble inside the application. It was the right shape of answer to the question as posed.
+
+The question was wrong. The two artifacts only have to match because of what was being measured. A delta recorded as "how the whole application responds to this measurement" carries local deformations and surface constraints that depend on the positions they start from, so it belongs to one body. A delta recorded as "what this control's MPFB targets contribute" is a sum of additive vertex offsets, so it belongs to the control. Measure the second and the bodies no longer have to match; they only have to share topology, which they do.
+
+That is measured rather than argued. Every run now displaces one control on the unfitted body, again after the ruler fit has moved the body 8.4 cm, and compares. They agree to 0.061 cm, a coupling of 0.723%, which over the 6.94 cm gap is about half a millimetre. The first version of that check used a tolerance of a ten-millionth of a centimetre and failed, correctly, because the coupling is not zero. The fix was to record the real number and defend a tolerance against it, not to widen the threshold until the hypothesis passed.
+
+## Root cause
+
+The constraint was inherited from how the measurement happened to be taken, and then treated as a property of the problem. Nothing had asked what the delta needed to represent for the preview to be right.
+
+## Prevention rule
+
+When two artifacts must agree and cannot be made to, check whether the requirement comes from the problem or from the representation. Changing what is recorded is sometimes cheaper than changing what is recorded about. And when a check you wrote to prove your own idea fails, read the number it gives you before touching the threshold: here it turned an assumption of exact independence into a measured coupling with a stated tolerance, which is a better claim than the one intended.
+
+## How to verify
+
+`tools/generate_mpfb_morph_basis.py` prints the body movement, the disagreement and the coupling on every run, and refuses to write past the tolerance. The report carries `deltaKind`, `bodyCouplingM` and `bodyMovedBetweenMeasurementsM`, and `tools/package_mpfb_morph_basis.py` waives its body-identity check only for a basis declaring `mpfb-target-offsets`. `python tools/audit_preview_dimension_coverage.py` reports 97 of 151.
+
+# 2026-08-29: The 2D authoring surface had never been swept
+
+## What happened
+
+Two sweeps existed, one for the measurement and construction inputs and one for the 3D camera. Neither touched the 2D workspace, which is where a pattern is actually drawn and edited: the piece list, the seam allowance and grainline overlays, the point inspector, and the segment and notch commands. That surface had no automated check at all.
+
+`tools/Invoke-Patternal2DAuthoringSweep.ps1` covers it now, capturing the pattern canvas on its own rather than the whole window so a changed image means the drawing changed rather than some panel's text. Both overlay toggles redraw the canvas and return to the state they were found in. Thirteen of the fourteen pattern pieces redraw when selected, and the fourteenth is the one that was already selected, which the sweep now records rather than reporting as a failure. Engaging point editing brings up all eleven point controls, the reset, split, curve, line and notch commands along with the sewing-edge pair and the four numeric boxes.
+
+The first version of the sweep reported those eleven as missing, because it looked for them before turning point editing on. That is the same mistake as reporting a collapsed measurement group's controls as absent: the tool has to put the interface into the state where the control exists before deciding it does not.
+
+## Root cause
+
+The sweeps were written to chase specific defects, in the measurement inputs and then in the 3D preview, and coverage followed the defects rather than the interface. Nothing had asked which parts of the application no check touched.
+
+## Prevention rule
+
+Coverage should be decided by the interface, not by where the last bug was. Enumerate the surfaces a user works in and check that each has something exercising it, before adding another probe to a surface that already has three.
+
+## How to verify
+
+Run `tools/Invoke-Patternal2DAuthoringSweep.ps1` with the application open. It reports which overlays redraw, which pieces redraw, and which point controls appear once point editing is engaged, and writes the canvas captures beside its report.
+
+# 2026-08-29: Two gates on the same quantity, and the earlier one was the weaker
+
+## What happened
+
+Pressing "Recalculate drape", the application's primary action, failed every time. It died at the Style3D source stage:
+
+```
+Initial arrangement failed the common solver input gate:
+  minimumTriangleAreaCm2 is 0.000095; expected at least 0.001 cm2
+  maximumEdgeStrainRatio is 5.542052; expected at most 2.000
+  ninetyFifthPercentileEdgeStrainRatio is 0.396584; expected at most 0.250
+```
+
+The stage before it produces a body-aware warm start through the Unreal garment compiler, and the compiler had already written `"accepted": false` into its own preflight report, with those three numbers beside it. The pipeline's check read that file, verified the panel count, the stitch count, the seam gap and the torso clearance, and passed it on. It never read the verdict, and it never looked at the geometry the next stage would measure.
+
+So the compiler said no, the pipeline said yes, and the source builder said no again, at which point the run was over. A user pressing the button saw a failure with no way forward, and the only good drape in the product was the packaged one from an older working copy.
+
+Two things were wrong and both are fixed. The check now applies the same three thresholds the solver input gate applies, and honours the compiler's own `accepted` flag. And a rejected warm start no longer ends the run: the panels settle from their drafted layout instead, which is what the source builder does when given no arrangement at all. That is not a fallback invented to get past the error. Running the source builder against the same body with no arrangement produces a valid source, and a full solve on such a source reaches static equilibrium with zero body collisions, zero self intersections and zero seam separation.
+
+With that, the button gets past the stage that used to end it and reaches the solver.
+
+## Root cause
+
+The same property was gated twice, in two places, with the earlier gate weaker than the later one. A weaker gate upstream of a stronger one is not a safety margin; it is a guarantee that bad work travels further before anyone notices, and that the failure surfaces somewhere that cannot explain it.
+
+## Prevention rule
+
+When a stage hands an artifact to a stage that will check it, check the same things, with the same numbers, from the same place. Better still, read the verdict the producer already wrote rather than forming a second opinion about it. And decide in advance whether a rejected optional input should end the run or simply not be used; here it was optional all along, and treating it as mandatory turned a quality problem into an outage.
+
+## How to verify
+
+Press "Recalculate drape" with the shipped pattern. Before the fix it stopped at `07-style3d-source.log` with the gate message above. Now the compiler's arrangement is dropped, the source builds, and the run reaches `08-style3d-drape.log`.
+
+# 2026-09-13: "The controls work" is not the same claim as "it looks right"
+
+## What happened
+
+Asked directly whether the 3D view looked acceptable, the honest answer was no, and the sweeps that had been reported as verification had never measured appearance at all. They proved that toggles toggle and that measurements move the body. The figure they moved was lit from a 30% flat ambient floor with weak directional terms, so no surface ever had a shadow side; highlights clipped to flat white because nothing tone-mapped them; and the body was lit in linear light while the garment, the grid and every untextured mesh were lit in display space, so they never sat under the same light.
+
+Two further defects only showed once the light had contrast. Morphing the body made it render as flat facets across the torso, because `recalculateIndexedNormals` accumulated per render vertex, and a render vertex is one corner of one UV island, so every copy of a seam vertex saw only its own side. The loader had done it per source vertex; the morph path had not. And after a simulation failed, the status line read "Accepted Style3D cloth · revision 47bf3c0d8f81" with the failed job's own hash on it, because the packaged cloth is shown whenever the body matches the packaged baseline and the label borrowed the current revision's hash to describe it.
+
+The lighting is now computed in linear light for every mesh: hemisphere ambient with a sky above and a warmer ground below, a key light with a wrapped terminator on skin and a hard one on cloth, a small scattering tint at the skin terminator, and a filmic curve before the single conversion to sRGB. Normals are recomputed per source vertex and copied to every render copy. The label names what is on screen.
+
+## Root cause
+
+Verification had been shaped by what was easy to measure. A hash of a canvas answers "did it change", and that is what every probe asked. Nothing asked "does this look like a person in a shirt", and nobody looked at the captures with that question in mind until the user did.
+
+## Prevention rule
+
+When the requirement is visual quality, the evidence has to be a picture, looked at, and the report has to say what was seen. A sweep that proves controls respond is worth keeping and worth stating for what it is; it must not be offered as the answer to a question about appearance. And when lighting gains contrast, re-check every path that computes normals, because flat light hides faceting completely.
+
+## How to verify
+
+`artifacts/preview-look/mpfb-basis-packaged.png` against `artifacts/preview-look/normals-after-production.png` is the same view before and after. `thigh-plus-20.png` against `normals-after-thigh.png` shows the faceting and its absence. The three sweeps still report the same numbers as before the change.
+
+# 2026-09-13: A shading term that cannot be seen is a term with the wrong units
+
+## What happened
+
+The first fold-shading term for the garment compiled, ran, and did nothing: the shirt changed by a mean of 0.16 out of 765 per pixel against the render before it. The term measured curvature as one over the radius in render units, which are metres times two, so a 5 cm fold reads as about 10, and I had scaled it by 0.06 and then applied it only to the ambient light, which is a fifth of the total. It could never have reached one percent of the image. Recalibrated to reach full occlusion at a 2 cm fold and applied to the indirect light, it registers, and the skin, which it must not touch, still measures 0.00.
+
+The packaged six-view capture also failed on its first run after the changes, with "Unsupported Pattern". It found the 3D tab by the name "3D DRAPE", and a text label in the same window now carries that name too, so it tried to select a label. The other sweeps had already moved to the tab's automation id.
+
+## Root cause
+
+A term was judged by whether it compiled and ran rather than by whether it moved the pixels it was written to move, and a control lookup by display name was left in one tool after the others had learned that names collide.
+
+## Prevention rule
+
+When adding a visual term, measure its effect on the region it targets and on a region it must not touch, before looking at the picture; a number of 0.16 out of 765 says more than a glance. Find controls by automation id, and keep the name as a fallback only.
+
+## How to verify
+
+`artifacts/preview-look/normals-after-production.png` against `folds2-after-production.png`: the shirt region differs by a mean of 2.45 and a maximum of 91, the skin region by 0.00. `tools/Invoke-PatternalDrapeViewCapture.ps1` now writes all twelve views into `artifacts/packaged-drape-views-lit`.
+
+# 2026-09-13: Three bodies, and the one a fresh simulation built could never be shipped
+
+## What happened
+
+Pressing "Recalculate drape" ran the simulation on a body the product could not use. `SimulationPipeline.cs` fitted an Antonia body through CharMorph and exported it as a GLB display avatar, while the packaged cloth sat on an MPFB body and the interactive preview had just moved to MPFB as well. `promote_style3d_baseline.py`, the only path from a job to the packaged assets, accepts an MPFB fit report, an MPFB body-preparation report and an OBJ display avatar with seven named parts, and nothing else. So the live path produced jobs that promotion refused by construction, and the two things that could be shipped were the two the live path did not build.
+
+The evidence for which body to keep pointed one way from two directions. Coverage: MPFB maps 93 of the 151 editable measurements, Antonia's named controls are a strict subset of MPFB's measure targets, and the preview already reaches 97 dimensions on MPFB. Physics: the initial drape on the Antonia body left 141 body intersections, and the same solver on the MPFB body left none and settled to an accepted equilibrium.
+
+The live path now runs the MakeHuman recipe the legacy Warp path already held: fit the MPFB body, prepare a rest-pose collider, drape and resolve contact on it, then lower the arms on the fitted body and on the textured display body, prepare the relaxed collider, and let the final settle carry the dressed cloth from the one body to the other through the solver's own start-body animation. That last part is the relaxed stance the packaged figure had been missing.
+
+Two contracts had to move with it. The pipeline refused any runtime whose manifest did not declare the product's backend, and it required a character directory that only Antonia ever had; the installer wrote that declaration, so the declaration, the required-script list and the integrity list changed there. And promotion pinned the fit report to schema 1.2 while the generator had been writing 1.3.
+
+## Root cause
+
+Each body arrived to solve the problem in front of it, and adopting the next one never retired the one before. The live simulation path was the last place the first body survived, and it survived because nothing downstream of it had ever been run to completion.
+
+## Prevention rule
+
+When one artifact is produced by a path and consumed by another, run the pair end to end before calling either finished. A producer whose output has never reached its consumer can be wrong in ways no unit test on either side will show. And when a project adopts an implementation, retire the alternatives in the same change, including the runtime declarations and integrity lists that name them.
+
+## How to verify
+
+`grep -n "generate_charmorph_avatar\|generate_mpfb_avatar" Patternal/SimulationPipeline.cs` shows only the MakeHuman generator in the live path. The runtime manifest at `%LOCALAPPDATA%\Patterna\SimulationRuntime\current\runtime-manifest.json` declares `MakeHuman MPFB2`. Pressing "Recalculate drape" runs stages 01 to 14 and writes `simulation-job.json`.
+
+# 2026-09-13: The last gate is a person, and the message must say so
+
+## What happened
+
+The first end-to-end run on the MakeHuman pipeline went through all sixteen stages. The final Style3D proof was accepted on the relaxed body: static equilibrium at frame 222 after a 180-frame animation from the rest body, zero body collisions, zero self collisions, zero seam separation. The compiler produced the render mesh and Blender rendered the six views. Then the run reported "failed its exact six-view body, garment, and render-hash gate".
+
+Two things were behind that. The render had been invoked with `--hide-bra`, which the Antonia branch of the gate required and the MakeHuman branch forbids, so the proof recorded six avatar objects where seven were expected. And the proof manifest's visual quality was unaccepted with no reviewed render hashes, because that field is written only by `tools/record_product_visual_review.py`, by a person who has looked at the views. That second condition is the human sign-off the product contract calls for, and it is right that software cannot pass it. What was wrong was telling the user the revision had failed, which sends them looking for a defect that does not exist.
+
+The flag is gone, and the pipeline now distinguishes the two cases: when the views exist and only the review is missing, it says so and names the tool.
+
+## Root cause
+
+The render invocation and the gate were written for different avatars, and a single boolean failure hid two unrelated conditions behind one sentence.
+
+## Prevention rule
+
+A gate that a person must pass should say that it is waiting for a person. Report the specific condition that stopped the run, and keep "failed" for the cases where something is actually wrong.
+
+## How to verify
+
+Press "Recalculate drape" with the shipped pattern. The run should end with the message naming `tools/record_product_visual_review.py`, and `proofs/product` in the job directory should hold six views with the bra shell visible.
+
+# 2026-11-16: A resumed job hid a generator that crashed
+
+## What happened
+
+The bra shell on the MakeHuman display avatar rendered as two grey slabs reaching out to the arms. The shell is fitted by casting horizontal rays inward from outside the body, and at the sides those rays hit the raised arms before the torso. The first correction removed every face with any arm-bone weight from the surface the rays are cast onto. The runtime was reinstalled and the simulation run again, and the run reached the six-view render.
+
+That run verified nothing. The job directory for the revision already held an accepted settle, so the pipeline resumed at the compiler stage and rendered the avatar assets written before the correction. The six views still showed the slabs. Run on its own, the corrected generator raised `Could not fit bra shell at theta=0.0000, z=0.7583` and Blender still exited with code 0.
+
+The measurement behind the failure: in `weights.default.json` the summed arm-bone weight is above zero on 4,905 of the 13,380 body vertices, and the innermost of them sits on the chest midline. Within the shell's height band, a weight above 0.5 starts 14.9 cm from the midline of the unfitted base mesh, which is the armpit. Removing every arm-weighted face removed the front of the chest.
+
+The shell now keeps every face in the surface and classifies the hit instead. A ray whose first hit is a face with a mean arm weight above 0.5 walks inward past such faces, stops at the body axis, and keeps the innermost hit when nothing else lies behind, which is the case over the shoulder where the straps run. The regenerated shell spans 18.9 cm either side of the midline where the old one spanned 41.2 cm, and a six-view render of the regenerated avatar shows no slabs. The three Blender stages now pass `--python-exit-code 1`, so a script exception fails the stage.
+
+## Root cause
+
+Three separate things lined up. The correction assumed rig weights are zero away from the arm, without measuring them. Blender reports success when the script it runs raises. And the resume check in `CanResumeAcceptedStyle3DEquilibrium` binds cached stage outputs to the pattern, body and solver reports but not to the runtime scripts that produced them, so changing a generator does not invalidate a job.
+
+## Prevention rule
+
+After changing a runtime script, verify the change by running that script directly and reading its output, before trusting a pipeline run. A pipeline run proves a script change only when the log for that script's stage is newer than the change. Measure a rig weight distribution before using it as a mask.
+
+## How to verify
+
+Compare the timestamp of `01-avatar.log` in the job directory with the time the runtime was installed; the log must be newer. In `display-avatar/bra.obj`, the largest absolute x coordinate should be near the torso half-width, about 0.19 m for the default body, and not near the arm span of 0.41 m.
+
+## Still open
+
+The resume check does not yet compare the runtime's script hashes. Until it does, move the revision's job directory aside before a run that is meant to exercise a changed script.

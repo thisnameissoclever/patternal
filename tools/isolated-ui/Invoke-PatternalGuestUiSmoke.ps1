@@ -22,10 +22,7 @@ $ErrorActionPreference = 'Stop'
 
 Import-Module (Join-Path $PSScriptRoot 'Patternal.IsolatedUi.psm1') -Force
 $repositoryRoot = Get-PatternalRepositoryRoot
-$vm = Assert-PatternalHyperVAccess -VmName $VmName
-if ($vm.State -ne 'Running') {
-    Start-VM -Name $VmName | Out-Null
-}
+$vm = Start-PatternalVmForAutomation -VmName $VmName
 
 $runId = [DateTimeOffset]::UtcNow.ToString('yyyyMMdd-HHmmss') + '-' + [Guid]::NewGuid().ToString('N').Substring(0, 8)
 $guestRequestPath = 'C:\PatternalTest\run-request.json'
@@ -112,17 +109,30 @@ try {
     $taskStartRequestedAt = Get-Date
     $guestResultPath = "$guestEvidenceRoot\$runId\result.json"
     do {
-        $guestStatus = Invoke-Command -Session $session -ScriptBlock {
-            param($Path)
-            $task = Get-ScheduledTask -TaskName 'Patternal Guest UI Smoke' -ErrorAction Stop
-            $taskInfo = Get-ScheduledTaskInfo -TaskName 'Patternal Guest UI Smoke' -ErrorAction Stop
-            [pscustomobject]@{
-                ResultExists = Test-Path -LiteralPath $Path
-                TaskState = $task.State.ToString()
-                LastRunTime = $taskInfo.LastRunTime
-                LastTaskResult = $taskInfo.LastTaskResult
+        $currentVm = Get-VM -Name $VmName -ErrorAction Stop
+        if ($currentVm.State -ne 'Running') {
+            throw "Guest '$VmName' left the Running state during UI smoke execution: $($currentVm.State)."
+        }
+        $statusJob = Invoke-Command -Session $session -ScriptBlock {
+                param($Path)
+                $task = Get-ScheduledTask -TaskName 'Patternal Guest UI Smoke' -ErrorAction Stop
+                $taskInfo = Get-ScheduledTaskInfo -TaskName 'Patternal Guest UI Smoke' -ErrorAction Stop
+                [pscustomobject]@{
+                    ResultExists = Test-Path -LiteralPath $Path
+                    TaskState = $task.State.ToString()
+                    LastRunTime = $taskInfo.LastRunTime
+                    LastTaskResult = $taskInfo.LastTaskResult
+                }
+            } -ArgumentList $guestResultPath -AsJob
+        try {
+            if (-not (Wait-Job -Job $statusJob -Timeout 15)) {
+                throw "Guest '$VmName' did not answer a UI smoke status query within 15 seconds."
             }
-        } -ArgumentList $guestResultPath
+            $guestStatus = Receive-Job -Job $statusJob -ErrorAction Stop
+        }
+        finally {
+            Remove-Job -Job $statusJob -Force -ErrorAction SilentlyContinue
+        }
         $complete = $guestStatus.ResultExists
         if ($complete) {
             break

@@ -65,6 +65,15 @@ if (-not $guestProvisioner.Contains('VM root ''$normalizedVmRoot'' must end with
 
 $guestRunnerPath = Join-Path $PSScriptRoot 'guest\Invoke-PatternalUiSmoke.ps1'
 $guestRunner = Get-Content -LiteralPath $guestRunnerPath -Raw
+foreach ($canvasSelectionContract in @(
+    "'Back Torso pattern piece'",
+    "'filled Back Torso geometry to select its piece without reframing'",
+    "'09-2d-canvas-selection.png'"
+)) {
+    if (-not $guestRunner.Contains($canvasSelectionContract)) {
+        throw "The guest suite no longer proves direct filled-geometry piece selection: $canvasSelectionContract"
+    }
+}
 $persistentRunnerPath = Join-Path $PSScriptRoot 'guest\Start-PatternalGuestRunner.ps1'
 $persistentRunner = Get-Content -LiteralPath $persistentRunnerPath -Raw
 $persistentRunnerHostPath = Join-Path $PSScriptRoot 'Invoke-PatternalGuestRunner.ps1'
@@ -88,6 +97,16 @@ if (-not $persistentRunner.Contains('hostInputInjected = $false') -or
     -not $persistentRunner.Contains('vmConnectLaunched = $false')) {
     throw 'Persistent guest runner results no longer record the host-input and VMConnect isolation boundary.'
 }
+if (-not $hostModule.Contains('function Start-PatternalVmForAutomation') -or
+    -not $hostModule.Contains('$resumedSavedState = $vm.State -eq ''Saved''') -or
+    -not $hostModule.Contains('Start-VM -Name $VmName | Out-Null') -or
+    -not $persistentRunnerHost.Contains('Start-PatternalVmForAutomation -VmName $VmName') -or
+    -not $payloadSync.Contains('Start-PatternalVmForAutomation -VmName $VmName')) {
+    throw 'Host automation no longer stabilizes a resumed saved VM before guest work.'
+}
+if (-not $payloadSync.Contains('Start-PatternalVmForAutomation -VmName $VmName')) {
+    throw 'Payload synchronization no longer uses the saved-state stabilization boundary.'
+}
 if (-not $guestInstaller.Contains("Register-ScheduledTask -TaskName 'Patternal Guest Runner'") -or
     -not $guestInstaller.Contains("New-ScheduledTaskTrigger -AtLogOn") -or
     -not $guestInstaller.Contains('-WindowStyle Hidden') -or
@@ -95,6 +114,11 @@ if (-not $guestInstaller.Contains("Register-ScheduledTask -TaskName 'Patternal G
     -not $guestInstaller.Contains('$registrationReused') -or
     -not $payloadSync.Contains("Start-PatternalGuestRunner.ps1")) {
     throw 'The persistent runner install no longer preserves hidden interactive execution, idempotent AppX registration, logon startup, and payload synchronization.'
+}
+if (-not $payloadSync.Contains('[switch]$AllowRestore') -or
+    -not $payloadSync.Contains('$buildArguments += ''--no-restore''') -or
+    -not $payloadSync.Contains('rerun with -AllowRestore if restore is authorized')) {
+    throw 'Payload synchronization no longer fails closed against an unreviewed dependency restore.'
 }
 $windowsPowerShellPath = Join-Path $env:WINDIR 'System32\WindowsPowerShell\v1.0\powershell.exe'
 if (-not (Test-Path -LiteralPath $windowsPowerShellPath -PathType Leaf)) {
@@ -192,10 +216,10 @@ foreach ($automationId in $requiredDrapeStateAutomationIds) {
 }
 foreach ($avatarStateContract in @(
     "'3D avatar follows edited measurements'",
-    "'Avatar preview: editable measurement mesh*'",
-    "'Avatar preview: fitted MHR candidate*'",
+    "'Avatar preview: MHR partial preview*'",
+    "'Avatar preview: MHR baseline preview*'",
     "'15-3d-edited-measurement-avatar.png'",
-    "'16-3d-restored-fitted-avatar.png'"
+    "'16-3d-restored-baseline-preview.png'"
 )) {
     if (-not $guestRunner.Contains($avatarStateContract)) {
         throw "Guest runner no longer proves avatar-state contract $avatarStateContract."
@@ -307,14 +331,16 @@ foreach ($dialogLifecycleContract in @(
 }
 $viewport = Get-Content -LiteralPath (Join-Path $repositoryRoot 'Patternal\Assets\avatar3d.html') -Raw
 if (-not $codeBehind.Contains('"avatar-state"') -or
-    -not $codeBehind.Contains('Avatar preview: editable measurement mesh') -or
-    -not $codeBehind.Contains('Avatar preview: fitted MHR candidate') -or
+    -not $codeBehind.Contains('Avatar preview: MHR partial preview') -or
+    -not $codeBehind.Contains('Avatar preview: MHR baseline preview') -or
+    -not $codeBehind.Contains('Avatar preview: 3D unsupported for this revision') -or
     -not $viewport.Contains("type:'avatar-state'")) {
     throw 'The packaged renderer no longer reports its measured-avatar preview state to the accessible WinUI surface.'
 }
-if (-not $viewport.Contains("?'FITTED AVATAR CANDIDATE'") -or
+if (-not $viewport.Contains("mhrUnsupportedPreview?'3D UNSUPPORTED FOR REVISION':'MHR PREVIEW ONLY'") -or
+    -not $viewport.Contains("mhrBaselinePreview?'mhr-baseline-preview':mhrMorphPreview?'mhr-morph-preview':mhrUnsupportedPreview?'mhr-unsupported-preview'") -or
     -not $viewport.Contains(":'MEASUREMENT PREVIEW'")) {
-    throw 'The 3D viewport again presents both the fitted candidate and the low-detail measurement preview as one accepted anatomical avatar.'
+    throw 'The 3D viewport no longer distinguishes the MHR baseline, partial, unsupported, and non-MHR fallback states.'
 }
 if (-not $guestRunner.Contains('failureDiagnostics = $failureDiagnostics')) {
     throw 'Guest runner no longer preserves process and event-log diagnostics with failed UI evidence.'
@@ -399,6 +425,14 @@ if ($syncScript.Contains('Get-FileHash')) {
 }
 if (-not $syncScript.Contains('Get-PatternalFileSha256')) {
     throw 'Guest payload synchronization no longer uses the module-independent SHA-256 helper.'
+}
+$moduleSource = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'Patternal.IsolatedUi.psm1') -Raw
+$guestInstallerSource = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'guest\Install-PatternalGuestPayload.ps1') -Raw
+foreach ($identitySource in @($moduleSource, $guestInstallerSource)) {
+    if (-not $identitySource.Contains('[Array]::Sort($lines, [StringComparer]::Ordinal)') -or
+        $identitySource.Contains('Sort-Object FullName')) {
+        throw 'Payload directory identity is not using the same ordinal path ordering on host and guest.'
+    }
 }
 if (-not $syncScript.Contains('Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force')) {
     throw 'Guest payload installation no longer permits the copied installer script in a clean Windows guest.'

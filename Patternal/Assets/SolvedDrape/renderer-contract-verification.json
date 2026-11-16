@@ -1,0 +1,109 @@
+{
+  "schemaVersion": "patterna.packaged-drape-asset-verification/1.0",
+  "claims": {
+    "accepted": true,
+    "packagedVisualQualityAccepted": false
+  },
+  "claimScope": "accepted means the renderer contract is satisfied: both meshes parse, carry their texture and line groups, share a frame, and the garment sits on the body. It says nothing about appearance.",
+  "arrangementId": "4a3bf450c38da10b285408d853687c770648dd1cf8c2a959e2e22389dea6ef3c",
+  "rendererWouldLoad": true,
+  "issues": [],
+  "body": {
+    "vertexCount": 13380,
+    "triangleCount": 26756,
+    "sceneFloor": -1.67,
+    "sceneTop": 1.6700000799999999,
+    "headCentroidZ": -0.18014380513499478,
+    "facesFrontCamera": true
+  },
+  "garment": {
+    "surfaceVertexCount": 526636,
+    "uvCornerCount": 3153768,
+    "triangleCount": 1051256,
+    "seamSegmentCount": 1942,
+    "edgeSegmentCount": 1010,
+    "sceneLow": 0.2218601200000001,
+    "sceneHigh": 1.24430212,
+    "fabricTileCentimeters": null,
+    "textureRepeatsAcross": [
+      1.0,
+      1.0
+    ]
+  },
+  "fitProfile": [
+    {
+      "heightFraction": 0.1,
+      "sceneHeight": 0.3241043200000001,
+      "garmentGirthCm": 114.79885577114528,
+      "bodyGirthCm": 76.87534930793561,
+      "easeCm": 37.92350646320967
+    },
+    {
+      "heightFraction": 0.188,
+      "sceneHeight": 0.4135679950000001,
+      "garmentGirthCm": 114.37015406028455,
+      "bodyGirthCm": 74.06662313013585,
+      "easeCm": 40.30353093014869
+    },
+    {
+      "heightFraction": 0.275,
+      "sceneHeight": 0.5030316700000002,
+      "garmentGirthCm": 115.09228156317928,
+      "bodyGirthCm": 78.2963608527084,
+      "easeCm": 36.795920710470874
+    },
+    {
+      "heightFraction": 0.362,
+      "sceneHeight": 0.592495345,
+      "garmentGirthCm": 116.88912939911992,
+      "bodyGirthCm": 94.61543832956357,
+      "easeCm": 22.273691069556357
+    },
+    {
+      "heightFraction": 0.45,
+      "sceneHeight": 0.68195902,
+      "garmentGirthCm": 118.6886932848419,
+      "bodyGirthCm": 108.58860717785623,
+      "easeCm": 10.100086106985673
+    },
+    {
+      "heightFraction": 0.537,
+      "sceneHeight": 0.771422695,
+      "garmentGirthCm": 119.08553496582871,
+      "bodyGirthCm": 111.68399256046457,
+      "easeCm": 7.401542405364148
+    },
+    {
+      "heightFraction": 0.625,
+      "sceneHeight": 0.8608863699999999,
+      "garmentGirthCm": 115.68131712182984,
+      "bodyGirthCm": 111.16306553271596,
+      "easeCm": 4.518251589113875
+    },
+    {
+      "heightFraction": 0.712,
+      "sceneHeight": 0.9503500449999999,
+      "garmentGirthCm": 111.12716516559064,
+      "bodyGirthCm": 107.06229481932223,
+      "easeCm": 4.064870346268412
+    },
+    {
+      "heightFraction": 0.8,
+      "sceneHeight": 1.03981372,
+      "garmentGirthCm": 106.02190188429499,
+      "bodyGirthCm": 101.505188235286,
+      "easeCm": 4.516713649008985
+    }
+  ],
+  "easeCm": {
+    "minimum": 4.064870346268412,
+    "maximum": 40.30353093014869,
+    "mean": 18.655345918902967,
+    "spread": 36.238660583880275
+  },
+  "garmentToBodySceneDistanceMeters": {
+    "minimum": 0.002833503223855606,
+    "median": 0.029600809569778418,
+    "maximum": 0.1945666567167365
+  }
+}

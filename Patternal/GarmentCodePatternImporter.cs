@@ -9,7 +9,19 @@ public sealed record GarmentCodeImportOptions(
     FabricPhysicsDocument Fabric,
     double SeamAllowanceCm = 1.0,
     string? SourcePath = null,
-    string? SourceRevision = null);
+    string? SourceRevision = null,
+    /// <summary>
+    /// The body this pattern was drafted for, when the file does not say.
+    /// </summary>
+    /// <remarks>
+    /// Older exports recorded how many body parameters were used and then
+    /// dropped the values, so the pattern arrives without knowing what it was
+    /// cut to. Everything that asks whether the body still matches the pattern
+    /// then answers no, permanently. Supplying the reference here records the
+    /// same fact without editing a file whose hash other artifacts declare.
+    /// A reference read from the file always wins.
+    /// </remarks>
+    GarmentBodyReferenceDocument? FallbackBodyReference = null);
 
 public sealed class GarmentCodeImportException : InvalidOperationException
 {
@@ -48,7 +60,8 @@ public static partial class GarmentCodePatternImporter
 
         double coordinateScale = ReadCoordinateScale(root);
         GarmentEaseProfileDocument? easeProfile = ReadEaseProfile(root);
-        GarmentBodyReferenceDocument? bodyReference = ReadBodyReference(root);
+        GarmentBodyReferenceDocument? bodyReference =
+            ReadBodyReference(root) ?? options.FallbackBodyReference;
         ShirtConstructionProfileDocument? shirtConstructionProfile =
             ReadShirtConstructionProfile(root);
         ShirtBustShapingProfileDocument? shirtBustShapingProfile =

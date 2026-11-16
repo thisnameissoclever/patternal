@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "patterna.libuipc-gravity-settle/1.0",
+  "declaredBeforeExecution": true,
+  "planId": "5f5351d5d2f0564572271333462d71c86fa6ae3cdee5f681317996556d72dbfc",
+  "claims": {
+    "acceptedCloth": false,
+    "calibratedFabric": false
+  },
+  "fabric": {
+    "name": "declared-light-cotton-poplin-estimate",
+    "stretchYoungsPa": 1000000.0,
+    "poissonRatio": 0.3,
+    "thicknessMeters": 0.00034,
+    "massDensityKgPerM3": 380.0,
+    "bendingStiffnessKiloPascals": 4522.826,
+    "notes": [
+      "These are declared physical estimates for a light cotton poplin, not swatch-calibrated measurements, so no run using them may claim calibrated fabric or accepted cloth.",
+      "The source bundle's fabric document is expressed in the Warp and Style3D solver's own parameterization (garment_tri_ka, spring_ke, and similar), which has no direct continuum equivalent. Only its friction coefficient of 0.35 transfers unchanged and is used below.",
+      "Membrane stiffness is the product of the Young's modulus and the thickness: 1.0 MPa times 0.34 mm gives 340 N/m, inside the usual woven-fabric range of roughly 100 to 1000 N/m.",
+      "Areal density follows from the same thickness: 380 kg/m3 times 0.34 mm gives 0.129 kg/m2, a light shirting weight.",
+      "The bending coefficient is no longer a guess. tools/calibrate_libuipc_bending.py hangs a clamped strip of this same declared fabric under gravity and compares it with the small-deflection cantilever solution. The discrete shell bending energy is linear in its coefficient, so one measured constant maps the coefficient to flexural rigidity; two probes three orders of magnitude apart agreed to within 0.4 percent.",
+      "The previous 0.05 value was roughly ninety thousand times too soft, which is why the settled surface buckled at the mesh scale instead of forming garment-scale folds.",
+      "The same declared constants give a textile bending length of 1.42 cm, inside the usual 1.4 to 2.5 cm range for light shirting, which is the quantity a Peirce cantilever test measures."
+    ]
+  },
+  "contact": {
+    "frictionCoefficient": 0.35,
+    "resistance": 1000000000.0,
+    "dHatMeters": 0.0026,
+    "clothContactThicknessMeters": 0.0002,
+    "colliderContactThicknessMeters": 0.0003,
+    "notes": [
+      "The envelope matches the accepted arrangement schedule v5 so the settle starts from a state its own contact model already considers valid, and so the resting contact distance stays above the 0.25 cm clearance acceptance threshold."
+    ]
+  },
+  "stitch": {
+    "constitution": "SoftVertexStitch",
+    "kappa": 10000.0,
+    "restLengthMeters": 0.0,
+    "notes": [
+      "The assembly used a deliberately soft 100 N/m so panels could glide around the body without a teleporting first step. The garment now arrives sewn, so the seams travel almost nothing and a stiffer 10 kN/m holds them closed against gravity without reintroducing that approach-speed problem."
+    ]
+  },
+  "integration": {
+    "gravityMetersPerSecondSquared": [
+      0.0,
+      -9.81,
+      0.0
+    ],
+    "dtSeconds": 0.008333333333333333,
+    "newtonMaximumIterations": 1024,
+    "newtonVelocityTolerance": 0.05,
+    "frameBudget": 900
+  },
+  "equilibrium": {
+    "maximumVertexMotionMeters": 0.0002,
+    "consecutiveFrames": 20,
+    "rule": "The settle ends when no vertex moves more than the declared distance for the declared number of consecutive frames. Reaching the frame budget without that streak is recorded as not settled rather than treated as equilibrium."
+  },
+  "revision": 2,
+  "revisionNote": "Recipe v1's bending coefficient was a placeholder carried from the assembly calibration. This revision replaces it with the value derived from the declared fabric's own flexural rigidity through a cantilever experiment in the same solver. Nothing else changes."
+}

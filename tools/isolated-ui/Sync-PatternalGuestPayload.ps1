@@ -10,6 +10,7 @@ param(
     [string]$RuntimeRedistributableUri = 'https://aka.ms/windowsappsdk/2.3/2.3.1/Microsoft.WindowsAppRuntime.Redist.2.3.zip',
     [version]$DotNetRuntimeVersion = '10.0.10',
     [string]$DotNetRuntimeInstallerUri = 'https://builds.dotnet.microsoft.com/dotnet/Runtime/10.0.10/dotnet-runtime-10.0.10-win-x64.exe',
+    [switch]$AllowRestore,
     [switch]$PrepareOnly
 )
 
@@ -19,9 +20,23 @@ $ErrorActionPreference = 'Stop'
 Import-Module (Join-Path $PSScriptRoot 'Patternal.IsolatedUi.psm1') -Force
 $repositoryRoot = Get-PatternalRepositoryRoot
 $projectPath = Join-Path $repositoryRoot 'Patternal\Patternal.csproj'
-& dotnet build $projectPath "-p:Platform=$Platform" "-p:Configuration=$Configuration"
+$buildArguments = @(
+    'build',
+    $projectPath,
+    "-p:Platform=$Platform",
+    "-p:Configuration=$Configuration"
+)
+if (-not $AllowRestore) {
+    $buildArguments += '--no-restore'
+}
+& dotnet @buildArguments
 if ($LASTEXITCODE -ne 0) {
-    throw "Patternal build failed with exit code $LASTEXITCODE."
+    $restoreHint = if ($AllowRestore) {
+        ''
+    } else {
+        ' Dependency restore is disabled by default; review the requested dependency changes, then rerun with -AllowRestore if restore is authorized.'
+    }
+    throw "Patternal build failed with exit code $LASTEXITCODE.$restoreHint"
 }
 
 $outputRoot = Get-ChildItem -LiteralPath (Join-Path $repositoryRoot "Patternal\bin\$Platform\$Configuration") -Directory -Recurse |
@@ -168,10 +183,7 @@ $identityFiles = @(
 
     $installResult = $null
     if (-not $PrepareOnly) {
-        $vm = Assert-PatternalHyperVAccess -VmName $VmName
-        if ($vm.State -ne 'Running') {
-            Start-VM -Name $VmName | Out-Null
-        }
+        $vm = Start-PatternalVmForAutomation -VmName $VmName
 
         $credential = Get-PatternalGuestCredential -VmName $VmName
         $session = New-PatternalVmSession -VmName $VmName -Credential $credential

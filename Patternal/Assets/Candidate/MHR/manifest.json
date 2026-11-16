@@ -2,7 +2,7 @@
   "schemaVersion": "patterna.display-avatar-glb/1.0",
   "accepted": false,
   "candidateOnly": true,
-  "displayMode": "mhr-candidate",
+  "displayMode": "mhr-preview",
   "source": "Meta Momentum Human Rig",
   "sourceVersion": "1.0.1",
   "sourceUrl": "https://github.com/facebookresearch/MHR",
@@ -351,8 +351,327 @@
   },
   "openGates": [
     "six-view host and packaged visual review is pending",
-    "measurement edits do not yet rebuild this MHR family in the packaged app",
+    "real-time MHR morph preview is not a revision-specific fitted collider",
     "cloth has not been solved and accepted on this exact MHR body",
     "physical-GPU packaged acceptance is pending"
-  ]
+  ],
+  "morphBasis": {
+    "schemaVersion": "patterna.mhr-morph-basis/1.0",
+    "accepted": false,
+    "previewOnly": true,
+    "validationScope": "independent endpoint interpolation for declared measurements only; compound behavior is unproven",
+    "file": "mhr-morphs.bin",
+    "bytes": 5136120,
+    "sha256": "444c9b78f8802280d325bcbecb3e79c7324028627b652fc0f85f344b652dbc3e",
+    "floatEncoding": "little-endian-float32",
+    "vertexCount": 19455,
+    "sourceVertexCount": 18439,
+    "floatsPerEndpoint": 58365,
+    "baselineHeightCm": 167.0,
+    "baseGeometrySha256": "cc50a422a17c00b65cf10eb827aa824c9a2d057ee8f1fb1afe92482023bfc840",
+    "baseProfileSha256": "df7f270383bdbff1f09e5b19619f44e4e58b94090e619298c79aa5bb3c759f69",
+    "identitySha256": "b3780358273707524361e982f8f8ba55a9fdf32e6a298b69ca775a80ba09b38e",
+    "modelSha256": "352e271a6c42729c68554ceaea0c955e866970160c31e35506d782dc0f7377bc",
+    "maximumGlbVertexMappingErrorM": 1.793177586864689e-07,
+    "baselineMaximumMeasurementResidualCm": 0.741525467854288,
+    "parameters": [
+      {
+        "avatarKey": "chest",
+        "target": "bustCircumference",
+        "minimum": 90.0,
+        "maximum": 130.0,
+        "baseline": 112.0,
+        "minimumFloatOffset": 0,
+        "maximumFloatOffset": 58365,
+        "floatCount": 58365,
+        "endpoints": {
+          "minimum": {
+            "requestedCm": 90.0,
+            "measuredCm": 90.7521537317395,
+            "absoluteResidualCm": 0.7521537317394973,
+            "maximumSurfaceDeltaCm": 6.628064718443608,
+            "fitIterations": 13
+          },
+          "maximum": {
+            "requestedCm": 130.0,
+            "measuredCm": 129.5469107274568,
+            "absoluteResidualCm": 0.4530892725431954,
+            "maximumSurfaceDeltaCm": 5.140914880913082,
+            "fitIterations": 8
+          }
+        }
+      },
+      {
+        "avatarKey": "chestDepth",
+        "target": "bustDepth",
+        "minimum": 24.0,
+        "maximum": 36.0,
+        "baseline": 31.0,
+        "minimumFloatOffset": 116730,
+        "maximumFloatOffset": 175095,
+        "floatCount": 58365,
+        "endpoints": {
+          "minimum": {
+            "requestedCm": 24.0,
+            "measuredCm": 24.34942319988854,
+            "absoluteResidualCm": 0.3494231998885411,
+            "maximumSurfaceDeltaCm": 3.6911803848726925,
+            "fitIterations": 5
+          },
+          "maximum": {
+            "requestedCm": 36.0,
+            "measuredCm": 35.99980713191295,
+            "absoluteResidualCm": 0.0001928680870477706,
+            "maximumSurfaceDeltaCm": 2.871840133453773,
+            "fitIterations": 7
+          }
+        }
+      },
+      {
+        "avatarKey": "underBust",
+        "target": "underbustCircumference",
+        "minimum": 70.0,
+        "maximum": 105.0,
+        "baseline": 84.0,
+        "minimumFloatOffset": 233460,
+        "maximumFloatOffset": 291825,
+        "floatCount": 58365,
+        "endpoints": {
+          "minimum": {
+            "requestedCm": 70.0,
+            "measuredCm": 70.66975292668769,
+            "absoluteResidualCm": 0.6697529266876927,
+            "maximumSurfaceDeltaCm": 4.568751249670887,
+            "fitIterations": 15
+          },
+          "maximum": {
+            "requestedCm": 105.0,
+            "measuredCm": 104.65843143176721,
+            "absoluteResidualCm": 0.3415685682327876,
+            "maximumSurfaceDeltaCm": 6.334511338841188,
+            "fitIterations": 11
+          }
+        }
+      },
+      {
+        "avatarKey": "underBustDepth",
+        "target": "underbustDepth",
+        "minimum": 18.0,
+        "maximum": 29.0,
+        "baseline": 23.0,
+        "minimumFloatOffset": 350190,
+        "maximumFloatOffset": 408555,
+        "floatCount": 58365,
+        "endpoints": {
+          "minimum": {
+            "requestedCm": 18.0,
+            "measuredCm": 18.660379035292976,
+            "absoluteResidualCm": 0.6603790352929764,
+            "maximumSurfaceDeltaCm": 2.3316419957997465,
+            "fitIterations": 7
+          },
+          "maximum": {
+            "requestedCm": 29.0,
+            "measuredCm": 28.999262983429556,
+            "absoluteResidualCm": 0.0007370165704436715,
+            "maximumSurfaceDeltaCm": 3.58460127143716,
+            "fitIterations": 11
+          }
+        }
+      },
+      {
+        "avatarKey": "waist",
+        "target": "waistCircumference",
+        "minimum": 65.0,
+        "maximum": 110.0,
+        "baseline": 82.0,
+        "minimumFloatOffset": 466920,
+        "maximumFloatOffset": 525285,
+        "floatCount": 58365,
+        "endpoints": {
+          "minimum": {
+            "requestedCm": 65.0,
+            "measuredCm": 65.93932944540474,
+            "absoluteResidualCm": 0.9393294454047378,
+            "maximumSurfaceDeltaCm": 5.165496965934746,
+            "fitIterations": 11
+          },
+          "maximum": {
+            "requestedCm": 110.0,
+            "measuredCm": 109.22711260567904,
+            "absoluteResidualCm": 0.7728873943209607,
+            "maximumSurfaceDeltaCm": 9.342522009207434,
+            "fitIterations": 17
+          }
+        }
+      },
+      {
+        "avatarKey": "waistDepth",
+        "target": "waistDepth",
+        "minimum": 16.0,
+        "maximum": 28.0,
+        "baseline": 21.0,
+        "minimumFloatOffset": 583650,
+        "maximumFloatOffset": 642015,
+        "floatCount": 58365,
+        "endpoints": {
+          "minimum": {
+            "requestedCm": 16.0,
+            "measuredCm": 16.486934107959996,
+            "absoluteResidualCm": 0.48693410795999625,
+            "maximumSurfaceDeltaCm": 2.699848097207775,
+            "fitIterations": 11
+          },
+          "maximum": {
+            "requestedCm": 28.0,
+            "measuredCm": 27.989786129197263,
+            "absoluteResidualCm": 0.010213870802736835,
+            "maximumSurfaceDeltaCm": 4.3105103375204195,
+            "fitIterations": 12
+          }
+        }
+      },
+      {
+        "avatarKey": "abdomenCirc",
+        "target": "abdomenCircumference",
+        "minimum": 70.0,
+        "maximum": 120.0,
+        "baseline": 90.0,
+        "minimumFloatOffset": 700380,
+        "maximumFloatOffset": 758745,
+        "floatCount": 58365,
+        "endpoints": {
+          "minimum": {
+            "requestedCm": 70.0,
+            "measuredCm": 70.58954961244879,
+            "absoluteResidualCm": 0.589549612448792,
+            "maximumSurfaceDeltaCm": 6.011456175259847,
+            "fitIterations": 12
+          },
+          "maximum": {
+            "requestedCm": 120.0,
+            "measuredCm": 119.46226761176115,
+            "absoluteResidualCm": 0.537732388238851,
+            "maximumSurfaceDeltaCm": 8.372456756555277,
+            "fitIterations": 11
+          }
+        }
+      },
+      {
+        "avatarKey": "abdomenDepth",
+        "target": "abdomenDepth",
+        "minimum": 17.0,
+        "maximum": 31.0,
+        "baseline": 22.5,
+        "minimumFloatOffset": 817110,
+        "maximumFloatOffset": 875475,
+        "floatCount": 58365,
+        "endpoints": {
+          "minimum": {
+            "requestedCm": 17.0,
+            "measuredCm": 17.575073834675138,
+            "absoluteResidualCm": 0.5750738346751376,
+            "maximumSurfaceDeltaCm": 2.5871297727624745,
+            "fitIterations": 8
+          },
+          "maximum": {
+            "requestedCm": 31.0,
+            "measuredCm": 30.99992552208253,
+            "absoluteResidualCm": 7.447791746884036e-05,
+            "maximumSurfaceDeltaCm": 4.617110723191151,
+            "fitIterations": 8
+          }
+        }
+      },
+      {
+        "avatarKey": "hip",
+        "target": "hipCircumference",
+        "minimum": 90.0,
+        "maximum": 135.0,
+        "baseline": 108.0,
+        "minimumFloatOffset": 933840,
+        "maximumFloatOffset": 992205,
+        "floatCount": 58365,
+        "endpoints": {
+          "minimum": {
+            "requestedCm": 90.0,
+            "measuredCm": 90.58872179020456,
+            "absoluteResidualCm": 0.5887217902045592,
+            "maximumSurfaceDeltaCm": 5.316513889522932,
+            "fitIterations": 8
+          },
+          "maximum": {
+            "requestedCm": 135.0,
+            "measuredCm": 134.09233183895884,
+            "absoluteResidualCm": 0.9076681610411583,
+            "maximumSurfaceDeltaCm": 7.5384219914771045,
+            "fitIterations": 10
+          }
+        }
+      },
+      {
+        "avatarKey": "hipDepth",
+        "target": "hipDepth",
+        "minimum": 22.0,
+        "maximum": 36.0,
+        "baseline": 28.0,
+        "minimumFloatOffset": 1050570,
+        "maximumFloatOffset": 1108935,
+        "floatCount": 58365,
+        "endpoints": {
+          "minimum": {
+            "requestedCm": 22.0,
+            "measuredCm": 22.03900462580038,
+            "absoluteResidualCm": 0.039004625800380666,
+            "maximumSurfaceDeltaCm": 3.1034909816208884,
+            "fitIterations": 5
+          },
+          "maximum": {
+            "requestedCm": 36.0,
+            "measuredCm": 35.999969741162964,
+            "absoluteResidualCm": 3.0258837036001296e-05,
+            "maximumSurfaceDeltaCm": 4.292413212933213,
+            "fitIterations": 10
+          }
+        }
+      },
+      {
+        "avatarKey": "upperArmCirc",
+        "avatarSourceKeys": [
+          "upperArmCircL",
+          "upperArmCircR"
+        ],
+        "aggregation": "mean",
+        "target": "upperArmCircumference",
+        "minimum": 22.0,
+        "maximum": 40.0,
+        "baseline": 26.0,
+        "minimumFloatOffset": 1167300,
+        "maximumFloatOffset": 1225665,
+        "floatCount": 58365,
+        "endpoints": {
+          "minimum": {
+            "requestedCm": 22.0,
+            "measuredCm": 22.060940316424087,
+            "absoluteResidualCm": 0.06094031642408737,
+            "maximumSurfaceDeltaCm": 0.9747666959603853,
+            "fitIterations": 7
+          },
+          "maximum": {
+            "requestedCm": 40.0,
+            "measuredCm": 40.00144883900434,
+            "absoluteResidualCm": 0.0014488390043396748,
+            "maximumSurfaceDeltaCm": 3.343003964536541,
+            "fitIterations": 4
+          }
+        }
+      }
+    ],
+    "limitations": [
+      "parameters are interpolated independently and combined additively",
+      "values outside each declared preview range are not represented",
+      "hair, eyes, and modesty assets receive height scaling but not local body fitting",
+      "preview acceptance does not prove cloth, product appearance, or a simulation collider"
+    ]
+  }
 }

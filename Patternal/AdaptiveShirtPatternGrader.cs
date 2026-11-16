@@ -31,6 +31,10 @@ public static class AdaptiveShirtPatternGrader
         20.7,
         42.0);
     private const double MaximumAttachmentLengthToChordRatio = 2.0;
+    // Two seam sides that already agree to within a tenth of a percent differ
+    // by less than a sewing machine can hold. Reshaping an edge to close that
+    // is all cost and no benefit.
+    private const double MinimumWorthwhileSeamDrift = 0.001;
 
     public static (GarmentDocument Document, AdaptiveShirtGrade Grade) Adapt(
         GarmentDocument source,
@@ -1368,10 +1372,28 @@ public static class AdaptiveShirtPatternGrader
             }
             string edgeAId = seam.SideA.EdgeIds[0];
             string edgeBId = seam.SideB.EdgeIds[0];
+
+            // A seam whose two sides are edges of the same piece is a dart
+            // closure, not two panels to reconcile. Its legs are drafted
+            // together and already share a length by construction, and the
+            // matcher's idea of "outward" points from one leg straight into the
+            // other, so bowing one to chase the other folds the wedge over
+            // itself and leaves the panel boundary crossing.
+            if (string.Equals(pieceA.Id, pieceB.Id, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
             double lengthA = ScaledCurveLength(pieceA, edgeAId);
             double lengthB = ScaledCurveLength(pieceB, edgeBId);
             double permittedAbsoluteDrift = Math.Max(lengthA, lengthB) < 2.0 ? 0.005 : 0.01;
-            if (Math.Abs(lengthA - lengthB) < permittedAbsoluteDrift)
+            // Bowing an edge is a quadratic way to buy length: closing a
+            // fraction of a millimetre costs centimetres of sideways travel,
+            // which is how a mismatch far below sewing tolerance turns into a
+            // self-intersection. Leave drift this small where it is.
+            double relativeDrift = Math.Abs(lengthA - lengthB) / Math.Max(lengthA, lengthB);
+            if (Math.Abs(lengthA - lengthB) < permittedAbsoluteDrift ||
+                relativeDrift < MinimumWorthwhileSeamDrift)
             {
                 continue;
             }

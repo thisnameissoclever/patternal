@@ -13,7 +13,7 @@ Patterna evaluates new avatar and cloth engines in machine-local, versioned dire
 5. Write a hash-bound `runtime-manifest.json`, then atomically rename the staging directory to its immutable version name. A valid installed version is reused. An invalid existing version is never overwritten unless `-Replace` is explicit; replacement preserves the old directory as a timestamped backup.
 6. Regenerate `challenger-runtime-catalog.json` from installed manifests. The catalog is discovery metadata; each runtime manifest and entry-point hash remains authoritative.
 
-Install both approved challengers:
+Install the approved challengers:
 
 ```powershell
 & .\tools\install_patterna_challenger_runtimes.ps1 -Component All
@@ -24,7 +24,13 @@ The expected version roots are:
 ```text
 %LOCALAPPDATA%\Patterna\ChallengerRuntimes\MHR\v1.0.1-py312-torch2.12.1-cpu
 %LOCALAPPDATA%\Patterna\ChallengerRuntimes\PPF\2026-08-08-03-55-win64
+%LOCALAPPDATA%\Patterna\ChallengerRuntimes\Anny\v0.6.0-py312-torch2.13.0-cu126
+%LOCALAPPDATA%\Patterna\ChallengerRuntimes\LibUIPC\v0.0.25-py312-cuda
 ```
+
+The Anny and LibUIPC components were authorized and installed on 2026-08-28. Both use hash-locked offline wheelhouses under the downloads root (`anny-wheels-py312-cu126` with 24 wheels including `torch 2.13.0+cu126`, and `libuipc-wheels-py312` with 24 wheels including the five NVIDIA CUDA 12.6 runtime wheels), with the committed locks in `tools/runtime-locks/`. The Anny installer runs `tools/verify_anny_release_wheel.py` against the exact release wheel and requires two identical offline neutral-body smoke runs (`tools/run_anny_install_smoke.py`); the deterministic neutral anny-topology mesh hash is `641a5fa1471b704236811e68bbba0b8859745172c278124669c252d6694389a7` with 13,718 vertices, 27,420 triangles, and the 104-bone anny rig. The LibUIPC installer writes a venv-local `sitecustomize.py` that prepends the NVIDIA runtime DLL directories to the process path, requires `tools/run_libuipc_install_smoke.py` to boot the CUDA engine on the RTX 4090 offline, and records the pyuipc Apache-license-text-versus-GPLv3-classifier conflict in the runtime manifest. The `packaging 26.2` wheel is part of the Anny closure because `safetensors 0.7.0` imports it at runtime without declaring the dependency.
+
+The installed Anny manifest SHA-256 is `5bb2fc537759ea6fdc637d50bbcc794853a35ecf8a453a30e94a5881c8562b65`. The installed LibUIPC manifest SHA-256 is `0ba3f808cdbe5158fac86bad2de320c537f7237c606ebcfa5ca48da2f5296a9c`.
 
 ## Proof boundary
 

@@ -46,17 +46,14 @@ public static class SimulationRuntimeLocator
 
     private static readonly string[] RequiredScripts =
     [
-        "fit_charmorph_profile.py",
-        "generate_charmorph_avatar.py",
-        "prepare_charmorph_garmentcode_body.py",
-        "charmorph_collision.py",
-        "charmorph_character.py",
-        "charmorph_anatomy.py",
-        "charmorph_pose.py",
-        "charmorph_glb.py",
-        "verify_charmorph_glb.py",
-        "charmorph_morphs.py",
-        "charmorph_profile_controls.py",
+        "generate_mpfb_avatar.py",
+        "prepare_mpfb_garmentcode_body.py",
+        "pose_mpfb_body.py",
+        "mpfb_morph_controls.py",
+        "mpfb_local_deformations.py",
+        "mpfb_surface_constraints.py",
+        "mpfb_measurements.py",
+        "mpfb_fit_acceptance.py",
         "mesh_torso_arcs.py",
         "generate_body_profile_from_mesh.py",
         "export_garmentcode_pattern_mesh.py",
@@ -140,14 +137,17 @@ public static class SimulationRuntimeLocator
                 !string.IsNullOrWhiteSpace(manifest.AvatarOutputLicense) ||
                 !string.IsNullOrWhiteSpace(manifest.AvatarLicenseFile) ||
                 !string.IsNullOrWhiteSpace(manifest.AvatarCharacterDirectory);
+            // A backend, its output licence and the licence file always go
+            // together. A character directory is only meaningful for a backend
+            // that ships its body as a separate character, as Antonia did; a
+            // MakeHuman body lives inside the Blender extension.
             bool declaresCompleteAvatarMetadata =
                 !string.IsNullOrWhiteSpace(manifest.AvatarBackend) &&
                 !string.IsNullOrWhiteSpace(manifest.AvatarOutputLicense) &&
-                !string.IsNullOrWhiteSpace(manifest.AvatarLicenseFile) &&
-                !string.IsNullOrWhiteSpace(manifest.AvatarCharacterDirectory);
+                !string.IsNullOrWhiteSpace(manifest.AvatarLicenseFile);
             if (declaresAnyAvatarMetadata && !declaresCompleteAvatarMetadata)
             {
-                rejection = "Avatar runtime metadata must declare backend, output license, license file, and character directory together.";
+                rejection = "Avatar runtime metadata must declare backend, output license, and license file together.";
                 return false;
             }
 

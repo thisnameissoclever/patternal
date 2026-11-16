@@ -19,7 +19,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def ui_measurement_keys() -> set[str]:
-    source = (REPO_ROOT / "Patterna" / "MainPage.xaml.cs").read_text(encoding="utf-8")
+    source = (REPO_ROOT / "Patternal" / "MainPage.xaml.cs").read_text(encoding="utf-8")
     keys = set(re.findall(r'P\("([A-Za-z0-9]+)"', source))
     limb_prefixes = (
         "armLength", "shoulderElbow", "elbowWrist", "upperArmCirc",

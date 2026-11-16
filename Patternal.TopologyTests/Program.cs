@@ -449,6 +449,28 @@ Assert(
             pair.Second.Top + pair.Second.Height <= pair.First.Top),
     "The 2D auto layout overlaps production shirt piece cells.");
 Assert(acceptedShirtLayout.CanvasHeight <= 720, "The 14-piece production shirt no longer fits the baseline 2D canvas.");
+double acceptedContentAspect = acceptedShirtLayout.ContentBounds.Width / acceptedShirtLayout.ContentBounds.Height;
+Assert(
+    acceptedContentAspect is >= 1.15 and <= 1.55,
+    $"The adaptive 2D packing aspect ratio {acceptedContentAspect:F3} wastes the baseline viewport.");
+Assert(
+    acceptedShirtLayout.ContentBounds.Height >= 500,
+    "The adaptive 2D packing collapsed back into a shallow strip with avoidable vertical whitespace.");
+PatternCanvasFrameResult allPiecesFrame = PatternCanvasLayoutEngine.FrameAll(
+    acceptedShirtLayout,
+    800,
+    600,
+    0.5f,
+    3f);
+Assert(allPiecesFrame.ZoomFactor is >= 0.5f and <= 3f, "Fit-all produced an invalid zoom factor.");
+Assert(
+    allPiecesFrame.HorizontalOffset >= 0 &&
+        allPiecesFrame.HorizontalOffset <= acceptedShirtLayout.CanvasWidth * allPiecesFrame.ZoomFactor - 800,
+    "Fit-all produced an invalid horizontal viewport offset.");
+Assert(
+    allPiecesFrame.VerticalOffset >= 0 &&
+        allPiecesFrame.VerticalOffset <= acceptedShirtLayout.CanvasHeight * allPiecesFrame.ZoomFactor - 600,
+    "Fit-all produced an invalid vertical viewport offset.");
 PatternCanvasPlacement frontTorsoPlacement = acceptedShirtLayout.Placements["front-torso"];
 PatternCanvasFrameResult frontTorsoFrame = PatternCanvasLayoutEngine.Frame(
     frontTorsoPlacement,
@@ -467,6 +489,16 @@ Assert(
     frontTorsoFrame.VerticalOffset >= 0 &&
         frontTorsoFrame.VerticalOffset <= acceptedShirtLayout.CanvasHeight * frontTorsoFrame.ZoomFactor - 600,
     "Frame-selected produced an invalid vertical viewport offset.");
+PatternCanvasPlacement collarPlacement = acceptedShirtLayout.Placements["left-collar-front"];
+PatternCanvasFrameResult collarFrame = PatternCanvasLayoutEngine.Frame(
+    collarPlacement,
+    acceptedShirtLayout.CanvasWidth,
+    acceptedShirtLayout.CanvasHeight,
+    800,
+    600,
+    0.5f,
+    16f);
+Assert(collarFrame.ZoomFactor >= 4f, "Frame-selected no longer makes a small collar piece inspectable.");
 Assert(acceptedShirt.Seams.Count == 34, "The production shirt source did not import all 34 construction seams.");
 Assert(acceptedShirtTopology.Panels.Count == 14, "The production shirt source did not compile all 14 panels.");
 Assert(acceptedShirtTopology.Seams.Count == 34, "The production shirt topology lost a construction seam.");
@@ -1012,6 +1044,12 @@ Assert(
         !mainPageXaml.Contains("86% FABRIC USE", StringComparison.Ordinal) &&
         mainPageCode.Contains("PatternCanvasLayoutEngine.Arrange", StringComparison.Ordinal) &&
         mainPageCode.Contains("PatternCanvasLayoutEngine.Frame", StringComparison.Ordinal) &&
+        mainPageCode.Contains("PatternCanvasLayoutEngine.FrameAll", StringComparison.Ordinal) &&
+        mainPageCode.Contains("QueueInitialPatternFit();", StringComparison.Ordinal) &&
+        mainPageCode.Contains("_patternCanvasLayout is null ||", StringComparison.Ordinal) &&
+        mainPageCode.Contains("FrameSelectedPatternPiece(showStatus: false)", StringComparison.Ordinal) &&
+        mainPageCode.Contains("holder.PointerPressed += OnPatternPiecePointerPressed", StringComparison.Ordinal) &&
+        mainPageCode.Contains("The current pan and zoom are unchanged.", StringComparison.Ordinal) &&
         mainPageCode.Contains("PatternScaleDipsPerCentimeter", StringComparison.Ordinal) &&
         mainPageCode.Contains("PatternCalibrationRulerDips / measured", StringComparison.Ordinal) &&
         mainPageCode.Contains("public override string ToString() => Name;", StringComparison.Ordinal),
@@ -1085,16 +1123,18 @@ Assert(viewportSource.Contains("loadDisplayAvatar", StringComparison.Ordinal) &&
 Assert(
     viewportSource.Contains("loadGlbDisplayAvatar", StringComparison.Ordinal) &&
         viewportSource.Contains("manifest.schemaVersion==='patterna.display-avatar-glb/1.0'", StringComparison.Ordinal),
-    "The packaged renderer cannot load the live Antonia GLB display-avatar contract.");
-Assert(viewportSource.Contains("fitted GLB candidate", StringComparison.Ordinal), "The Antonia HUD again implies that every editable measurement is mapped into the fixed candidate.");
+    "The packaged renderer cannot load the candidate GLB display-avatar contract.");
+Assert(viewportSource.Contains("fitted GLB candidate", StringComparison.Ordinal), "The candidate HUD again implies that every editable measurement is mapped into the fixed candidate.");
 Assert(
     viewportSource.Contains("loadCandidateDisplayAvatar", StringComparison.Ordinal) &&
         viewportSource.Contains("crypto.subtle.digest('SHA-256'", StringComparison.Ordinal) &&
         viewportSource.Contains("manifest.accepted!==false||manifest.candidateOnly!==true", StringComparison.Ordinal) &&
         viewportSource.Contains("Number(manifest.displayYawDegrees)", StringComparison.Ordinal) &&
         viewportSource.Contains("has an unsupported transform", StringComparison.Ordinal) &&
-        viewportSource.Contains("Antonia candidate · measurement fit accepted · cloth and production visual gates pending", StringComparison.Ordinal),
-    "The packaged renderer no longer loads the hash-bound Antonia GLB behind an explicit candidate boundary.");
+        viewportSource.Contains("MHR baseline preview · numerical fit evidence recorded · visual, collider, cloth, and product gates open", StringComparison.Ordinal) &&
+        viewportSource.Contains("3D drape unsupported for this revision", StringComparison.Ordinal) &&
+        viewportSource.Contains("previewChangedKeys", StringComparison.Ordinal),
+    "The packaged renderer no longer loads the hash-bound MHR GLB behind an explicit preview-only, fail-closed boundary.");
 Assert(
     mainPageXaml.Contains("x:Name=\"ShowBraToggle\"", StringComparison.Ordinal) &&
         mainPageXaml.Contains("x:Name=\"BraAvailabilityText\"", StringComparison.Ordinal) &&

@@ -78,7 +78,7 @@ class PromoteStyle3DBaselineTests(unittest.TestCase):
         report_path.write_text(json.dumps(report), encoding="utf-8")
 
         fit_report = {
-            "schema_version": "patterna.mpfb-avatar-fit/1.2",
+            "schema_version": "patterna.mpfb-avatar-fit/1.3",
             "accepted": True,
             "source_profile_sha256": "a" * 64,
             "output_body": str(source_body),

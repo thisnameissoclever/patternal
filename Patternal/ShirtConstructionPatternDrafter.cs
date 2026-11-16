@@ -67,6 +67,49 @@ public static class ShirtConstructionPatternDrafter
             Math.Abs(first.FrontBalanceCm - second.FrontBalanceCm) <= tolerance;
     }
 
+    /// <summary>
+    /// Names the construction values that differ, and by how much.
+    /// </summary>
+    /// <remarks>
+    /// Telling someone that one of eleven values differs leaves them to find
+    /// which, and the message that did so listed six possibilities without
+    /// naming any. This reports the actual differences so the reason a pattern
+    /// no longer matches its simulated cloth can be read rather than guessed.
+    /// </remarks>
+    public static IReadOnlyList<string> DescribeDifferences(
+        ShirtConstructionProfileDocument first,
+        ShirtConstructionProfileDocument second,
+        double tolerance = 0.001)
+    {
+        ArgumentNullException.ThrowIfNull(first);
+        ArgumentNullException.ThrowIfNull(second);
+        (string Name, double First, double Second)[] values =
+        [
+            ("front width share", first.FrontWidthSharePercent, second.FrontWidthSharePercent),
+            ("neckline width", first.NecklineWidthCm, second.NecklineWidthCm),
+            ("front neck depth", first.FrontNeckDepthCm, second.FrontNeckDepthCm),
+            ("back neck depth", first.BackNeckDepthCm, second.BackNeckDepthCm),
+            ("shoulder length", first.ShoulderLengthCm, second.ShoulderLengthCm),
+            ("shoulder drop", first.ShoulderDropCm, second.ShoulderDropCm),
+            ("armscye depth", first.ArmscyeDepthCm, second.ArmscyeDepthCm),
+            ("armscye scoop", first.ArmscyeScoopCm, second.ArmscyeScoopCm),
+            ("underarm extension", first.UnderarmExtensionCm, second.UnderarmExtensionCm),
+            ("sleeve cap height", first.SleeveCapHeightCm, second.SleeveCapHeightCm),
+            ("front balance", first.FrontBalanceCm, second.FrontBalanceCm),
+        ];
+        List<string> differences = [];
+        foreach ((string name, double firstValue, double secondValue) in values)
+        {
+            if (Math.Abs(firstValue - secondValue) > tolerance)
+            {
+                differences.Add(string.Create(
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    $"{name} {firstValue:0.###} against {secondValue:0.###} cm"));
+            }
+        }
+        return differences;
+    }
+
     public static GarmentDocument Apply(
         GarmentDocument document,
         ShirtConstructionProfileDocument profile)

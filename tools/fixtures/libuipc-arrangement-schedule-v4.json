@@ -1,0 +1,103 @@
+{
+  "schemaVersion": "patterna.libuipc-arrangement-schedule/1.0",
+  "declaredBeforeExecution": true,
+  "planId": "5f5351d5d2f0564572271333462d71c86fa6ae3cdee5f681317996556d72dbfc",
+  "coordinateSystem": "right-handed Y-up meters",
+  "stitch": {
+    "constitution": "SoftVertexStitch",
+    "kappa": 100.0,
+    "restLengthMeters": 0.0,
+    "notes": [
+      "The first declared kappa of 1e6 N/m made the initial implicit step try to close the 0.55 m torso seams in one frame; the resulting CCD sweep volumes exhausted GPU memory and crashed the contact broad phase.",
+      "This one declared change (soft assembly kappa 100 N/m) bounds the approach speed so panels glide around the collider under contact instead of teleporting; the closed-seam equilibrium force stays zero because the rest length is zero."
+    ]
+  },
+  "contact": {
+    "frictionCoefficient": 0.35,
+    "resistance": 1000000000.0,
+    "dHatMeters": 0.002,
+    "clothContactThicknessMeters": 0.0002,
+    "colliderContactThicknessMeters": 0.0003,
+    "sewnPanelPairContactDisabled": "only-pairs-staged-inside-the-contact-envelope",
+    "notes": [
+      "Rest-length-zero stitches require sewn panel pairs to reach zero separation, so contact between each distinct sewn panel pair is disabled; cloth self-collision and cloth-collider contact stay enabled.",
+      "Contact offsets are declared below the smallest staged separations: the front-torso center-front seam starts 0.78 mm apart and the staged collar sits 0.59 mm from the collider.",
+      "The shell mass calibration keeps the plan's 0.001 m thickness; the contact offset attribute is set separately to the declared values."
+    ]
+  },
+  "phaseBoundary": {
+    "velocityPolicy": "reset-to-zero",
+    "restGeometryPolicy": "exact-material-space-rest-mesh-every-phase",
+    "carryPositions": true
+  },
+  "convergence": {
+    "activeSeamMaxSeparationMeters": 0.0025,
+    "consecutiveFrames": 12,
+    "rule": "a phase ends early when every stitch group active in that phase stays under the separation threshold for the declared consecutive frame count"
+  },
+  "determinism": {
+    "maxVertexDeviationMeters": 0.0001,
+    "rule": "two clean runs with identical inputs must agree per vertex within the declared deviation"
+  },
+  "phases": [
+    {
+      "phaseId": "torso-closure",
+      "frameBudget": 360,
+      "stitchGroups": [
+        "back-torso-panel--front-torso-panel",
+        "front-torso-panel--front-torso-panel"
+      ]
+    },
+    {
+      "phaseId": "sleeve-tube-join",
+      "frameBudget": 300,
+      "stitchGroups": [
+        "left-sleeve-b-panel--left-sleeve-f-panel",
+        "right-sleeve-b-panel--right-sleeve-f-panel"
+      ]
+    },
+    {
+      "phaseId": "sleeve-attach",
+      "frameBudget": 240,
+      "stitchGroups": [
+        "back-torso-panel--left-sleeve-b-panel",
+        "back-torso-panel--right-sleeve-b-panel",
+        "front-torso-panel--left-sleeve-f-panel",
+        "front-torso-panel--right-sleeve-f-panel",
+        "front-torso-panel--left-sleeve-b-panel",
+        "front-torso-panel--right-sleeve-b-panel"
+      ]
+    },
+    {
+      "phaseId": "collar-assembly-and-attach",
+      "frameBudget": 240,
+      "stitchGroups": [
+        "left-collar-back-panel--left-collar-front-panel",
+        "right-collar-back-panel--right-collar-front-panel",
+        "left-collar-back-panel--right-collar-back-panel",
+        "left-collar-front-panel--right-collar-front-panel",
+        "back-torso-panel--left-collar-back-panel",
+        "back-torso-panel--right-collar-back-panel",
+        "front-torso-panel--left-collar-front-panel",
+        "front-torso-panel--right-collar-front-panel"
+      ]
+    },
+    {
+      "phaseId": "cuff-assembly-and-attach",
+      "frameBudget": 240,
+      "stitchGroups": [
+        "sl-left-cuff-b-panel--sl-left-cuff-f-panel",
+        "sl-right-cuff-b-panel--sl-right-cuff-f-panel",
+        "left-sleeve-b-panel--sl-left-cuff-b-panel",
+        "left-sleeve-f-panel--sl-left-cuff-f-panel",
+        "right-sleeve-b-panel--sl-right-cuff-b-panel",
+        "right-sleeve-f-panel--sl-right-cuff-f-panel"
+      ]
+    }
+  ],
+  "cloth": {
+    "moduliAdaptation": "StrainLimitingBaraffWitkinShell takes one isotropic ElasticModuli2D; the declared moduli use the calibration stretch Young's modulus with the calibration Poisson ratio. Combining the separate 600 Pa shear value through youngs_shear() implies Poisson 49 and a negative Lame lambda, which destroys the material."
+  },
+  "revision": 4,
+  "revisionNote": "Plan v3's verification measured 1,494 garment self-intersections, all of them between sewn panel pairs whose mutual contact the executor had disabled wholesale. With the body-frame staging, every sewn pair except the two coincident collar assembly pairs stages outside the contact envelope, so contact now stays enabled for sewn pairs and a seam rests at the mutual thickness sum, which still passes every declared seam gate. Only pairs whose staged separation sits inside the envelope keep disabled contact."
+}

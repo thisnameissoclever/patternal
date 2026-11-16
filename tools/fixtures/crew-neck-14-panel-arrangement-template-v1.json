@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "patterna.named-garment-arrangement-template/1.0",
+  "garmentArchetype": "crew-neck-shirt",
+  "panelCount": 14,
+  "stitchCount": 38,
+  "sourceDocumentSha256": "a92f9a87b3b89c4578b2468fcf9b68a04a544512be7ccaee75529c19c7bcf8e8",
+  "stitchRoles": {
+    "collarAssembly": [0, 15, 30, 31],
+    "cuffAssembly": [1, 2, 16, 17],
+    "sleeveTube": [3, 4, 18, 19],
+    "cuffAttachment": [5, 6, 20, 21],
+    "armhole": [7, 8, 9, 22, 23, 24],
+    "neckline": [10, 11, 25, 26],
+    "shoulder": [12, 27],
+    "sideSeam": [13, 14, 28, 29, 33, 34, 36, 37],
+    "bustDart": [32, 35]
+  }
+}

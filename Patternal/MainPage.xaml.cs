@@ -349,7 +349,23 @@ public sealed partial class MainPage : Page
                     "Full-bust adaptive crew-neck shirt",
                     fabric,
                     SourcePath: "PatternaUnreal/SourceAssets/GarmentCode/PatternaProductionCrewNeck.specification.json",
-                    SourceRevision: "e3469c92cdc0ae6e019527ff90f32f8c096884a35f95696a5e3f4c325891b3e3"));
+                    SourceRevision: "e3469c92cdc0ae6e019527ff90f32f8c096884a35f95696a5e3f4c325891b3e3",
+                    // The bundled source records how many body parameters drafted
+                    // it and not their values, so it arrives not knowing what it
+                    // was cut to. These are the same defaults the bundled cloth
+                    // was solved on and that the baseline comparison grades to,
+                    // so stating them here makes the pattern agree with the rest
+                    // of the chain rather than asserting anything new.
+                    FallbackBodyReference: new GarmentBodyReferenceDocument(
+                        DefaultChest,
+                        DefaultWaist,
+                        DefaultHip,
+                        DefaultShoulder,
+                        DefaultTorso,
+                        AverageDefaultDetailedMeasurement("armLengthL", "armLengthR", DefaultHeight * 0.343),
+                        AverageDefaultDetailedMeasurement("upperArmCircL", "upperArmCircR", DefaultChest * 0.32),
+                        AverageDefaultDetailedMeasurement("armholeDepthL", "armholeDepthR", DefaultChest * 0.225),
+                        AverageDefaultDetailedMeasurement("armscyeCircL", "armscyeCircR", DefaultChest * 0.457))));
             _bundledSimulationFitEvidence = null;
             AlignUnmodifiedEaseControlsToBundledSource();
             AlignConstructionControlsToBundledSource();
@@ -486,13 +502,27 @@ public sealed partial class MainPage : Page
         }
         if (IsBodyAtSourceReference())
         {
-            ShirtConstructionProfileDocument? sourceProfile =
-                TryMeasureShirtConstructionProfile(_adaptiveShirtDocument);
-            if (sourceProfile is not null)
+            // Measure the graded garment, not the ungraded source. Grading is
+            // what turns the source block into the pattern the user actually
+            // gets, and it moves the construction while doing so, so measuring
+            // before it reports numbers no drafted pattern ever has. The
+            // baseline check compares against the graded document, so taking
+            // them from different stages of one pipeline meant the two could
+            // never agree and the application could never present its own
+            // accepted cloth as current.
+            ShirtConstructionProfileDocument? gradedProfile = null;
+            try
             {
-                return sourceProfile;
+                gradedProfile = TryMeasureShirtConstructionProfile(
+                    BuildBundledProductionGarmentDocument());
             }
-            return DefaultShirtConstructionProfile();
+            catch (InvalidOperationException)
+            {
+                gradedProfile = null;
+            }
+            return gradedProfile
+                ?? TryMeasureShirtConstructionProfile(_adaptiveShirtDocument)
+                ?? DefaultShirtConstructionProfile();
         }
         double armholeDepth = AverageDetailedMeasurement("armholeDepthL", "armholeDepthR", DefaultChest * 0.225);
         double armscyeCircumference = AverageDetailedMeasurement("armscyeCircL", "armscyeCircR", DefaultChest * 0.457);
@@ -585,6 +615,14 @@ public sealed partial class MainPage : Page
         SimulationStatusText.Text = shirtAccepted
             ? "Checking whether the accepted cloth matches this document"
             : "3D blocked · dress equilibrium has not passed the visual and strain gates";
+
+        // The lines above hide every acceptance affordance until the pattern is
+        // checked again, which is right for anything that asserts a result. The
+        // camera buttons assert nothing; they are how a user turns whatever the
+        // viewport already shows. Leaving the reset as the final word stranded
+        // the 3D tab without them, so recompute the real state here rather than
+        // relying on each of this method's callers to remember.
+        UpdateSimulationFreshness();
     }
 
     private Brush ResourceBrush(string key)
@@ -636,6 +674,7 @@ public sealed partial class MainPage : Page
         }
         DrawCanvasDraftPreview();
         PatternFrameSelectedButton.IsEnabled = layout.Placements.ContainsKey(_selectedPieceId);
+        QueueInitialPatternFit();
     }
 
     private GarmentDocument BuildCurrentGarmentDocument()
@@ -1252,8 +1291,12 @@ public sealed partial class MainPage : Page
         Canvas holder = new()
         {
             Width = placement.Width,
-            Height = placement.Height
+            Height = placement.Height,
+            Tag = piece.Id
         };
+        AutomationProperties.SetName(holder, $"{piece.Name} pattern piece");
+        AutomationProperties.SetHelpText(holder, "Select this pattern piece in the drafting canvas");
+        holder.PointerPressed += OnPatternPiecePointerPressed;
         Canvas geometryLayer = new()
         {
             Width = placement.Width,
@@ -1323,6 +1366,32 @@ public sealed partial class MainPage : Page
         Canvas.SetLeft(holder, placement.Left);
         Canvas.SetTop(holder, placement.Top);
         PatternCanvas.Children.Add(holder);
+    }
+
+    private void OnPatternPiecePointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        if (e.Handled ||
+            _canvasDraftTool != CanvasDraftTool.None ||
+            sender is not Canvas { Tag: string pieceId } ||
+            string.Equals(_selectedPieceId, pieceId, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        _selectedPieceId = pieceId;
+        _selectedPatternPoint = null;
+        PatternPiecesList.SelectedItem = PatternPieceItems.FirstOrDefault(item =>
+            string.Equals(item.Id, pieceId, StringComparison.OrdinalIgnoreCase));
+        RenderPattern();
+        UpdatePatternPointInspector();
+        string pieceName = _garmentDocument?.Pieces
+            .FirstOrDefault(piece => string.Equals(piece.Id, pieceId, StringComparison.OrdinalIgnoreCase))?.Name
+            ?? pieceId;
+        ShowStatus(
+            "Pattern piece selected",
+            $"{pieceName} is active in the drafting canvas. The current pan and zoom are unchanged.",
+            InfoBarSeverity.Informational);
+        e.Handled = true;
     }
 
     private void DrawPieceGrainline(Canvas holder, PatternPieceDocument piece)
@@ -1950,6 +2019,13 @@ public sealed partial class MainPage : Page
 
             ReverseSeamSideBToggle.IsEnabled = selectedSeam is not null;
             ReverseSeamSideBToggle.IsOn = selectedSeam?.SideB.Reverse ?? false;
+            // A closure control on a garment with no closures can never be
+            // enabled by anything the user does, and an affordance that is
+            // permanently dead reads as a broken application rather than as an
+            // inapplicable one. Show it only while there is a closure to act on.
+            ClosureStateToggle.Visibility = document.Closures.Count > 0
+                ? Visibility.Visible
+                : Visibility.Collapsed;
             ClosureStateToggle.IsEnabled = selectedClosure is not null;
             ClosureStateToggle.IsOn = selectedClosure is not null &&
                 string.Equals(selectedClosure.State, GarmentClosureStates.Closed, StringComparison.OrdinalIgnoreCase);
@@ -2688,10 +2764,66 @@ public sealed partial class MainPage : Page
 
         ApplyLinkedBaselineMeasurements();
         AlignConstructionControlsToBundledSource();
+        if (!TryAcceptDraftableMeasurement(sender, e))
+        {
+            return;
+        }
+
         UpdateMeasurementLabels();
         RenderPattern();
         UpdateFitIntelligence();
         _ = UpdateDrapeViewportAsync();
+    }
+
+    /// <summary>
+    /// The body-measurement slider counterpart of <see cref="TryAcceptDraftableValue"/>.
+    /// </summary>
+    private bool TryAcceptDraftableMeasurement(object sender, RangeBaseValueChangedEventArgs e)
+    {
+        if (_revertingUndraftableValue)
+        {
+            return false;
+        }
+
+        try
+        {
+            // Probe the whole document build, not just the grade. Rendering
+            // runs the structural editor, the point offsets, the assembly
+            // overrides and the physical dart compiler after grading, and any
+            // of them can refuse a value the grader accepted. Probing only the
+            // first stage let a legal entry pass the guard and then end the
+            // process from a later one.
+            BuildCurrentGarmentDocument();
+            return true;
+        }
+        catch (InvalidOperationException exception)
+        {
+            if (sender is RangeBase range)
+            {
+                _revertingUndraftableValue = true;
+                try
+                {
+                    range.Value = e.OldValue;
+                }
+                finally
+                {
+                    _revertingUndraftableValue = false;
+                }
+                ApplyLinkedBaselineMeasurements();
+                UpdateMeasurementLabels();
+            }
+
+            string label = sender is DependencyObject element
+                ? AutomationProperties.GetName(element)
+                : string.Empty;
+            ShowStatus(
+                string.IsNullOrWhiteSpace(label)
+                    ? "That measurement cannot be drafted"
+                    : $"{label} was not applied",
+                $"{exception.Message} The previous value has been restored.",
+                InfoBarSeverity.Warning);
+            return false;
+        }
     }
 
     private void OnDetailedMeasurementChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
@@ -2700,6 +2832,24 @@ public sealed partial class MainPage : Page
         {
             return;
         }
+
+        // Realising a box inside a group the user has just opened raises this
+        // event as the binding fills in the value the measurement already
+        // holds. That is not an edit: treating it as one marks untouched
+        // measurements as manually entered and re-drafts the pattern once per
+        // box, which is what made opening a group take minutes.
+        if (BoundMeasurementAlreadyHolds(sender, args.NewValue))
+        {
+            return;
+        }
+
+        // The box raises this event from its own value change, before the
+        // two-way binding writes that value into the measurement behind it.
+        // Everything below reads the measurement, so the new value has to be
+        // put there first; otherwise the draft, the fit report, the
+        // draftability probe and the 3D body are all built from the value the
+        // user just replaced. The binding's later write is then a no-op.
+        CommitBoundMeasurementValue(sender, args.NewValue);
 
         if (sender.DataContext is MeasurementParameter measurement)
         {
@@ -2710,18 +2860,136 @@ public sealed partial class MainPage : Page
             }
         }
 
+        if (!TryAcceptDraftableValue(sender, args))
+        {
+            return;
+        }
+
         RenderPattern();
         UpdatePatternPointInspector();
         UpdateFitIntelligence();
         _ = UpdateDrapeViewportAsync();
     }
 
+    /// <summary>
+    /// Reports whether a number box's value change carries nothing new for the
+    /// measurement it is bound to.
+    /// </summary>
+    private static bool BoundMeasurementAlreadyHolds(NumberBox sender, double value)
+    {
+        // An emptied box reports no value at all, which is never what the
+        // measurement holds and is never a value to draft from either.
+        if (double.IsNaN(value))
+        {
+            return true;
+        }
+
+        return sender.DataContext switch
+        {
+            MeasurementParameter measurement => Math.Abs(measurement.Value - value) < 0.001,
+            CustomMeasurement custom => Math.Abs(custom.Value - value) < 0.001,
+            _ => false
+        };
+    }
+
+    /// <summary>
+    /// Writes a number box's committed value into the measurement it is bound
+    /// to, ahead of the two-way binding.
+    /// </summary>
+    /// <remarks>
+    /// Both measurement models ignore a write that matches what they already
+    /// hold, so calling this before the binding runs is safe and calling it
+    /// with an unchanged value does nothing.
+    /// </remarks>
+    private static void CommitBoundMeasurementValue(NumberBox sender, double value)
+    {
+        if (double.IsNaN(value))
+        {
+            return;
+        }
+
+        switch (sender.DataContext)
+        {
+            case MeasurementParameter measurement:
+                measurement.Value = value;
+                break;
+            case CustomMeasurement custom:
+                custom.Value = value;
+                break;
+        }
+    }
+
     private void OnCustomMeasurementChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
     {
-        if (_pageReady)
+        if (!_pageReady)
         {
-            _ = UpdateDrapeViewportAsync();
+            return;
         }
+
+        if (BoundMeasurementAlreadyHolds(sender, args.NewValue))
+        {
+            return;
+        }
+
+        // Same ordering as the detailed measurements: the viewport payload is
+        // read from the bound model, which the binding has not written yet.
+        CommitBoundMeasurementValue(sender, args.NewValue);
+        _ = UpdateDrapeViewportAsync();
+    }
+
+    /// <summary>
+    /// Returns every detailed measurement to its declared default.
+    /// </summary>
+    /// <remarks>
+    /// There are 145 of them, and without this a profile can only be moved
+    /// away from its defaults, never back. Resetting also clears the manual
+    /// flag, so a measurement the user has abandoned resumes following the
+    /// estimate derived from the primary measurements instead of holding a
+    /// value it was given once.
+    /// </remarks>
+    private void OnResetMeasurementsClicked(object sender, RoutedEventArgs e)
+    {
+        if (!_pageReady)
+        {
+            return;
+        }
+
+        int reset = 0;
+        // Each write reaches its number box through the binding, which raises
+        // the per-box changed event. Those would each re-draft the pattern, so
+        // they are suppressed and the dependent work is run once at the end.
+        _updatingLinkedMeasurements = true;
+        try
+        {
+            foreach (MeasurementParameter measurement in
+                MeasurementGroups.SelectMany(group => group.Measurements))
+            {
+                if (Math.Abs(measurement.Value - measurement.DefaultValue) < 0.001 &&
+                    !measurement.IsUserOverride)
+                {
+                    continue;
+                }
+
+                measurement.Reset();
+                reset++;
+            }
+        }
+        finally
+        {
+            _updatingLinkedMeasurements = false;
+        }
+
+        RenderPattern();
+        UpdatePatternPointInspector();
+        UpdateFitIntelligence();
+        _ = UpdateDrapeViewportAsync();
+
+        ShowStatus(
+            reset == 0 ? "Measurements already at their defaults" : "Measurements reset",
+            reset == 0
+                ? "No detailed measurement differed from its default."
+                : $"{reset} detailed measurements returned to their defaults and now follow the estimates again.",
+            InfoBarSeverity.Success);
     }
 
     private void OnLinkProportionsToggled(object sender, RoutedEventArgs e)
@@ -3019,6 +3287,8 @@ public sealed partial class MainPage : Page
             _ => "balanced"
         };
 
+        string bodyTemplate =
+            (BodyTemplateComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "neutral";
         Dictionary<string, object?> avatar = new()
         {
             ["height"] = HeightSlider.Value,
@@ -3028,7 +3298,7 @@ public sealed partial class MainPage : Page
             ["shoulder"] = ShoulderSlider.Value,
             ["torso"] = TorsoSlider.Value,
             ["posture"] = posture,
-            ["template"] = (BodyTemplateComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "neutral",
+            ["template"] = bodyTemplate,
             ["photos"] = _photoCount,
             ["showBra"] = ShowBraToggle.IsOn
         };
@@ -3037,6 +3307,56 @@ public sealed partial class MainPage : Page
         {
             avatar[measurement.Key] = measurement.Value;
         }
+
+        HashSet<string> previewChangedKeys = new(StringComparer.Ordinal);
+        void RecordPrimaryPreviewChange(string key, double value, double baseline)
+        {
+            if (Math.Abs(value - baseline) >= 0.001)
+            {
+                previewChangedKeys.Add(key);
+            }
+        }
+        RecordPrimaryPreviewChange("height", HeightSlider.Value, DefaultHeight);
+        RecordPrimaryPreviewChange("chest", ChestSlider.Value, DefaultChest);
+        RecordPrimaryPreviewChange("waist", WaistSlider.Value, DefaultWaist);
+        RecordPrimaryPreviewChange("hip", HipSlider.Value, DefaultHip);
+        RecordPrimaryPreviewChange("shoulder", ShoulderSlider.Value, DefaultShoulder);
+        RecordPrimaryPreviewChange("torso", TorsoSlider.Value, DefaultTorso);
+        foreach (MeasurementParameter measurement in MeasurementGroups.SelectMany(group => group.Measurements))
+        {
+            // Only a measurement the user set counts. The rest are derived
+            // from the six primary measurements by
+            // ApplyLinkedBaselineMeasurements, so they carry nothing those
+            // already carry, and those are recorded just above. Counting a
+            // derived value again made moving a slider and moving it straight
+            // back leave the preview permanently claiming that dozens of
+            // dimensions could not be drawn, because an estimate does not land
+            // on the declared default it was rounded from.
+            if (measurement.IsUserOverride &&
+                Math.Abs(measurement.Value - measurement.DefaultValue) >= 0.001)
+            {
+                previewChangedKeys.Add(measurement.Key);
+            }
+        }
+        if (!string.Equals(posture, "balanced", StringComparison.Ordinal))
+        {
+            previewChangedKeys.Add("posture");
+        }
+        if (BodyTemplateComboBox.SelectedIndex != DefaultBodyTemplateIndex)
+        {
+            previewChangedKeys.Add("template");
+        }
+        if (_photoCount != 0)
+        {
+            previewChangedKeys.Add("photos");
+        }
+        if (CustomMeasurements.Any(measurement => Math.Abs(measurement.Value) >= 0.001))
+        {
+            previewChangedKeys.Add("customMeasurements");
+        }
+        avatar["previewChangedKeys"] = previewChangedKeys
+            .OrderBy(key => key, StringComparer.Ordinal)
+            .ToArray();
 
         avatar["customMeasurements"] = CustomMeasurements.Select((measurement, index) => new
         {
@@ -3312,6 +3632,8 @@ public sealed partial class MainPage : Page
         UpdateAcceptedEquilibriumTopology();
         StaleSimulationNotice.Visibility = isShirt && !isCurrent ? Visibility.Visible : Visibility.Collapsed;
         UnacceptedGarmentNotice.Visibility = isShirt ? Visibility.Collapsed : Visibility.Visible;
+        // Showing or hiding the notice changes how much room is left below it.
+        UpdateDrapeSurfaceHeight();
 
         if (isCurrent)
         {
@@ -3322,8 +3644,13 @@ public sealed partial class MainPage : Page
             AcceptedEquilibriumDetailText.Text = isBundledFit
                 ? "High-resolution cotton cloth with exact seams, static equilibrium, and zero body or self intersections"
                 : "The current pattern was accepted after Newton Style3D equilibrium, collision, seam, and strain-tail validation";
+            // The packaged cloth is shown because this body matches the body
+            // it was settled on. It is not the product of this revision's own
+            // simulation, so it must not carry this revision's hash: a user who
+            // has just watched that simulation fail would read the same hash
+            // here as the failure having been accepted after all.
             SimulationStatusText.Text = isBundledFit
-                ? $"Accepted Style3D cloth · revision {_currentSimulationRevision![..12]}"
+                ? "Packaged Style3D cloth · this body matches the packaged baseline"
                 : $"Accepted same-source cloth · revision {_currentSimulationRevision![..12]}";
         }
         else if (isShirt)
@@ -3414,7 +3741,12 @@ public sealed partial class MainPage : Page
         ShirtConstructionProfileDocument currentConstruction = CurrentShirtConstructionProfile();
         if (!ShirtConstructionPatternDrafter.AreEquivalent(currentConstruction, sourceConstruction))
         {
-            return "the neckline, shoulder, armscye, sleeve cap, width distribution, or balance differs from the simulated pattern";
+            IReadOnlyList<string> differences = ShirtConstructionPatternDrafter.DescribeDifferences(
+                currentConstruction,
+                sourceConstruction);
+            return differences.Count > 0
+                ? $"the construction differs from the simulated pattern: {string.Join("; ", differences)}"
+                : "the construction differs from the simulated pattern";
         }
         GarmentDocument currentGarment = _garmentDocument ?? BuildCurrentGarmentDocument();
         bool hasCanonicalGarmentStructure = string.Equals(
@@ -3500,6 +3832,18 @@ public sealed partial class MainPage : Page
 
             if (string.Equals(type.GetString(), "avatar-state", StringComparison.Ordinal))
             {
+                // These messages describe the editable preview body. While the
+                // packaged solve is on screen, that body is not what the user
+                // is looking at, so its description must not overwrite the one
+                // that names what is.
+                if (string.Equals(
+                    _displayedSimulationRevision,
+                    SolvedDrapeRevision,
+                    StringComparison.Ordinal))
+                {
+                    return;
+                }
+
                 string? mode = root.TryGetProperty("mode", out JsonElement modeElement) &&
                     modeElement.ValueKind == JsonValueKind.String
                         ? modeElement.GetString()
@@ -3508,11 +3852,35 @@ public sealed partial class MainPage : Page
                     heightElement.TryGetDouble(out double parsedHeight)
                         ? parsedHeight
                         : 0;
+                int mappedValues = root.TryGetProperty("mappedValues", out JsonElement mappedElement) &&
+                    mappedElement.TryGetInt32(out int parsedMappedValues)
+                        ? parsedMappedValues
+                        : 0;
+                int limitedValues = root.TryGetProperty("limitedKeys", out JsonElement limitedElement) &&
+                    limitedElement.ValueKind == JsonValueKind.Array
+                        ? limitedElement.GetArrayLength()
+                        : 0;
+                int unsupportedValues = root.TryGetProperty("unsupportedKeys", out JsonElement unsupportedElement) &&
+                    unsupportedElement.ValueKind == JsonValueKind.Array
+                        ? unsupportedElement.GetArrayLength()
+                        : 0;
                 AvatarPreviewStateText.Text = string.Equals(
                     mode,
-                    "fitted-mhr-candidate",
+                    "mhr-baseline-preview",
                     StringComparison.Ordinal)
-                        ? $"Avatar preview: fitted MHR candidate · {height:0} cm"
+                        ? $"Avatar preview: measurement baseline · {height:0} cm · visual and cloth gates open"
+                    : string.Equals(
+                        mode,
+                        "mhr-morph-preview",
+                        StringComparison.Ordinal)
+                            ? limitedValues > 0
+                                ? $"Avatar preview: partial measurement preview · {height:0} cm · {mappedValues} mapped values · {limitedValues} outside preview range"
+                                : $"Avatar preview: partial measurement preview · {height:0} cm · {mappedValues} mapped values · not fitted cloth"
+                    : string.Equals(
+                        mode,
+                        "mhr-unsupported-preview",
+                        StringComparison.Ordinal)
+                            ? $"Avatar preview: 3D unsupported for this revision · {unsupportedValues} unmapped values · 2D remains authoritative"
                     : string.Equals(
                         mode,
                         "fitted-antonia-candidate",
@@ -3681,9 +4049,75 @@ public sealed partial class MainPage : Page
         _ = UpdateDrapeViewportAsync();
     }
 
+    private bool _revertingUndraftableValue;
+
+    /// <summary>
+    /// Refuses a typed value the drafter cannot turn into a pattern.
+    /// </summary>
+    /// <remarks>
+    /// The drafter throws when a request would need more redrafting than its
+    /// construction limits allow, which is the right answer: silently clamping
+    /// would hand back a pattern nobody asked for. What was wrong is that the
+    /// throw travelled out of a ValueChanged handler and ended the process,
+    /// losing the user's work over a number typed into a box.
+    ///
+    /// Every undraftable value arrives through one of these handlers, so the
+    /// draft is attempted here first. On refusal the box goes back to the value
+    /// it held, the pattern is untouched, and the user is told which
+    /// combination the drafter could not resolve.
+    /// </remarks>
+    private bool TryAcceptDraftableValue(NumberBox sender, NumberBoxValueChangedEventArgs args)
+    {
+        if (_revertingUndraftableValue)
+        {
+            return false;
+        }
+
+        try
+        {
+            // Probe the whole document build, not just the grade. Rendering
+            // runs the structural editor, the point offsets, the assembly
+            // overrides and the physical dart compiler after grading, and any
+            // of them can refuse a value the grader accepted. Probing only the
+            // first stage let a legal entry pass the guard and then end the
+            // process from a later one.
+            BuildCurrentGarmentDocument();
+            return true;
+        }
+        catch (InvalidOperationException exception)
+        {
+            _revertingUndraftableValue = true;
+            try
+            {
+                // The bound measurement was moved to the new value before this
+                // probe ran, so putting the box back is not enough on its own.
+                CommitBoundMeasurementValue(sender, args.OldValue);
+                sender.Value = args.OldValue;
+            }
+            finally
+            {
+                _revertingUndraftableValue = false;
+            }
+
+            string label = AutomationProperties.GetName(sender);
+            ShowStatus(
+                string.IsNullOrWhiteSpace(label)
+                    ? "That value cannot be drafted"
+                    : $"{label} was not applied",
+                $"{exception.Message} The previous value has been restored.",
+                InfoBarSeverity.Warning);
+            return false;
+        }
+    }
+
     private void OnGarmentEaseChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
     {
         if (!_pageReady)
+        {
+            return;
+        }
+
+        if (!TryAcceptDraftableValue(sender, args))
         {
             return;
         }
@@ -3701,6 +4135,11 @@ public sealed partial class MainPage : Page
     private void OnShirtConstructionChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
     {
         if (!_pageReady || _updatingConstructionControls)
+        {
+            return;
+        }
+
+        if (!TryAcceptDraftableValue(sender, args))
         {
             return;
         }
@@ -3735,6 +4174,12 @@ public sealed partial class MainPage : Page
         {
             return;
         }
+
+        if (!TryAcceptDraftableValue(sender, args))
+        {
+            return;
+        }
+
         ApplyBustShapingControlChange("Bust shaping updated");
     }
 
@@ -3891,7 +4336,16 @@ public sealed partial class MainPage : Page
         {
             _acceptedSimulationRevision = null;
             UpdateSimulationFreshness();
-            ShowStatus("3D regeneration failed", exception.Message, InfoBarSeverity.Error);
+            // A revision waiting on a person's review of its six views has
+            // not failed; every automated gate passed. Say what is pending.
+            if (exception is SimulationReviewPendingException)
+            {
+                ShowStatus("Six views await your review", exception.Message, InfoBarSeverity.Informational);
+            }
+            else
+            {
+                ShowStatus("3D regeneration failed", exception.Message, InfoBarSeverity.Error);
+            }
         }
         finally
         {
@@ -5024,11 +5478,12 @@ public sealed partial class MainPage : Page
             _selectedPieceId = item.Id;
             _selectedPatternPoint = null;
             RenderPattern();
+            FrameSelectedPatternPiece(showStatus: false);
             UpdatePatternPointInspector();
             string pieceName = BuildCurrentGarmentDocument().Pieces
                 .FirstOrDefault(piece => string.Equals(piece.Id, item.Id, StringComparison.OrdinalIgnoreCase))?.Name
                 ?? item.Id;
-            ShowStatus("Pattern piece selected", $"{pieceName} is active in the drafting canvas.", InfoBarSeverity.Informational);
+            ShowStatus("Pattern piece selected", $"{pieceName} is active and framed in the drafting canvas.", InfoBarSeverity.Informational);
         }
     }
 
@@ -6146,11 +6601,14 @@ public sealed partial class MainPage : Page
     }
 
     private void OnFrameSelectedPatternClicked(object sender, RoutedEventArgs e)
+        => FrameSelectedPatternPiece(showStatus: true);
+
+    private bool FrameSelectedPatternPiece(bool showStatus)
     {
         if (_patternCanvasLayout is null ||
             !_patternCanvasLayout.Placements.TryGetValue(_selectedPieceId, out PatternCanvasPlacement? placement))
         {
-            return;
+            return false;
         }
 
         PatternCanvasFrameResult frame = PatternCanvasLayoutEngine.Frame(
@@ -6170,7 +6628,11 @@ public sealed partial class MainPage : Page
         string pieceName = _garmentDocument?.Pieces
             .FirstOrDefault(piece => string.Equals(piece.Id, _selectedPieceId, StringComparison.OrdinalIgnoreCase))?.Name
             ?? _selectedPieceId;
-        ShowStatus("Pattern piece framed", $"{pieceName} is framed in the drafting viewport.", InfoBarSeverity.Informational);
+        if (showStatus)
+        {
+            ShowStatus("Pattern piece framed", $"{pieceName} is framed in the drafting viewport.", InfoBarSeverity.Informational);
+        }
+        return true;
     }
 
     private void ChangePatternZoom(float delta)
@@ -6194,24 +6656,56 @@ public sealed partial class MainPage : Page
 
     private void OnPatternScrollViewerSizeChanged(object sender, SizeChangedEventArgs e)
     {
-        if (_patternViewInitialized || e.NewSize.Width < 100 || e.NewSize.Height < 100)
+        if (e.NewSize.Width < 100 || e.NewSize.Height < 100)
         {
             return;
         }
-        _patternViewInitialized = true;
-        DispatcherQueue.TryEnqueue(() => FitPatternToViewport(disableAnimation: true));
+        QueueInitialPatternFit();
+    }
+
+    private void QueueInitialPatternFit()
+    {
+        if (_patternViewInitialized ||
+            _patternCanvasLayout is null ||
+            PatternScrollViewer.ViewportWidth < 100 ||
+            PatternScrollViewer.ViewportHeight < 100)
+        {
+            return;
+        }
+
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (_patternViewInitialized ||
+                _patternCanvasLayout is null ||
+                PatternScrollViewer.ViewportWidth < 100 ||
+                PatternScrollViewer.ViewportHeight < 100)
+            {
+                return;
+            }
+
+            _patternViewInitialized = true;
+            FitPatternToViewport(disableAnimation: true);
+        });
     }
 
     private void FitPatternToViewport(bool disableAnimation)
     {
-        double viewportWidth = Math.Max(1, PatternScrollViewer.ViewportWidth - 24);
-        double viewportHeight = Math.Max(1, PatternScrollViewer.ViewportHeight - 24);
-        float target = (float)Math.Clamp(
-            Math.Min(viewportWidth / PatternCanvas.Width, viewportHeight / PatternCanvas.Height),
+        if (_patternCanvasLayout is null)
+        {
+            return;
+        }
+        PatternCanvasFrameResult frame = PatternCanvasLayoutEngine.FrameAll(
+            _patternCanvasLayout,
+            PatternScrollViewer.ViewportWidth,
+            PatternScrollViewer.ViewportHeight,
             PatternScrollViewer.MinZoomFactor,
             PatternScrollViewer.MaxZoomFactor);
-        _patternZoomTarget = target;
-        PatternScrollViewer.ChangeView(0, 0, target, disableAnimation);
+        _patternZoomTarget = frame.ZoomFactor;
+        PatternScrollViewer.ChangeView(
+            frame.HorizontalOffset,
+            frame.VerticalOffset,
+            frame.ZoomFactor,
+            disableAnimation);
     }
 
     private void UpdatePatternZoomLabel(float zoomFactor)
@@ -6272,12 +6766,57 @@ public sealed partial class MainPage : Page
     private void OnPageRootSizeChanged(object sender, SizeChangedEventArgs e)
         => UpdateDrapeSurfaceHeight();
 
+    private void OnStaleSimulationNoticeSizeChanged(object sender, SizeChangedEventArgs e)
+        => UpdateDrapeSurfaceHeight();
+
+    // Height of the workspace tab strip above the 3D surface.
+    private const double WorkspaceTabStripHeight = 70;
+
+    /// <summary>
+    /// Sizes the 3D surface to the room left below the tab strip and notice.
+    /// </summary>
+    /// <remarks>
+    /// The surface needs an explicit height: its row is star-sized, but the
+    /// hosted browser control collapses to nothing when it is left to the row
+    /// alone. The height used to subtract only the command bar and the tab
+    /// strip, which left the out-of-date notice unaccounted for, so whenever
+    /// that notice was showing the surface ran past the bottom of its
+    /// container and the lower part of the 3D view was clipped away.
+    ///
+    /// The notice reports a height only after it has been laid out, so this
+    /// runs again from the notice's own size changes rather than trying to
+    /// predict it.
+    /// </remarks>
     private void UpdateDrapeSurfaceHeight()
     {
-        if (DrapeSurfaceGrid is not null && PageRoot.ActualHeight > 0)
+        if (DrapeSurfaceGrid is null || PageRoot.ActualHeight <= 0)
         {
-            DrapeSurfaceGrid.Height = Math.Max(320, PageRoot.ActualHeight - EditorCommandBar.ActualHeight - 70);
+            return;
         }
+
+        double noticeHeight = 0;
+        if (StaleSimulationNotice.Visibility == Visibility.Visible)
+        {
+            noticeHeight = StaleSimulationNotice.ActualHeight;
+            if (noticeHeight <= 0)
+            {
+                // The notice has just been shown and has not been laid out, so
+                // it still reports no height. Ask it how tall it wants to be
+                // rather than leaving the surface too tall until some later
+                // pass happens to correct it.
+                StaleSimulationNotice.Measure(
+                    new Windows.Foundation.Size(
+                        PageRoot.ActualWidth, double.PositiveInfinity));
+                noticeHeight = StaleSimulationNotice.DesiredSize.Height;
+            }
+        }
+
+        DrapeSurfaceGrid.Height = Math.Max(
+            320,
+            PageRoot.ActualHeight
+                - EditorCommandBar.ActualHeight
+                - WorkspaceTabStripHeight
+                - noticeHeight);
     }
 
     private async void OnDrapeCameraViewClicked(object sender, RoutedEventArgs e)
@@ -6296,6 +6835,137 @@ public sealed partial class MainPage : Page
 
     private async void OnResetDrapeCameraClicked(object sender, RoutedEventArgs e)
         => await ExecuteDrapeScriptAsync("window.patterna.resetCamera();");
+
+    private const string SolvedDrapeRevision = "packaged-solved-drape";
+
+    /// <summary>
+    /// Shows the packaged cloth solve, or restores the editing view.
+    /// </summary>
+    /// <remarks>
+    /// The solve is a fixed reference: one garment settled on the one body it
+    /// was solved against. It is deliberately not tied to the pattern being
+    /// edited, so it never stands in for a drape of the current pattern and
+    /// never sets <c>_acceptedSimulationRevision</c>.
+    /// </remarks>
+    private async void OnSolvedDrapeToggled(object sender, RoutedEventArgs e)
+    {
+        if (!_webReady || DrapeWebView.CoreWebView2 is null)
+        {
+            return;
+        }
+
+        if (SolvedDrapeToggle.IsChecked != true)
+        {
+            _displayedSimulationRevision = null;
+            await ExecuteDrapeScriptAsync("window.patterna.clearAcceptedRevision();");
+            await UpdateDrapeViewportAsync();
+            return;
+        }
+
+        try
+        {
+            string label = await BuildSolvedDrapeLabelAsync();
+            // The solved-drape body is the production collision body, vertex
+            // for vertex, so the production display avatar's skin, hair and
+            // face belong on it. Without this the packaged six views showed a
+            // bald, untextured collider standing in for the person.
+            string script =
+                "window.patterna.loadAcceptedRevision(" +
+                $"{JsonSerializer.Serialize("https://patterna.local/SolvedDrape/body.obj")}," +
+                $"{JsonSerializer.Serialize("https://patterna.local/SolvedDrape/garment.obj")}," +
+                $"{JsonSerializer.Serialize(label)}," +
+                $"{JsonSerializer.Serialize(SolvedDrapeRevision)}," +
+                $"{JsonSerializer.Serialize("https://patterna.local/Production/Avatar/")});";
+            _displayedSimulationRevision = null;
+            if (await LoadViewportAssetsAsync(SolvedDrapeRevision, script))
+            {
+                _displayedSimulationRevision = SolvedDrapeRevision;
+                SimulationStatusText.Text = "Showing the packaged cloth solve";
+                AvatarPreviewStateText.Text =
+                    "Avatar preview: the body this cloth was solved on, in its dressing stance";
+            }
+            else
+            {
+                SolvedDrapeToggle.IsChecked = false;
+            }
+        }
+        catch (Exception exception)
+        {
+            SolvedDrapeToggle.IsChecked = false;
+            ShowStatus(
+                "The packaged cloth solve could not be shown",
+                exception.Message,
+                InfoBarSeverity.Error);
+        }
+    }
+
+    /// <summary>
+    /// Verifies the shipped drape assets against their own report and describes them.
+    /// </summary>
+    private async Task<string> BuildSolvedDrapeLabelAsync()
+    {
+        string directory = System.IO.Path.Combine(
+            AppContext.BaseDirectory, "Assets", "SolvedDrape");
+        string reportPath = System.IO.Path.Combine(directory, "packaged-drape-assets.json");
+        using JsonDocument report = JsonDocument.Parse(
+            await File.ReadAllTextAsync(reportPath));
+        JsonElement root = report.RootElement;
+        if (root.GetProperty("schemaVersion").GetString()
+            != "patterna.packaged-drape-assets/1.0")
+        {
+            throw new InvalidOperationException(
+                "The packaged drape assets carry an unsupported schema.");
+        }
+
+        // The report names the exact bytes it describes. Refuse to draw
+        // anything else, so an edited or half-copied asset fails loudly
+        // instead of rendering as an unexplained shape.
+        JsonElement outputs = root.GetProperty("outputs");
+        foreach (string name in new[] { "body.obj", "garment.obj" })
+        {
+            string expected = outputs.GetProperty(name).GetString()
+                ?? throw new InvalidOperationException($"{name} has no declared hash.");
+            string actual = SimulationPipeline.FileSha256(
+                System.IO.Path.Combine(directory, name));
+            if (!string.Equals(expected, actual, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException(
+                    $"{name} does not match the hash its report declares.");
+            }
+        }
+
+        string arrangement = root.GetProperty("arrangementId").GetString() ?? string.Empty;
+        int triangles = root.GetProperty("garment").GetProperty("triangleCount").GetInt32();
+        double stature = root.GetProperty("body").GetProperty("statureMeters").GetDouble();
+
+        // The label must describe the asset that is on screen. Naming one
+        // solver here made the caption wrong the moment a result from another
+        // one was packaged, so the description travels with the asset.
+        string engine = root.TryGetProperty("method", out JsonElement method) &&
+            method.ValueKind == JsonValueKind.Object &&
+            method.TryGetProperty("engine", out JsonElement engineElement)
+                ? engineElement.GetString() ?? "packaged cloth solve"
+                : "packaged cloth solve";
+
+        StringBuilder label = new();
+        label.Append(engine)
+            .Append(" · ")
+            .Append(arrangement.Length >= 12 ? arrangement[..12] : arrangement)
+            .Append(" · ")
+            .Append($"{triangles:N0} garment triangles on a {stature * 100:0} cm body");
+        if (root.TryGetProperty("openGates", out JsonElement gates) &&
+            gates.ValueKind == JsonValueKind.Array)
+        {
+            foreach (JsonElement gate in gates.EnumerateArray())
+            {
+                if (gate.GetString() is { Length: > 0 } text)
+                {
+                    label.Append(" · ").Append(text.TrimEnd('.'));
+                }
+            }
+        }
+        return label.ToString();
+    }
 
     private void ShowStatus(string title, string message, InfoBarSeverity severity)
     {

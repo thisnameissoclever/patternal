@@ -2,9 +2,9 @@
 
 This project isolates the replacement 3D stack from the working WinUI application. It uses Unreal Engine 5.8, MetaHuman Creator, Chaos Cloth Asset, Dataflow cloth nodes, OpenUSD cloth interchange, DirectX 12, Lumen, virtual shadow maps, and hardware ray tracing.
 
-## Current avatar baseline
+## Historical avatar baseline
 
-`MH_Patterna_Female_Default` is the production avatar baseline. It is a female MetaHuman with a full joints-and-blend-shapes rig, 2K face and body source textures, skin shading, eyes, hands, feet, and a groomed hairstyle. The female shape is only the starting state. The measurement workflow must remain able to replace every estimated dimension and drive the parametric body controls before garment simulation.
+`MH_Patterna_Female_Default` is the visual baseline for this historical Unreal spike. It is not the current product avatar or an accepted measurement body. It is a female MetaHuman with a full joints-and-blend-shapes rig, 2K face and body source textures, skin shading, eyes, hands, feet, and a groomed hairstyle. The project has not proven that the live Patterna measurement document can generate this body and an exact matching collider at runtime.
 
 The editor project explicitly enables `PythonScriptPlugin` and `EditorScriptingUtilities`. These bundled Unreal plugins are required by the staged measurement scripts in `tools` and must be loaded before a `py` console command is treated as executed.
 
@@ -21,6 +21,8 @@ The Unreal viewport must not replace the WinUI WebGL preview until all of these 
 7. A machine-readable adapter can translate the WinUI garment document into the Unreal cloth input format.
 
 The existing WinUI measurement editor and versioned garment document remain authoritative while this gate is incomplete.
+
+The 2026-08-22 revision-bundle preflight rejects this project as the next product sidecar. Runtime code selects fixed cooked `/Game/...` garments. Garment construction and repair use the editor-only module, Dataflow regeneration, and package saving. No packaged runtime path consumes `patterna.revision-bundle/1.0` or creates the exact edited cloth asset without editor-only authoring. Do not resume Unreal implementation unless a bounded spike can replace that boundary without manual Dataflow work.
 
 ## Runtime validation scene
 

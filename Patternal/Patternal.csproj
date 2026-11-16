@@ -38,6 +38,7 @@
     <Content Include="Assets\Production\Avatar\**\*" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
     <Content Include="Assets\Candidate\Antonia\**\*" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
     <Content Include="Assets\Candidate\MHR\**\*" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
+    <Content Include="Assets\SolvedDrape\**\*" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
     <Content Include="..\third_party\CharMorph-db\characters\antonia\license.txt" Link="Assets\Candidate\Antonia\license.txt" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
     <Content Include="Assets\MAKEHUMAN-ASSET-NOTICE.md" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\PatternaUnreal\SourceAssets\GarmentCode\PatternaProductionCrewNeck.specification.json" Link="Assets\GarmentCode\PatternaProductionCrewNeck.specification.json" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />

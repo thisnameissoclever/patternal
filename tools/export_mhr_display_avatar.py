@@ -742,7 +742,7 @@ def main() -> None:
         "schemaVersion": "patterna.display-avatar-glb/1.0",
         "accepted": False,
         "candidateOnly": True,
-        "displayMode": "mhr-candidate",
+        "displayMode": "mhr-preview",
         "source": "Meta Momentum Human Rig",
         "sourceVersion": "1.0.1",
         "sourceUrl": "https://github.com/facebookresearch/MHR",
@@ -801,7 +801,7 @@ def main() -> None:
         "renders": render_hashes,
         "openGates": [
             "six-view host and packaged visual review is pending",
-            "measurement edits do not yet rebuild this MHR family in the packaged app",
+            "real-time MHR morph preview is not a revision-specific fitted collider",
             "cloth has not been solved and accepted on this exact MHR body",
             "physical-GPU packaged acceptance is pending",
         ],
